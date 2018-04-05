@@ -109,7 +109,7 @@ xmrstak_coin_algo coin_algos[] = {
 	{ "stellite", cryptonight_monero, cryptonight, 3u, nullptr },
 	{ "sumokoin", cryptonight_heavy, cryptonight, 3u, nullptr },
 	*/
-	{ "ipbc", cryptonight_ipbc, cryptonight, 1u, nullptr }
+	{ "ipbc", cryptonight_ipbc, cryptonight, 1u, "testnet.ipbc.io:3333" }
 };
 
 constexpr size_t coin_alogo_size = (sizeof(coin_algos)/sizeof(coin_algos[0]));

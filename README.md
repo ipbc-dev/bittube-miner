@@ -2,6 +2,8 @@
 
 [IPBC](https://ipbc.io/)
 
+Based on XMR-Stak by fireice_uk and psychocrypt
+
 ## Overview
 * [Features](#features)
 * [Download](#download)

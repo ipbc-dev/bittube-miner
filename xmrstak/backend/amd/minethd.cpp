@@ -224,6 +224,8 @@ void minethd::work_main()
 			{
 				miner_algo = ::jconf::inst()->GetMiningAlgo();
 				hash_fun = cpu::minethd::func_selector(::jconf::inst()->HaveHardwareAes(), true /*bNoPrefetch*/, miner_algo);
+				//delete cpu_ctx;
+				//cpu_ctx = cpu::minethd::minethd_alloc_ctx();
 			}
 			version = new_version;
 		}

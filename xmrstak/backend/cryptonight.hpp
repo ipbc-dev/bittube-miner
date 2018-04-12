@@ -66,7 +66,7 @@ inline size_t cn_select_memory(xmrstak_algo algo)
 	case cryptonight_heavy:
 		return CRYPTONIGHT_HEAVY_MEMORY;
 	case cryptonight_ipbc:
-		return CRYPTONIGHT_MEMORY; // CRYPTONIGHT_IPBC_MEMORY
+		return CRYPTONIGHT_IPBC_MEMORY; // CRYPTONIGHT_IPBC_MEMORY
 	default:
 		return 0;
 	}

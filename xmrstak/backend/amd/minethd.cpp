@@ -224,8 +224,6 @@ void minethd::work_main()
 			{
 				miner_algo = ::jconf::inst()->GetMiningAlgo();
 				hash_fun = cpu::minethd::func_selector(::jconf::inst()->HaveHardwareAes(), true /*bNoPrefetch*/, miner_algo);
-				//delete cpu_ctx;
-				//cpu_ctx = cpu::minethd::minethd_alloc_ctx();
 			}
 			version = new_version;
 		}
@@ -236,7 +234,7 @@ void minethd::work_main()
 		assert(sizeof(job_result::sJobID) == sizeof(pool_job::sJobID));
 		uint64_t target = oWork.iTarget;
 		
-		XMRSetJob(pGpuCtx, oWork.bWorkBlob, oWork.iWorkSize, target, miner_algo, version);
+		XMRSetJob(pGpuCtx, oWork.bWorkBlob, oWork.iWorkSize, target, miner_algo);
 
 		if(oWork.bNiceHash)
 			pGpuCtx->Nonce = *(uint32_t*)(oWork.bWorkBlob + 39);
@@ -252,7 +250,7 @@ void minethd::work_main()
 			cl_uint results[0x100];
 			memset(results,0,sizeof(cl_uint)*(0x100));
 
-			XMRRunJob(pGpuCtx, results, miner_algo, version);
+			XMRRunJob(pGpuCtx, results, miner_algo);
 
 			for(size_t i = 0; i < results[0xFF]; i++)
 			{

@@ -810,4 +810,4 @@ void minethd::multiway_work_main()
 }
 
 } // namespace cpu
-} // namepsace xmrstak
+} // namespace xmrstak

@@ -18,7 +18,7 @@
 #endif
 
 #define XMR_STAK_NAME "ipbc-miner"
-#define XMR_STAK_VERSION "1.0.0"
+#define XMR_STAK_VERSION "1.1.2"
 
 #if defined(_WIN32)
 #define OS_TYPE "win"

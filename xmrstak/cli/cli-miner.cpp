@@ -97,7 +97,7 @@ void help()
 	cout<<"  -u, --user USERNAME        pool user name or wallet address"<<endl;
 	cout<<"  -r, --rigid RIGID          rig identifier for pool-side statistics (needs pool support)"<<endl;
 	cout<<"  -p, --pass PASSWD          pool password, in the most cases x or empty \"\""<<endl;
-	// cout<<"  --use-nicehash             the pool should run in nicehash mode"<<endl;
+	cout<<"  --use-nicehash             the pool should run in nicehash mode"<<endl;
 	cout<<"  --currency NAME            currency to mine"<<endl;
 	cout<< endl;
 #ifdef _WIN32
@@ -158,8 +158,7 @@ std::string get_multipool_entry(bool& final)
 #else
 	bool tls = read_yes_no("- Does this pool port support TLS/SSL? Use no if unknown. (y/N)");
 #endif
-	// bool nicehash = read_yes_no("- Do you want to use nicehash on this pool? (y/n)");
-	bool nicehash = false;
+	bool nicehash = read_yes_no("- Do you want to use nicehash on this pool? (y/n)");
 
 	int64_t pool_weight;
 	std::cout << "- Please enter a weight for this pool: "<<std::endl;
@@ -267,8 +266,7 @@ void do_guided_pool_config()
 		tls = params::inst().poolUseTls;
 #endif
 
-	bool nicehash = false;
-	/*
+	bool nicehash;
 	if(!userSetPool)
 	{
 		prompt_once(prompted);
@@ -276,7 +274,6 @@ void do_guided_pool_config()
 	}
 	else
 		nicehash = params::inst().nicehashMode;
-	*/
 
 	bool multipool;
 	if(!userSetPool)
@@ -575,12 +572,10 @@ int main(int argc, char *argv[])
 			params::inst().userSetRigid = true;
 			params::inst().poolRigid = argv[i];
 		}
-		/*
 		else if(opName.compare("--use-nicehash") == 0)
 		{
 			params::inst().nicehashMode = true;
 		}
-		*/
 		else if(opName.compare("-c") == 0 || opName.compare("--config") == 0)
 		{
 			++i;

@@ -177,7 +177,7 @@ bool jconf::GetPoolConfig(size_t id, pool_cfg& cfg)
 	cfg.sWalletAddr = jlogin->GetString();
 	cfg.sRigId = jrigid->GetString();
 	cfg.sPasswd = jpasswd->GetString();
-	cfg.nicehash = false; // jnicehash->GetBool();
+	cfg.nicehash = jnicehash->GetBool();
 	cfg.tls = jtls->GetBool();
 	cfg.tls_fingerprint = jtlsfp->GetString();
 	cfg.raw_weight = jwt->GetUint64();

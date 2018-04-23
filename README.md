@@ -15,7 +15,6 @@ Based on XMR-Stak by fireice_uk and psychocrypt
 
 - support all common backends (CPU/x86, AMD-GPU and NVIDIA-GPU)
 - support all common OS (Linux, Windows and macOS)
-- supports algorithm cryptonight for Monero (XMR) and cryptonight-light (AEON)
 - easy to use
   - guided start (no need to edit a config file for the first start)
   - auto configuration for each backend

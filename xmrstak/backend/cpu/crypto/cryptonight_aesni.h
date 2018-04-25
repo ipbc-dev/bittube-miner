@@ -43,7 +43,7 @@ extern "C"
 {
 	void keccak(const uint8_t *in, int inlen, uint8_t *md, int mdlen);
 	void keccakf(uint64_t st[25], int rounds);
-	extern void(*const extra_hashes[4])(const void *, size_t, char *);
+	extern void(*const extra_hashes[4])(const void *, uint32_t, char *);
 }
 
 // This will shift and xor tmp1 into itself as 4 32-bit vals such as
@@ -429,7 +429,7 @@ inline void cryptonight_monero_tweak(uint64_t* mem_out, __m128i tmp)
 	tmp = _mm_castps_si128(_mm_movehl_ps(_mm_castsi128_ps(tmp), _mm_castsi128_ps(tmp)));
 	uint64_t vh = _mm_cvtsi128_si64(tmp);
 
-	uint8_t x = vh >> 24;
+	uint8_t x = static_cast<uint8_t>(vh >> 24);
 	static const uint16_t table = 0x7531;
 	const uint8_t index = (((x >> 3) & 6) | (x & 1)) << 1;
 	vh ^= ((table >> index) & 0x3) << 28;
@@ -506,15 +506,13 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 			_mm_prefetch((const char*)&l0[al0 & MASK], _MM_HINT_T0);
 		ah0 += lo;
 
-		if(ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_ipbc)
-			((uint64_t*)&l0[idx0 & MASK])[1] = ah0 ^ monero_const;
-		else
+		if (ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_ipbc) {
+			if (ALGO == cryptonight_ipbc)
+				((uint64_t*)&l0[idx0 & MASK])[1] = ah0 ^ monero_const ^ ((uint64_t*)&l0[idx0 & MASK])[0];
+			else
+				((uint64_t*)&l0[idx0 & MASK])[1] = ah0 ^ monero_const;
+		} else
 			((uint64_t*)&l0[idx0 & MASK])[1] = ah0;
-
-		if (ALGO == cryptonight_ipbc) {
-			((uint64_t*)&l0[idx0 & MASK])[1] ^= ((uint64_t*)&l0[idx0 & MASK])[0];
-		}
-
 		ah0 ^= ch;
 
 		idx0 = al0;
@@ -636,14 +634,13 @@ void cryptonight_double_hash(const void* input, size_t len, void* output, crypto
 		axh0 += lo;
 		((uint64_t*)&l0[idx0 & MASK])[0] = axl0;
 
-		if(ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_ipbc)
-			((uint64_t*)&l0[idx0 & MASK])[1] = axh0 ^ monero_const_0;
-		else
+		if (ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_ipbc) {
+			if (ALGO == cryptonight_ipbc)
+				((uint64_t*)&l0[idx0 & MASK])[1] = axh0 ^ monero_const_0 ^ ((uint64_t*)&l0[idx0 & MASK])[0];
+			else
+				((uint64_t*)&l0[idx0 & MASK])[1] = axh0 ^ monero_const_0;
+		} else
 			((uint64_t*)&l0[idx0 & MASK])[1] = axh0;
-
-		if (ALGO == cryptonight_ipbc) {
-			((uint64_t*)&l0[idx0 & MASK])[1] ^= ((uint64_t*)&l0[idx0 & MASK])[0];
-		}
 
 		axh0 ^= ch;
 		axl0 ^= cl;
@@ -671,14 +668,13 @@ void cryptonight_double_hash(const void* input, size_t len, void* output, crypto
 		axh1 += lo;
 		((uint64_t*)&l1[idx1 & MASK])[0] = axl1;
 
-		if(ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_ipbc)
-			((uint64_t*)&l1[idx1 & MASK])[1] = axh1 ^ monero_const_1;
-		else
+		if (ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_ipbc) {
+			if (ALGO == cryptonight_ipbc)
+				((uint64_t*)&l1[idx1 & MASK])[1] = axh1 ^ monero_const_1 ^ ((uint64_t*)&l1[idx1 & MASK])[0];
+			else
+				((uint64_t*)&l1[idx1 & MASK])[1] = axh1 ^ monero_const_1;
+		} else
 			((uint64_t*)&l1[idx1 & MASK])[1] = axh1;
-
-		if (ALGO == cryptonight_ipbc) {
-			((uint64_t*)&l1[idx1 & MASK])[1] ^= ((uint64_t*)&l1[idx1 & MASK])[0];
-		}
 
 		axh1 ^= ch;
 		axl1 ^= cl;
@@ -738,11 +734,13 @@ void cryptonight_double_hash(const void* input, size_t len, void* output, crypto
 	lo = _umul128(idx, _mm_cvtsi128_si64(b), &hi);		\
 	a = _mm_add_epi64(a, _mm_set_epi64x(lo, hi));		\
 	if(ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_ipbc) \
+	{ \
 		_mm_store_si128(ptr, _mm_xor_si128(a, mc)); \
+		if (ALGO == cryptonight_ipbc) \
+			((uint64_t*)ptr)[1] ^= ((uint64_t*)ptr)[0];\
+	} \
 	else \
 		_mm_store_si128(ptr, a);\
-    if (ALGO == cryptonight_ipbc) \
-        ((uint64_t*)&l[idx & MASK])[1] ^= ((uint64_t*)&l[idx & MASK])[0];\
 	a = _mm_xor_si128(a, b); \
 	idx = _mm_cvtsi128_si64(a);	\
 	if(ALGO == cryptonight_heavy) \

@@ -55,6 +55,8 @@
 #	include "xmrstak/misc/uac.hpp"
 #endif // _WIN32
 
+#include "../libwebsockets/ws_server.h"
+
 int do_benchmark(int block_version);
 
 void help()
@@ -364,6 +366,15 @@ void do_guided_config()
 
 int main(int argc, char *argv[])
 {
+//Testing section ----
+std::cout << "Press enter to continue..." << std::endl;
+std::cin.get();
+
+
+
+//--------------------
+
+
 #ifndef CONF_NO_TLS
 	SSL_library_init();
 	SSL_load_error_strings();

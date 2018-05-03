@@ -43,6 +43,15 @@
 
 //----------------------------------------------------------------------------------------------------------
 // POST additions start ---
+
+struct post_response {
+	bool isError = false;
+	char* error = "Texto del error";
+
+	bool isData = false;
+	char* resData = "Datos en formato json";
+};
+
 const int POSTBUFFERSIZE = 512;
 const int MAXNAMESIZE = 20;
 const int MAXANSWERSIZE = 512;
@@ -50,7 +59,9 @@ const int GET = 0;
 const int POST = 1;
 
 const char* greatingpage="<html><body><h1>Welcome, %s!</center></h1></body></html>";
+
 const char* errorpage="<html><body>This doesn't seem to be right.</body></html>";
+
 const char* askpage = "<html><body>\n\
                        Upload a file, please!<br>\n\
                        There are %u clients uploading at the moment.<br>\n\
@@ -118,6 +129,8 @@ int httpd::iterate_post (void *coninfo_cls, enum MHD_ValueKind kind, const char 
 		return MHD_NO;
 	}
 
+	
+	con_info->answerstring = "Bueeeeeeeno esto es embarazoso...";
 	return MHD_YES;
 }
 
@@ -151,10 +164,7 @@ int httpd::starting_process_post (MHD_Connection* connection,
 												const char* upload_data,
 												size_t* upload_data_size,
 												void ** ptr) {
-
-	std::cout << "Receiving a post msg..."  << std::endl;
-	//std::cout << "Data size: " << *upload_data_size << std::endl;
-	//std::cout << "Data in: " << upload_data << std::endl;
+	std::cout << "[httpd::starting_process_post(...)]Receiving a post msg..."  << std::endl;
 
 	if(NULL == *ptr) {
 		struct connection_info_struct *con_info;
@@ -167,7 +177,7 @@ int httpd::starting_process_post (MHD_Connection* connection,
 				
 		con_info->answerstring = NULL;
 
-		if (strcmp (method, "POST") == 0) {      
+		//---if (strcmp (method, "POST") == 0) {      
 			con_info->postprocessor = MHD_create_post_processor (connection, POSTBUFFERSIZE, 
 																						  iterate_post, (void*) con_info);   
 
@@ -177,22 +187,22 @@ int httpd::starting_process_post (MHD_Connection* connection,
 			}
 
 			con_info->connectiontype = POST;
-		} else  {
-			con_info->connectiontype = GET;
-		}
+		//---} else  {
+		//---	con_info->connectiontype = GET;
+		//---}
 
 		*ptr = (void*) con_info; 
 		return MHD_YES;
 	}
 
-	if (strcmp (method, "GET") == 0) {
-		return send_page (connection, askpage);     
-	}
+	//---if (strcmp (method, "GET") == 0) {
+	//---	return send_page (connection, askpage);     
+	//---}
 
-	if (strcmp (method, "POST") == 0) {
+	//---if (strcmp (method, "POST") == 0) {
 		struct connection_info_struct *con_info = (connection_info_struct*)*ptr;
 
-		if (*upload_data_size != 0)          {
+		if (*upload_data_size != 0) {
 			MHD_post_process (con_info->postprocessor, upload_data,	
 									*upload_data_size);
 
@@ -202,7 +212,7 @@ int httpd::starting_process_post (MHD_Connection* connection,
 		} else if (NULL != con_info->answerstring) {
 			return send_page (connection, con_info->answerstring);
 		}
-	}
+	//---}
 
 	return send_page(connection, errorpage); 
 

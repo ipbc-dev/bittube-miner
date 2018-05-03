@@ -55,7 +55,7 @@
 #	include "xmrstak/misc/uac.hpp"
 #endif // _WIN32
 
-#include "../libwebsockets/ws_server.h"
+//#include "../libwebsockets/ws_server.h"
 
 int do_benchmark(int block_version);
 

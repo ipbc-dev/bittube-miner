@@ -535,7 +535,7 @@ target_link_libraries(ipbc-miner ${LIBS} ipbc-miner-c ipbc-miner-backend)
 # WebSockets
 ################################################################################
 
-include("${CMAKE_SOURCE_DIR}/libs/libwebsockets.cmake")
+#include("${CMAKE_SOURCE_DIR}/libs/libwebsockets.cmake")
 
 ################################################################################
 # Install

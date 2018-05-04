@@ -96,6 +96,28 @@ int httpd::send_page (struct MHD_Connection *connection, const char *page) {
   return ret;
 }
 
+//----
+
+/*
+ * Description: obtain data to send to frontend
+ */
+std::string httpd::getCustomInfo () {
+	std::string result = "";
+
+	//TODO: ...
+
+	return result;
+}
+
+/*
+ * Description: parsing data received from frontend
+ */
+void httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
+
+}
+
+
+
 int httpd::iterate_post (void *coninfo_cls, enum MHD_ValueKind kind, const char *key,
 								 const char *filename, const char *content_type,
 								 const char *transfer_encoding, const char *data, 
@@ -107,7 +129,7 @@ int httpd::iterate_post (void *coninfo_cls, enum MHD_ValueKind kind, const char 
 
 	struct connection_info_struct *con_info = (connection_info_struct*)coninfo_cls;
 
-	if (strcmp (key, "name") == 0) {
+	if (strcmp (key, "name") == 0) {// FIXME: delete example ---------------
 
 		std::cout << "Reciving a name" << std::endl;
 
@@ -127,10 +149,21 @@ int httpd::iterate_post (void *coninfo_cls, enum MHD_ValueKind kind, const char 
 		}
 
 		return MHD_NO;
+	} else { //--------------------------------------------------------------
+
+		if ((size > 0) && (size <= MAXNAMESIZE)) {
+			std::string keyParse (key);
+			std::string valueParse (data);
+			parseCustomInfo (keyParse, valueParse);
+			con_info->answerstring = "ok";
+		}  else  {
+			con_info->answerstring = NULL;
+		}
+
+		return MHD_NO;
 	}
 
-	
-	con_info->answerstring = "Bueeeeeeeno esto es embarazoso...";
+	con_info->answerstring = "not valid data";
 	return MHD_YES;
 }
 
@@ -164,6 +197,7 @@ int httpd::starting_process_post (MHD_Connection* connection,
 												const char* upload_data,
 												size_t* upload_data_size,
 												void ** ptr) {
+
 	std::cout << "[httpd::starting_process_post(...)]Receiving a post msg..."  << std::endl;
 
 	if(NULL == *ptr) {
@@ -176,46 +210,32 @@ int httpd::starting_process_post (MHD_Connection* connection,
 		}
 				
 		con_info->answerstring = NULL;
-
-		//---if (strcmp (method, "POST") == 0) {      
-			con_info->postprocessor = MHD_create_post_processor (connection, POSTBUFFERSIZE, 
+		con_info->postprocessor = MHD_create_post_processor (connection, POSTBUFFERSIZE, 
 																						  iterate_post, (void*) con_info);   
 
-			if (con_info->postprocessor == NULL) {
-				free (con_info); 
-				return MHD_NO;
-			}
+		if (con_info->postprocessor == NULL) {
+			free (con_info); 
+			return MHD_NO;
+		}
 
-			con_info->connectiontype = POST;
-		//---} else  {
-		//---	con_info->connectiontype = GET;
-		//---}
-
+		con_info->connectiontype = POST;
 		*ptr = (void*) con_info; 
 		return MHD_YES;
 	}
 
-	//---if (strcmp (method, "GET") == 0) {
-	//---	return send_page (connection, askpage);     
-	//---}
+	struct connection_info_struct *con_info = (connection_info_struct*)*ptr;
 
-	//---if (strcmp (method, "POST") == 0) {
-		struct connection_info_struct *con_info = (connection_info_struct*)*ptr;
+	if (*upload_data_size != 0) {
+		MHD_post_process (con_info->postprocessor, upload_data,	
+								*upload_data_size);
 
-		if (*upload_data_size != 0) {
-			MHD_post_process (con_info->postprocessor, upload_data,	
-									*upload_data_size);
-
-			*upload_data_size = 0;
-
-			return MHD_YES;
-		} else if (NULL != con_info->answerstring) {
-			return send_page (connection, con_info->answerstring);
-		}
-	//---}
+		*upload_data_size = 0;
+		return MHD_YES;
+	} else if (NULL != con_info->answerstring) {
+		return send_page (connection, con_info->answerstring);
+	}
 
 	return send_page(connection, errorpage); 
-
 }
 // POST additions end ---
 //----------------------------------------------------------------------------------------------------------
@@ -300,6 +320,14 @@ int httpd::req_handler(void * cls,
 	else if(strcasecmp(url, "/api.json") == 0)
 	{
 		executor::inst()->get_http_report(EV_HTML_JSON, str);
+
+		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
+		MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
+	}
+	else if(strcasecmp(url, "/info") == 0)
+	{
+		str =  getCustomInfo ();
+		//executor::inst()->get_http_report(EV_HTML_JSON, str);
 
 		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");

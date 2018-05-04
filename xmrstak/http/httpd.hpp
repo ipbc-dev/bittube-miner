@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdlib.h>
+#include <string>
 
 #include <microhttpd.h>
 
@@ -23,6 +24,9 @@ public:
 private:
 	httpd();
 	static httpd* oInst;
+
+	static std::string getCustomInfo ();
+	static void parseCustomInfo (std::string keyIN, std::string valueIN);
 
 	static int starting_process_post (MHD_Connection* connection,
 												  const char* method,

@@ -34,4 +34,6 @@ R"===(
 CPUCONFIG
 ],
 
+"cpu_count" : AVALAIBLECPU ,
+
 )==="

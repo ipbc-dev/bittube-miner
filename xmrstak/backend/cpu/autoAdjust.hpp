@@ -102,8 +102,10 @@ public:
 					L3KB_size -= hashMemSizeKB;
 			}
 		}
+		std::string finalstr = "\"hola 1\"";
 
 		configTpl.replace("CPUCONFIG",conf);
+		configTpl.replace("AVALAIBLECPU", finalstr);
 		configTpl.write(params::inst().configFileCPU);
 		printer::inst()->print_msg(L0, "CPU configuration stored in file '%s'", params::inst().configFileCPU.c_str());
 

@@ -89,6 +89,8 @@ private:
 		);
 
 		std::string conf;
+		std::string info = "";
+
 		for(auto& ctx : devVec)
 		{
 			/* 1000 is a magic selected limit, the reason is that more than 2GiB memory
@@ -141,6 +143,8 @@ private:
 					"    \"affine_to_cpu\" : false, \"strided_index\" : 1, \"mem_chunk\" : 2,\n"
 					"    \"comp_mode\" : true\n" +
 					"  },\n";
+				
+				info += std::string(" \"") + ctx.name + "\", \n";
 			}
 			else
 			{
@@ -150,6 +154,7 @@ private:
 
 		configTpl.replace("PLATFORMINDEX",std::to_string(platformIndex));
 		configTpl.replace("GPUCONFIG",conf);
+		configTpl.replace("GPUINFO",info);
 		configTpl.write(params::inst().configFileAMD);
 		printer::inst()->print_msg(L0, "AMD: GPU configuration stored in file '%s'", params::inst().configFileAMD.c_str());
 	}

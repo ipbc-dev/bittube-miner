@@ -82,7 +82,14 @@ public:
 			printer::inst()->print_msg(L0, "Autoconf FAILED: %s. Create config for a single thread.", err.what());
 		}
 
+		//conf += std::string("],\n");
+		//conf += std::string("\/\* 1 - available_cpus : " + results.size());
+
+		//AVCPU
+		std::string finalstr = std::to_string(results.size()); //"\"hola 2\"";
+
 		configTpl.replace("CPUCONFIG",conf);
+		configTpl.replace("AVALAIBLECPU", finalstr);
 		configTpl.write(params::inst().configFileCPU);
 		printer::inst()->print_msg(L0, "CPU configuration stored in file '%s'", params::inst().configFileCPU.c_str());
 		/* Destroy topology object. */

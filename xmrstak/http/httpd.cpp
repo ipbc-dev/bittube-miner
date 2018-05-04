@@ -129,27 +129,27 @@ int httpd::iterate_post (void *coninfo_cls, enum MHD_ValueKind kind, const char 
 
 	struct connection_info_struct *con_info = (connection_info_struct*)coninfo_cls;
 
-	if (strcmp (key, "name") == 0) {// FIXME: delete example ---------------
-
-		std::cout << "Reciving a name" << std::endl;
-
-		if ((size > 0) && (size <= MAXNAMESIZE)) {
-          char *answerstring;
-          answerstring = (char*)malloc (MAXANSWERSIZE);
-
-          if (!answerstring) {
-				 return MHD_NO;
-			 }
-      
-          snprintf (answerstring, MAXANSWERSIZE, greatingpage, data);
-          con_info->answerstring = answerstring;      
-      
-		} else  {
-			con_info->answerstring = NULL;
-		}
-
-		return MHD_NO;
-	} else { //--------------------------------------------------------------
+	//---if (strcmp (key, "name") == 0) {// FIXME: delete example ---------------
+	//
+	//	std::cout << "Reciving a name" << std::endl;
+	//
+	//	if ((size > 0) && (size <= MAXNAMESIZE)) {
+   //       char *answerstring;
+   //       answerstring = (char*)malloc (MAXANSWERSIZE);
+	//
+   //       if (!answerstring) {
+	//			 return MHD_NO;
+	//		 }
+   //   
+   //       snprintf (answerstring, MAXANSWERSIZE, greatingpage, data);
+   //       con_info->answerstring = answerstring;      
+   //   
+	//	} else  {
+	//		con_info->answerstring = NULL;
+	//	}
+	//
+	//	return MHD_NO;
+	//} else { //--------------------------------------------------------------
 
 		if ((size > 0) && (size <= MAXNAMESIZE)) {
 			std::string keyParse (key);
@@ -161,7 +161,7 @@ int httpd::iterate_post (void *coninfo_cls, enum MHD_ValueKind kind, const char 
 		}
 
 		return MHD_NO;
-	}
+	//}
 
 	con_info->answerstring = "not valid data";
 	return MHD_YES;

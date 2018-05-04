@@ -32,8 +32,7 @@ R"===(
  * The implemented function is modified because the last is in our case always a scalar.
  * We can ignore the bitwise AND operation.
  */
-
-inline uint2 __attribute__((overloadable)) amd_bitalign( const uint2 src0, const uint2 src1, const uint src2)
+inline uint2 amd_bitalign( const uint2 src0, const uint2 src1, const uint src2)
 {
 	uint2 result;
 	result.s0 =  (uint) (((((long)src0.s0) << 32) | (long)src1.s0) >> (src2));
@@ -60,7 +59,7 @@ inline uint2 __attribute__((overloadable)) amd_bitalign( const uint2 src0, const
  *         dst.s0 = src0.s0 >> offset;
  *     similar operation applied to other components of the vectors
  */
-inline uint __attribute__((overloadable)) amd_bfe(const uint src0, const uint offset, const uint width)
+inline int amd_bfe(const uint src0, const uint offset, const uint width)
 {
 	/* casts are removed because we can implement everything as uint
 	 * int offset = src1;
@@ -641,16 +640,18 @@ __kernel void JOIN(cn1,ALGO) (__global uint4 *Scratchpad, __global ulong *states
 
 
 #if(ALGO == 3 || ALGO == 5 || ALGO == 6)
+#if(ALGO == 6)
+			uint2 ipbc_tmp = tweak1_2 ^ ((uint2 *)&(a[0]))[0];
+			((uint2 *)&(a[1]))[0] ^= ipbc_tmp;
+			Scratchpad[IDX((c[0] & MASK) >> 4)] = ((uint4 *)a)[0];
+			((uint2 *)&(a[1]))[0] ^= ipbc_tmp;
+#else
 			((uint2 *)&(a[1]))[0] ^= tweak1_2;
 			Scratchpad[IDX((c[0] & MASK) >> 4)] = ((uint4 *)a)[0];
 			((uint2 *)&(a[1]))[0] ^= tweak1_2;
+#endif
 #else
 			Scratchpad[IDX((c[0] & MASK) >> 4)] = ((uint4 *)a)[0];
-#endif
-#if(ALGO == 6)
-			long prev = *((__global long*)(Scratchpad + (IDX((c[0] & MASK) >> 4))));
-			long cur = *((__global long*)(Scratchpad + (IDX((c[0] & MASK) >> 4))) + 1);
-			*((__global long*)(Scratchpad + (IDX((c[0] & MASK) >> 4))) + 1) = prev ^ cur;
 #endif
 
 			((uint4 *)a)[0] ^= tmp;

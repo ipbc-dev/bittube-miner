@@ -36,6 +36,14 @@
 #include <string.h>
 #include <string>
 
+#include <iostream>
+#include <fstream>
+
+#include "xmrstak/rapidjson/document.h"
+#include "xmrstak/rapidjson/istreamwrapper.h"
+
+#include <regex>
+
 //#include <microhttpd.h>
 #ifdef _WIN32
 #define strcasecmp _stricmp
@@ -102,9 +110,85 @@ int httpd::send_page (struct MHD_Connection *connection, const char *page) {
  * Description: obtain data to send to frontend
  */
 std::string httpd::getCustomInfo () {
-	std::string result = "";
+	std::string result = "{ \"cpu_count\" : ";
 
-	//TODO: ...
+	// check if exist cpu.txt file and load cpu count
+	std::ifstream cpuFile("./cpu.txt");
+
+   if(cpuFile.fail()){
+        std::cout << "cpu.txt file NOT exists 001\n" << std::endl;
+		  result += std::string("" + -1);
+   } else {
+		std::cout << "cpu.txt file exists\n" << std::endl;
+
+		std::regex regPattern("\.*\(cpu_count\)\.*\([0-9]\+\)\.*");
+		std::smatch base_match;
+
+		std::cout << "------------------------------------------------------------------------------" << std::endl;
+		for( std::string line; std::getline( cpuFile, line ); ) {
+
+			std::cout << line << std::endl;
+			if (std::regex_match(line, base_match, regPattern)) {
+				std::cout << "Found cpu_count value: " << base_match[2] << std::endl;
+				result += base_match[2];
+			}
+		}
+		std::cout << "------------------------------------------------------------------------------" << std::endl;
+		std::cout << result << std::endl;
+
+
+		//std::ifstream ifs("./cpu.txt");
+		//---rapidjson::IStreamWrapper isw(cpuFile);
+		//---rapidjson::Document d;
+		//---d.ParseStream(isw);
+
+		//---std::cout << "File parsed: " << std::endl;
+
+		//---if (d.HasMember("cpu_threads_conf")) {
+		//---	int cpuCount = 1 ;//d["cpu_count"].GetInt();
+
+		//---	std::cout << "Found cpu_count value: " << cpuCount << std::endl;
+		//---} else {
+		//---	std::cout << "Not found cpu_count value" << std::endl;
+		//---}
+	}
+
+
+
+	// check if exist nvidia.txt file and load nvidia names string
+	std::ifstream nvidiaFile("./nvidia.txt");
+
+	if(nvidiaFile.fail()){
+		std::cout << "nvidia.txt file couldn\'t be opened (not existing or failed to open)\n";
+	} else { 
+		//TODO: ...
+	}
+
+	//---if (std::fstream{"./nvidia.txt"}) {
+	//---	std::cout << "nvidia.txt file exists\n";
+	//---} else {
+	//---	std::cerr << "nvidia.txt file couldn\'t be opened (not existing or failed to open)\n";
+	//---}
+
+
+
+	// check if exist amd.txt file and load amd names string
+	std::ifstream amdFile("./amd.txt");
+
+	if(amdFile.fail()){
+		std::cout << "nvidia.txt file couldn\'t be opened (not existing or failed to open)\n";
+	} else { 
+		//TODO: ...
+	}
+
+	//---if (std::fstream{"./amd.txt"}) {
+	//---	std::cout << "amd.txt file exists\n";
+	//---} else {
+	//---	std::cerr << "amd.txt file couldn\'t be opened (not existing or failed to open)\n";
+	//---}
+
+	// return string(json) with all data
+	// ...
 
 	return result;
 }
@@ -376,8 +460,9 @@ int httpd::req_handler(void * cls,
 	return ret;
 }
 
-bool httpd::start_daemon()
-{
+bool httpd::start_daemon() {
+	getCustomInfo (); //FIXME: only for testing, deleting this line when work done
+
 	d = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION,
 		jconf::inst()->GetHttpdPort(), NULL, NULL,
 		&httpd::req_handler,

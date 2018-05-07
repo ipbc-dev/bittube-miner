@@ -152,43 +152,94 @@ std::string httpd::getCustomInfo () {
 		//---	std::cout << "Not found cpu_count value" << std::endl;
 		//---}
 	}
+	result += ", \n";
 
 
-
+	result += "\"nvidia_list\" : [";
+	bool initArray = false;
+	bool primera = true;
 	// check if exist nvidia.txt file and load nvidia names string
-	std::ifstream nvidiaFile("./nvidia.txt");
+	std::ifstream nvidiaFile("./nvidiaTMP.txt");
 
 	if(nvidiaFile.fail()){
 		std::cout << "nvidia.txt file couldn\'t be opened (not existing or failed to open)\n";
 	} else { 
-		//TODO: ...
+		std::cout << "nvidia.txt file exists\n" << std::endl;
+
+		std::regex mainPattern("\.*\(gpu_info\)\.*");
+		std::regex namePattern("\.*\(\"\.*\"\)\.*");
+		std::regex endPattern("\.*\],\.*");
+		std::smatch base_match;
+
+		std::cout << "------------------------------------------------------------------------------" << std::endl;
+		for( std::string line; std::getline( nvidiaFile, line ); ) {
+			std::cout << line << std::endl;
+
+			if (initArray && std::regex_match(line, endPattern)) {
+				std::cout << ">>>>>----Found end of array" << std::endl;
+				initArray = false;
+			} else if (initArray) {
+				if (std::regex_match(line, base_match, namePattern)) {
+					std::cout << ">>>>>---- Found end of name" << std::endl;
+					if (primera) {
+						primera = false;
+					} else {
+						result += ", \n";
+					}
+					result += base_match[1];
+				}
+			} else if (!initArray && std::regex_match(line, mainPattern)) {
+				std::cout << ">>>>>---- Found gpu_info value" << std::endl;
+				initArray = true;
+			}
+		}
 	}
-
-	//---if (std::fstream{"./nvidia.txt"}) {
-	//---	std::cout << "nvidia.txt file exists\n";
-	//---} else {
-	//---	std::cerr << "nvidia.txt file couldn\'t be opened (not existing or failed to open)\n";
-	//---}
+	result += "], \n";
 
 
-
+	result += "\"amd_list\" : [";
+	initArray = false;
+	primera = true;
 	// check if exist amd.txt file and load amd names string
 	std::ifstream amdFile("./amd.txt");
 
 	if(amdFile.fail()){
-		std::cout << "nvidia.txt file couldn\'t be opened (not existing or failed to open)\n";
+		std::cout << "amd.txt file couldn\'t be opened (not existing or failed to open)\n";
 	} else { 
-		//TODO: ...
+		std::cout << "amd.txt file exists\n" << std::endl;
+
+		std::regex mainPattern("\.*\(gpu_info\)\.*");
+		std::regex namePattern("\.*\(\"\.*\"\)\.*");
+		std::regex endPattern("\.*\],\.*");
+		std::smatch base_match;
+
+		std::cout << "------------------------------------------------------------------------------" << std::endl;
+		for( std::string line; std::getline( amdFile, line ); ) {
+			std::cout << line << std::endl;
+
+			if (initArray && std::regex_match(line, endPattern)) {
+				std::cout << ">>>>>----Found end of array" << std::endl;
+				initArray = false;
+			} else if (initArray) {
+				if (std::regex_match(line, base_match, namePattern)) {
+					std::cout << ">>>>>---- Found end of name" << std::endl;
+					if (primera) {
+						primera = false;
+					} else {
+						result += ", \n";
+					}
+					result += base_match[1];
+				}
+			} else if (!initArray && std::regex_match(line, mainPattern)) {
+				std::cout << ">>>>>---- Found gpu_info value" << std::endl;
+				initArray = true;
+			}
+		}
 	}
+	result += "] } \n";
 
-	//---if (std::fstream{"./amd.txt"}) {
-	//---	std::cout << "amd.txt file exists\n";
-	//---} else {
-	//---	std::cerr << "amd.txt file couldn\'t be opened (not existing or failed to open)\n";
-	//---}
-
-	// return string(json) with all data
-	// ...
+	std::cout << "--------------------------------<<" << std::endl;
+	std::cout << result << std::endl;
 
 	return result;
 }

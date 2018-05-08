@@ -9,15 +9,18 @@ struct MHD_Daemon;
 struct MHD_Connection;
 //enum MHD_ValueKind: int;
 //enum MHD_RequestTerminationCode: int;
+struct config_data;
 
-class httpd
-{
+class httpd {
+
 public:
 	static httpd* inst() {
 
 		if (oInst == nullptr) oInst = new httpd;
 		return oInst;
 	};
+
+	static config_data* miner_config;
 
 	bool start_daemon();
 
@@ -26,7 +29,8 @@ private:
 	static httpd* oInst;
 
 	static std::string getCustomInfo ();
-	static void parseCustomInfo (std::string keyIN, std::string valueIN);
+	static bool parseCustomInfo (std::string keyIN, std::string valueIN);
+	static void updateConfigFiles ();
 
 	static int starting_process_post (MHD_Connection* connection,
 												  const char* method,
@@ -47,7 +51,7 @@ private:
 									 uint64_t off, 
 									 size_t size);
 
-	void request_completed (void *cls, 
+	static void request_completed (void *cls, 
 									struct MHD_Connection *connection, 
 									void **con_cls,
 									enum MHD_RequestTerminationCode toe);

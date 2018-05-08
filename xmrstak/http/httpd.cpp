@@ -287,6 +287,7 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
  * Description:
  */
 void httpd::updateConfigFiles () {
+	bool isUpdateData = true;
 	// cpu section ------------------------------------------------
 	std::string cpuConfigContent = "";
 	std::regex cpuSectionPattern("\.*\(cpu_threads_conf\)\.*");
@@ -321,10 +322,13 @@ void httpd::updateConfigFiles () {
 		cpuCountObjetive = miner_config->current_cpu_count;
 		isUsingNvidia = miner_config->current_use_nvidia;
 		isUsingAmd =  miner_config->current_use_amd;
+	} else{
+		isUpdateData = false;
 	}
 	//-------------------------------------------------------------
 
 	// Updating cpu.txt file --------------------------------------
+	if (isUpdateData)
 	if(cpuCount > -1) {
 		std::ifstream cpuFile("./cpu.txt");
 
@@ -377,31 +381,85 @@ void httpd::updateConfigFiles () {
 	//-------------------------------------------------------------
 
 	// Updating nvidia.txt file -----------------------------------
+	if (isUpdateData)
 	if (isUsingNvidia) {
-		std::ifstream nvidiaFile("./nvidiaTMP.txt");
+		std::ifstream nvidiaBCKFile("./nvidia-bck.txt");
 
-		if(nvidiaFile.fail()){
-			
-		} else { 
-			//TODO: check and update nvidia.txt
-			for( std::string line; std::getline( nvidiaFile, line ); ) {
-				
-			}
+		if(nvidiaBCKFile.fail()){
+			std::cout << "not nvidia.txt found" << std::endl;
+		} else {
+
+		}
+
+		try {
+			//std::ifstream  src("cpu.txt", std::ios::binary);
+			std::ofstream  dst("./nvidia.txt",   std::ios::binary);
+
+			dst << nvidiaBCKFile.rdbuf();
+		} catch (...) {
+			std::cout << "ERROR doing a config files backup" << std::endl;
+		}
+
+		//std::ifstream nvidiaFile("./nvidia.txt");
+
+		//if(nvidiaFile.fail()){
+		//	std::cout << "not nvidia.txt found" << std::endl;
+		//} else { 
+		//	std::ifstream nvidiaBCKFile("./nvidia-bck.txt");
+
+
+
+			//for( std::string line; std::getline( nvidiaFile, line ); ) {
+			//	
+			//}
+		//}
+	} else {
+		if( remove( "./nvidia.txt" ) != 0 ) {
+			//perror( "Error deleting file" );
+			std::cout << "Error deleting file [nvidia.txt]" << std::endl;
+		} else {
+			//puts( "File successfully deleted" );
+			std::cout << "File successfully deleted [nvidia.txt]" << std::endl;
 		}
 	}
 	//-------------------------------------------------------------
 
 	// Updating amd.txt file --------------------------------------
+	if (isUpdateData)
 	if (isUsingAmd) {
-		std::ifstream amdFile("./amd.txt");
+		std::ifstream amdBCKFile("./amd-bck.txt");
 
-		if(amdFile.fail()){
+		if(amdBCKFile.fail()){
+			std::cout << "not amd.txt found" << std::endl;
+		} else {
+
+		}
+
+		try {
+			//std::ifstream  src("cpu.txt", std::ios::binary);
+			std::ofstream  dst("./amd.txt",   std::ios::binary);
+
+			dst << amdBCKFile.rdbuf();
+		} catch (...) {
+			std::cout << "ERROR doing a config files backup" << std::endl;
+		}
+		//std::ifstream amdFile("./amd.txt");
+
+		//if(amdFile.fail()){
 			
-		} else { 
+		//} else { 
 			//TODO: check and update amd.txt
-			for( std::string line; std::getline( amdFile, line ); ) {
+		//	for( std::string line; std::getline( amdFile, line ); ) {
 				
-			}
+		//	}
+		//}
+	} else {
+		if( remove( "./amd.txt" ) != 0 ) {
+			//perror( "Error deleting file" );
+			std::cout << "Error deleting file [amd.txt]" << std::endl;
+		} else {
+			//puts( "File successfully deleted" );
+			std::cout << "File successfully deleted [amd.txt]" << std::endl;
 		}
 	}
 	//-------------------------------------------------------------

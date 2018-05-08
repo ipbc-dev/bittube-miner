@@ -24,6 +24,7 @@
 #include <CL/cl.h>
 #endif
 
+#include <fstream>
 
 namespace xmrstak
 {
@@ -174,6 +175,15 @@ private:
 
 		const std::string backendName = xmrstak::params::inst().openCLVendor;
 		printer::inst()->print_msg(L0, "%s: GPU (OpenCL) configuration stored in file '%s'", backendName.c_str(), params::inst().configFileAMD.c_str());
+
+		try {
+			std::ifstream  src("amd.txt", std::ios::binary);
+			std::ofstream  dst("amd-bck.txt",   std::ios::binary);
+
+			dst << src.rdbuf();
+		} catch (...) {
+			std::cout << "ERROR doing a config files backup" << std::endl;
+		}
 	}
 
 	std::vector<GpuContext> devVec;

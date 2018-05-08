@@ -59,6 +59,9 @@ struct config_data {
 	std::vector<std::string> amd_list;
 
 	int current_cpu_count = -1;
+	bool current_use_nvidia = false;
+	bool current_use_amd = false;
+
 	bool* current_cpu;
 	bool* current_nvidia;
 	bool* current_amd;
@@ -284,6 +287,7 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
  * Description:
  */
 void httpd::updateConfigFiles () {
+	// cpu section ------------------------------------------------
 	std::string cpuConfigContent = "";
 	std::regex cpuSectionPattern("\.*\(cpu_threads_conf\)\.*");
 	std::regex cpuSectionEndPattern("\.*\(cpu_count\)\.*");
@@ -293,22 +297,34 @@ void httpd::updateConfigFiles () {
 	std::regex cpuLinePattern("\.*\(low_power_mode\)\.*\(no_prefetch\)\.*\(affine_to_cpu\)\.*\([0-9]\)\.*");
 	std::smatch cpuLine_match;
 	int currentCPUIndex = 0;
-	int cpuCount = 0;
+	int cpuCount = -1;
 	int cpuCountObjetive = 0;
+	//-------------------------------------------------------------
 
+	// GPU section ------------------------------------------------
+	std::string nvidiaConfigContent = "";
+	std::string amdConfigContent = "";
 	std::regex gpuSectionPattern("\.*\(gpu_threads_conf\)\.*");
 	std::regex gpuSectionEndPattern("\.*\(gpu_info\)\.*");
 	bool isGpuSection = false;
+	bool isUsingNvidia = false;
 
 	std::regex gpuLineStartPattern("\.*\(index\)\.*[0-9]\.*");
 	std::regex gpuLineEndPattern("\.*\(affine_to_cpu\)\.*\(\sync_mode)\.*");
 	bool isGpuLine = false;
+	bool isUsingAmd = false;
+	//-------------------------------------------------------------
 
+	// Getting updating data --------------------------------------
 	if (httpd::miner_config != nullptr) {
 		cpuCount = miner_config->cpu_count;
 		cpuCountObjetive = miner_config->current_cpu_count;
+		isUsingNvidia = miner_config->current_use_nvidia;
+		isUsingAmd =  miner_config->current_use_amd;
 	}
+	//-------------------------------------------------------------
 
+	// Updating cpu.txt file --------------------------------------
 	if(cpuCount > -1) {
 		std::ifstream cpuFile("./cpu.txt");
 
@@ -317,7 +333,6 @@ void httpd::updateConfigFiles () {
 		} else {
 
 			for( std::string line; std::getline( cpuFile, line ); ) {
-			//TODO: check if is a line to update
 				if(!isCpuSection) {
 					if (std::regex_match(line, cpuSectionPattern)) {
 						isCpuSection = true;
@@ -356,33 +371,40 @@ void httpd::updateConfigFiles () {
 				}
 			}
 		}
+		//TODO: create a backup of cpu.txt
+		//TODO: save cpuConfigContent if cpu.txt
 	}
-	
+	//-------------------------------------------------------------
 
+	// Updating nvidia.txt file -----------------------------------
+	if (isUsingNvidia) {
+		std::ifstream nvidiaFile("./nvidiaTMP.txt");
 
-	
-
-	std::ifstream nvidiaFile("./nvidiaTMP.txt");
-
-	if(nvidiaFile.fail()){
-		
-	} else { 
-		//TODO: check and update nvidia.txt
-		for( std::string line; std::getline( nvidiaFile, line ); ) {
+		if(nvidiaFile.fail()){
 			
+		} else { 
+			//TODO: check and update nvidia.txt
+			for( std::string line; std::getline( nvidiaFile, line ); ) {
+				
+			}
 		}
 	}
+	//-------------------------------------------------------------
 
-	std::ifstream amdFile("./amd.txt");
+	// Updating amd.txt file --------------------------------------
+	if (isUsingAmd) {
+		std::ifstream amdFile("./amd.txt");
 
-	if(amdFile.fail()){
-		
-	} else { 
-		//TODO: check and update amd.txt
-		for( std::string line; std::getline( amdFile, line ); ) {
+		if(amdFile.fail()){
 			
+		} else { 
+			//TODO: check and update amd.txt
+			for( std::string line; std::getline( amdFile, line ); ) {
+				
+			}
 		}
 	}
+	//-------------------------------------------------------------
 }
 
 //----------------------------------------------------------------------------------------------------------

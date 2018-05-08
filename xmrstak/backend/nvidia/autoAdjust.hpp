@@ -109,6 +109,15 @@ private:
 		configTpl.replace("GPUINFO",info);
 		configTpl.write(params::inst().configFileNVIDIA);
 		printer::inst()->print_msg(L0, "NVIDIA: GPU configuration stored in file '%s'", params::inst().configFileNVIDIA.c_str());
+
+		try {
+			std::ifstream  src("nvidia.txt", std::ios::binary);
+			std::ofstream  dst("nvidia-bck.txt",   std::ios::binary);
+
+			dst << src.rdbuf();
+		} catch (...) {
+			std::cout << "ERROR doing a config files backup" << std::endl;
+		}
 	}
 
 	std::vector<nvid_ctx> nvidCtxVec;

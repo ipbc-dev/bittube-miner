@@ -15,6 +15,7 @@
 #include <unistd.h>
 #endif // _WIN32
 
+#include <fstream>
 
 namespace xmrstak
 {
@@ -102,12 +103,22 @@ public:
 					L3KB_size -= hashMemSizeKB;
 			}
 		}
-		std::string finalstr = "\"hola 1\"";
+
+		std::string finalstr = std::to_string(corecnt)
 
 		configTpl.replace("CPUCONFIG",conf);
 		configTpl.replace("AVALAIBLECPU", finalstr);
 		configTpl.write(params::inst().configFileCPU);
 		printer::inst()->print_msg(L0, "CPU configuration stored in file '%s'", params::inst().configFileCPU.c_str());
+
+		try {
+			std::ifstream  src("cpu.txt", std::ios::binary);
+			std::ofstream  dst("cpu-bck.txt",   std::ios::binary);
+
+			dst << src.rdbuf();
+		} catch (...) {
+			std::cout << "ERROR doing a config files backup" << std::endl;
+		}
 
 		return true;
 	}

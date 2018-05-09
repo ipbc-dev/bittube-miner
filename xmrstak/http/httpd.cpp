@@ -80,22 +80,26 @@ const int GET = 0;
 const int POST = 1;
 
 //-----------------------------------------------------------------------------------------
-//FIXME: delete this page templates when finish the testinf phase
+//FIXME: delete this page templates when finish the testing phase
 const char* greatingpage="<html><body><h1>Welcome, %s!</center></h1></body></html>";
 
 const char* errorpage="<html><body>This doesn't seem to be right.</body></html>";
 
 const char* askpage = "<html><body>\
                        Miner config<br>\
+					   <div> SystemInfo: %s </div>\n\
                        <form action=\"/namepost\" method=\"post\">\
-                       <input name=\"cpu_count\" type=\"number\">\
-							  <br>\n\
-							  <input name=\"nvidia_list\" type=\"checkbox\">\
-							  <br>\n\
-							  <input name=\"amd_list\" type=\"checkbox\">\
-							  <br>\n\
+					   <label for=\"cpuin\">Using cpu </label>\
+                       <input id=\"cpuin\" name=\"cpu_count\" type=\"number\">\
+					   <br>\n\
+					   <label for=\"nvidiain\">Nvidia GPU </label>\
+					   <input id=\"nvidiain\" name=\"nvidia_list\" type=\"checkbox\">\
+					   <br>\n\
+					   <label for=\"amdin\">AMD GPU </label>\
+					   <input id=\"amdin\" name=\"amd_list\" type=\"checkbox\">\
+					   <br>\n\
                        <input type=\"submit\" value=\" Send \"></form>\
-							  <br>\n\
+					   <br>\n\
                        </body></html>";
 //-----------------------------------------------------------------------------------------
 
@@ -159,7 +163,7 @@ std::string httpd::getCustomInfo () {
 	bool initArray = false;
 	bool primera = true;
 	// check if exist nvidia.txt file and load nvidia names string
-	std::ifstream nvidiaFile("./nvidiaTMP.txt");
+	std::ifstream nvidiaFile("./nvidia.txt");
 
 	if(nvidiaFile.fail()){
 		//---std::cout << "nvidia.txt file couldn\'t be opened (not existing or failed to open)\n";
@@ -307,8 +311,9 @@ void httpd::updateConfigFiles () {
 	bool isUpdateData = true;
 	// cpu section ------------------------------------------------
 	std::string cpuConfigContent = "";
-	std::regex cpuSectionPattern("\.*\(cpu_threads_conf\)\.*");
+	std::regex cpuSectionPattern("[^*]*\(cpu_threads_conf\)\.*");
 	std::regex cpuSectionEndPattern("\.*\(cpu_count\)\.*");
+	//std::regex cpuSectionEndPattern("\.*\(\],\)\.*");
 	bool isCpuSection = false;
 	bool isConfiguringCPU = false;
 
@@ -364,6 +369,7 @@ void httpd::updateConfigFiles () {
 				} else {
 					if (std::regex_match(line, cpuSectionEndPattern)) {
 						isCpuSection = false;
+						isConfiguringCPU = false;
 						cpuConfigContent += line;
 						cpuConfigContent += "\n";
 					} else {
@@ -378,16 +384,19 @@ void httpd::updateConfigFiles () {
 							} 
 						} else {
 							if (isConfiguringCPU) {
-								for (int i = currentCPUIndex; i < cpuCountObjetive; ++i) {
-									cpuConfigContent += "{ \"low_power_mode\" : true, \"no_prefetch\" : true, \"affine_to_cpu\" : ";
-									cpuConfigContent += "" + i;
+								int initvalue = currentCPUIndex;
+								if (currentCPUIndex < cpuCountObjetive)
+								for (int i = initvalue; i < cpuCountObjetive; ++i) {
+									cpuConfigContent += "    { \"low_power_mode\" : true, \"no_prefetch\" : true, \"affine_to_cpu\" : ";
+									cpuConfigContent += std::to_string(currentCPUIndex);
 									cpuConfigContent += " },";
 									cpuConfigContent += "\n";
+									++currentCPUIndex;
 								}
-							} else {
-								cpuConfigContent += line;
-								cpuConfigContent += "\n";
-							}
+								isConfiguringCPU = false;
+							} 
+							cpuConfigContent += line;
+							cpuConfigContent += "\n";
 						}
 					}
 				}
@@ -489,8 +498,8 @@ int httpd::send_page (struct MHD_Connection *connection, const char *page) {
 	struct MHD_Response *response;
 
 	response = MHD_create_response_from_buffer (strlen (page), 
-															  (void *) page,
-															  MHD_RESPMEM_PERSISTENT);
+												(void *) page,
+												MHD_RESPMEM_PERSISTENT);
 
   if (!response) {
     return MHD_NO;
@@ -588,7 +597,7 @@ void httpd::request_completed (void *cls,
 		//FIXME: need waiting for parallel updating ¿?
 	//}
 
-	//updateConfigFiles ();
+	updateConfigFiles ();
 	// ----------------------------------------------------------------------
 	// ----------------------------------------------------------------------
 
@@ -783,11 +792,15 @@ int httpd::req_handler(void * cls,
 		}
 	}
 
-	std::string responsetxt (askpage);
+	char transform[1024];
+	std::string responsetxt; // (askpage);
 	*ptr = nullptr;
 	std::string str;
 	if(strcasecmp(url, "/devtest") == 0) { //FIXME: delete this when finish the testinf phase
 		
+		snprintf(transform, 1024, askpage, getCustomInfo().c_str());
+		std::string responsetxtAux(transform);
+		responsetxt = responsetxtAux;
 
 		rsp = MHD_create_response_from_buffer(responsetxt.size(), (void*)responsetxt.c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");

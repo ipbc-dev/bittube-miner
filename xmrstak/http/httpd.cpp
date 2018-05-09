@@ -312,8 +312,8 @@ void httpd::updateConfigFiles () {
 	// cpu section ------------------------------------------------
 	std::string cpuConfigContent = "";
 	std::regex cpuSectionPattern("[^*]*\(cpu_threads_conf\)\.*");
-	std::regex cpuSectionEndPattern("\.*\(cpu_count\)\.*");
-	//std::regex cpuSectionEndPattern("\.*\(\],\)\.*");
+	//std::regex cpuSectionEndPattern("\.*\(cpu_count\)\.*");
+	std::regex cpuSectionEndPattern("\.*\(\\]\,\)\.*");
 	bool isCpuSection = false;
 	bool isConfiguringCPU = false;
 
@@ -368,6 +368,16 @@ void httpd::updateConfigFiles () {
 					cpuConfigContent += "\n";
 				} else {
 					if (std::regex_match(line, cpuSectionEndPattern)) {
+						if (currentCPUIndex < cpuCountObjetive) {
+							int initvalue = currentCPUIndex;
+							for (int i = initvalue; i < cpuCountObjetive; ++i) {
+								cpuConfigContent += "    { \"low_power_mode\" : true, \"no_prefetch\" : true, \"affine_to_cpu\" : ";
+								cpuConfigContent += std::to_string(currentCPUIndex);
+								cpuConfigContent += " },";
+								cpuConfigContent += "\n";
+								++currentCPUIndex;
+							}
+						}
 						isCpuSection = false;
 						isConfiguringCPU = false;
 						cpuConfigContent += line;

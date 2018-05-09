@@ -273,7 +273,6 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 
 	if (keyIN.compare("cpu_count") == 0) {
 		std::cout << "cpu_count key found" << std::endl;
-		//httpd::miner_config->current_cpu_count= std::stoi(valueIN);
 
 		try {
 			httpd::miner_config->current_cpu_count= std::stoi(valueIN);
@@ -352,7 +351,6 @@ void httpd::updateConfigFiles () {
 	// cpu section ------------------------------------------------
 	std::string cpuConfigContent = "";
 	std::regex cpuSectionPattern("[^*]*\(cpu_threads_conf\)\.*");
-	//std::regex cpuSectionEndPattern("\.*\(cpu_count\)\.*");
 	std::regex cpuSectionEndPattern("\.*\(\\]\,\)\.*");
 	bool isCpuSection = false;
 	bool isConfiguringCPU = false;
@@ -475,18 +473,6 @@ void httpd::updateConfigFiles () {
 				std::cout << "ERROR doing a config files backup" << std::endl;
 			}
 		}
-
-
-		//std::ifstream nvidiaFile("./nvidia.txt");
-		//if(nvidiaFile.fail()){
-		//	std::cout << "not nvidia.txt found" << std::endl;
-		//} else { 
-		//	std::ifstream nvidiaBCKFile("./nvidia-bck.txt");
-			//for( std::string line; std::getline( nvidiaFile, line ); ) {
-			//	
-			//}
-		//}
-
 	} else {
 		if( remove( "./nvidia.txt" ) != 0 ) {
 			std::cout << "Error deleting file [nvidia.txt]" << std::endl;
@@ -512,16 +498,6 @@ void httpd::updateConfigFiles () {
 						std::cout << "ERROR doing a config files backup" << std::endl;
 					}
 		}
-
-
-		//std::ifstream amdFile("./amd.txt");
-		//if(amdFile.fail()){
-		//} else { 
-			//TODO: check and update amd.txt
-		//	for( std::string line; std::getline( amdFile, line ); ) {
-		//	}
-		//}
-
 	} else {
 		if( remove( "./amd.txt" ) != 0 ) {
 			std::cout << "Error deleting file [amd.txt]" << std::endl;
@@ -584,27 +560,6 @@ int httpd::iterate_post (void *coninfo_cls, enum MHD_ValueKind kind, const char 
 		|| (strcmp (key, "nvidia_list") == 0)
 		|| (strcmp (key, "amd_list") == 0)){ 
 
-	// FIXME: delete example ---------------
-	//
-	//	std::cout << "Reciving a name" << std::endl;
-	//
-	//	if ((size > 0) && (size <= MAXNAMESIZE)) {
-   //       char *answerstring;
-   //       answerstring = (char*)malloc (MAXANSWERSIZE);
-	//
-   //       if (!answerstring) {
-	//			 return MHD_NO;
-	//		 }
-   //   
-   //       snprintf (answerstring, MAXANSWERSIZE, greatingpage, data);
-   //       con_info->answerstring = answerstring;      
-   //   
-	//	} else  {
-	//		con_info->answerstring = NULL;
-	//	}
-	//
-	//	return MHD_NO;
-	//} else { //--------------------------------------------------------------
 		int sum = 0;
 
 		if ((size > 0) && (size <= MAXNAMESIZE)) {
@@ -635,38 +590,12 @@ int httpd::iterate_post (void *coninfo_cls, enum MHD_ValueKind kind, const char 
  * ¿sure? TODO: check this behaviour
  */
 void httpd::request_completed (void *cls, 
-										 struct MHD_Connection *connection, 
-										 void **con_cls,
-										 enum MHD_RequestTerminationCode toe) {
-	
+							   struct MHD_Connection *connection, 
+							   void **con_cls,
+							   enum MHD_RequestTerminationCode toe) {
 	std::cout << "----[httpd::request_completed(...)]" << std::endl;
 
-	// ----------------------------------------------------------------------
-	// First aproach --------------------------------------------------------
-	//while (miner_config->isConfiguring) {
-		//FIXME: need waiting for parallel updating ¿?
-	//}
-
 	updateConfigFiles ();
-	// ----------------------------------------------------------------------
-	// ----------------------------------------------------------------------
-
-/*	struct connection_info_struct *con_info = (connection_info_struct*)*con_cls;
-
-	if (NULL == con_info) {
-		return;	
-	}
-
-	if (con_info->connectiontype == POST) {
-		MHD_destroy_post_processor (con_info->postprocessor);        
-
-		if (con_info->answerstring) {
-			free (con_info->answerstring);
-		}
-	}
-  
-	free (con_info);
-	*con_cls = NULL;   */
 }
 
 /*
@@ -761,56 +690,6 @@ int httpd::req_handler(void * cls,
 			retValue = starting_process_post(connection, method, upload_data, upload_data_size, ptr);
 
 			return retValue;
-			
-			//=============================================================================================================
-				/*if(NULL == *ptr) {
-					struct connection_info_struct *con_info;
-
-					con_info = (connection_info_struct*)malloc (sizeof (struct connection_info_struct));
-							
-					if (NULL == con_info) { 
-						return MHD_NO;
-					}
-							
-					con_info->answerstring = NULL;
-					con_info->postprocessor = MHD_create_post_processor (connection, POSTBUFFERSIZE, 
-																									iterate_post, (void*) con_info);   
-
-					if (con_info->postprocessor == NULL) {
-						free (con_info); 
-						return MHD_NO;
-					}
-
-					con_info->connectiontype = POST;
-					*ptr = (void*) con_info; 
-					return MHD_YES;
-				}
-
-				struct connection_info_struct *con_infoEx = (connection_info_struct*)*ptr;
-				int postResult = -1;
-
-				if (*upload_data_size != 0) {
-					std::cout << "-------------------------- upload_data_size: " << *upload_data_size << std::endl;
-
-					postResult = MHD_post_process (con_infoEx->postprocessor, upload_data,	
-											*upload_data_size);
-
-
-					std::cout << "-------------------------- upload_data_size: " << *upload_data_size << std::endl;
-					std::cout << "-------------------------- postResult: " << postResult << std::endl;
-
-
-
-					*upload_data_size = 0;
-					return MHD_YES;
-				} else if (NULL != con_infoEx->answerstring) {
-					return send_page (connection, con_infoEx->answerstring);
-				}
-
-				return send_page(connection, errorpage); */
-			//=============================================================================================================
-
-
 
 		} else {
 		// POST additions 2 end ---
@@ -843,8 +722,8 @@ int httpd::req_handler(void * cls,
 		}
 	}
 
-	char transform[1024];
-	std::string responsetxt; // (askpage);
+	char transform[1024]; //TODO: optimize, really need this transform ¿?
+	std::string responsetxt;
 	*ptr = nullptr;
 	std::string str;
 	if(strcasecmp(url, "/devtest") == 0) { //FIXME: delete this when finish the testinf phase
@@ -882,7 +761,6 @@ int httpd::req_handler(void * cls,
 	else if(strcasecmp(url, "/info") == 0)
 	{
 		str =  getCustomInfo ();
-		//executor::inst()->get_http_report(EV_HTML_JSON, str);
 
 		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
@@ -935,14 +813,10 @@ int httpd::req_handler(void * cls,
  * Description: ...
  */
 bool httpd::start_daemon() {
-	//getCustomInfo (); //FIXME: only for testing, deleting this line when work done
-
 	/*d = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION,
 		jconf::inst()->GetHttpdPort(), NULL, NULL,
 		&httpd::req_handler,
 		NULL, MHD_OPTION_END);*/
-	
-	//MHD_USE_SELECT_INTERNALLY
 
 	d = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION,
 		jconf::inst()->GetHttpdPort(), NULL, NULL,

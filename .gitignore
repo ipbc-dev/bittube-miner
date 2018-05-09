@@ -4,6 +4,8 @@ xmr-stak-cpu.layout
 xmr-stak-cpu.depend
 config-debug.txt
 doc/temp/
+build/
+linux-build/
 
 # netbeans project files
 /nbproject/

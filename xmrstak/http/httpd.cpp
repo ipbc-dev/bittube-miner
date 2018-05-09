@@ -88,7 +88,7 @@ const char* errorpage="<html><body>This doesn't seem to be right.</body></html>"
 const char* askpage = "<html><body>\
                        Miner config<br>\
 					   <div> SystemInfo: %s </div>\n\
-                       <form action=\"/namepost\" method=\"post\">\
+                       <form action=\"/config\" method=\"post\">\
 					   <label for=\"cpuin\">Using cpu </label>\
                        <input id=\"cpuin\" name=\"cpu_count\" type=\"number\">\
 					   <br>\n\
@@ -288,10 +288,50 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 		result = true;
 	} else if (keyIN.compare("nvidia_list") == 0) {
 		std::cout << "nvidia_list key found" << std::endl;
+		bool resultTmp = false;
+		if ((valueIN.compare("true") == 0) ||
+			(valueIN.compare("True") == 0) ||
+			(valueIN.compare("TRUE") == 0) ||
+			(valueIN.compare("1") == 0)) {
+			resultTmp = true;
+		}
+
+		try {
+			httpd::miner_config->current_use_nvidia = resultTmp;
+		}
+		catch (int param) {
+			std::cout << "int exception";
+		}
+		catch (char param) {
+			std::cout << "char exception";
+		}
+		catch (...) {
+			std::cout << "default exception";
+		}
 
 		result = true;
 	} else if (keyIN.compare("amd_list") == 0) {
 		std::cout << "amd_list key found" << std::endl;
+		bool resultTmp = false;
+		if ((valueIN.compare("true") == 0) ||
+			(valueIN.compare("True") == 0) ||
+			(valueIN.compare("TRUE") == 0) ||
+			(valueIN.compare("1") == 0)) {
+			resultTmp = true;
+		}
+
+		try {
+			httpd::miner_config->current_use_amd = resultTmp;
+		}
+		catch (int param) {
+			std::cout << "int exception";
+		}
+		catch (char param) {
+			std::cout << "char exception";
+		}
+		catch (...) {
+			std::cout << "default exception";
+		}
 
 		result = true;
 	} else {
@@ -715,7 +755,8 @@ int httpd::req_handler(void * cls,
 	if (strcmp(method, "GET") != 0) {
 		//--------------------------------------------------------------------------------------
 		// POST additions 2 start ---
-		if (strcmp(method, "POST") == 0) {
+		if ((strcmp(method, "POST") == 0) &&
+			(strcasecmp(url, "/config") == 0)) {
 
 			retValue = starting_process_post(connection, method, upload_data, upload_data_size, ptr);
 

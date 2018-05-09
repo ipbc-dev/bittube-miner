@@ -28,6 +28,21 @@ private:
 	httpd();
 	static httpd* oInst;
 
+	static std::string parseCPUFile();
+	static std::string parseGPUNvidiaFile();
+	static std::string parseGPUAMD();
+	static std::string parseConfigFile();
+	static std::string parsePoolFile();
+
+	static bool updateCPUFile();
+	static bool updateGPUNvidiaFile();
+	static bool updateGPUAMD();
+	static bool updateConfigFile();
+	static bool updatePoolFile();
+
+	static bool parsePostInfo();
+
+
 	static std::string getCustomInfo ();
 	static bool parseCustomInfo (std::string keyIN, std::string valueIN);
 	static void updateConfigFiles ();

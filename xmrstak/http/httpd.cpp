@@ -21,6 +21,24 @@
   *
   */
 
+/*
+ * TODO:
+ *	- get and config http port throw post:
+ *     - create backup of config.txt -> in ./xmrstack/cli/cli-miner -> do_guided_config() [366]
+ *     - parse config.txt to get http port
+ *     - save port (default and custom) on runtime memory
+ *     - get port from post
+ *     - update config.txt
+ *
+ *  - get and config [pool adress, wallet id] throw post:
+ *     - create backup of pool.txt -> in ./xmrstack/cli/cli-miner -> do_guided_pool_config() [324]
+ *     - parse pool.txt to get the interesting data
+ *     - save data on runtime menory
+ *     - get data from post
+ *     - update pool.txt
+ *
+ */
+
 #ifndef CONF_NO_HTTPD
 
 
@@ -44,16 +62,19 @@
 
 #include <regex>
 
-//#include <microhttpd.h>
 #ifdef _WIN32
 #define strcasecmp _stricmp
 #endif // _WIN32
 
+#pragma region typesAndConfig 
 //----------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------
-// POST additions start ---
+// http types and configuration - start --------------------------------------------------------------------
 
 struct config_data {
+	int http_port = 1600;
+	std::string pool_adress = "pool.ipbc.io:13333";
+	std::string wallet_id = "";
+
 	bool isConfiguring = false;//FIXME: really needed, there is posible parallel updatings¿?
 
 	int cpu_count = -1;
@@ -68,10 +89,13 @@ struct config_data {
 	bool* current_nvidia; //TODO: using for disable concrete gpu, not only gpu process or not
 	bool* current_amd; //TODO: using for disable concrete gpu, not only gpu process or not
 
-	int sizeLeft = 0;
 };
 
-config_data* httpd::miner_config = nullptr;
+struct connection_info_struct {
+	int connectiontype;
+	char *answerstring;
+	struct MHD_PostProcessor *postprocessor;
+};
 
 const int POSTBUFFERSIZE = 512;
 const int MAXNAMESIZE = 20;
@@ -79,7 +103,16 @@ const int MAXANSWERSIZE = 512;
 const int GET = 0;
 const int POST = 1;
 
-//-----------------------------------------------------------------------------------------
+config_data* httpd::miner_config = nullptr;
+
+// http types and configuration - end ----------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------
+#pragma endregion
+
+#pragma region httpTemplates 
+//----------------------------------------------------------------------------------------------------------
+// Dev and test http templates - start ---------------------------------------------------------------------
+
 //FIXME: delete this page templates when finish the testing phase
 const char* greatingpage="<html><body><h1>Welcome, %s!</center></h1></body></html>";
 
@@ -88,29 +121,170 @@ const char* errorpage="<html><body>This doesn't seem to be right.</body></html>"
 const char* askpage = "<html><body>\
                        Miner config<br>\
 					   <div> SystemInfo: %s </div>\n\
+					   <hr>\
                        <form action=\"/config\" method=\"post\">\
-					   <label for=\"cpuin\">Using cpu </label>\
-                       <input id=\"cpuin\" name=\"cpu_count\" type=\"number\">\
-					   <br>\n\
-					   <label for=\"nvidiain\">Nvidia GPU </label>\
-					   <input id=\"nvidiain\" name=\"nvidia_list\" type=\"checkbox\">\
-					   <br>\n\
-					   <label for=\"amdin\">AMD GPU </label>\
-					   <input id=\"amdin\" name=\"amd_list\" type=\"checkbox\">\
-					   <br>\n\
-                       <input type=\"submit\" value=\" Send \"></form>\
+						  <label for=\"portin\">Http port: </label>\
+                          <input id=\"portin\" name=\"http_port\" type=\"number\">\
+						  <hr>\
+						  <label for=\"poolin\">Pool adress: </label>\
+                          <input id=\"poolin\" name=\"pool_adress\" type=\"number\">\
+						  <label for=\"walletin\">Wallet id: </label>\
+                          <input id=\"walletin\" name=\"wallet_id\" type=\"number\">\
+						  <hr>\
+					      <label for=\"cpuin\">Using cpu </label>\
+                          <input id=\"cpuin\" name=\"cpu_count\" type=\"number\">\
+					      <br>\n\
+						  <hr>\
+					      <label for=\"nvidiain\">Nvidia GPU </label>\
+					      <input id=\"nvidiain\" name=\"nvidia_list\" type=\"checkbox\">\
+					      <br>\n\
+					      <label for=\"amdin\">AMD GPU </label>\
+					      <input id=\"amdin\" name=\"amd_list\" type=\"checkbox\">\
+					      <br>\n\
+                          <input type=\"submit\" value=\" Send \">\
+					   </form>\
 					   <br>\n\
                        </body></html>";
-//-----------------------------------------------------------------------------------------
 
-struct connection_info_struct {
-  int connectiontype;
-  char *answerstring;
-  struct MHD_PostProcessor *postprocessor; 
-};
+// Dev and test http templates - end -----------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------
+#pragma endregion
 
+#pragma region gettingData 
 //----------------------------------------------------------------------------------------------------------
+// Getting data from config files - start ------------------------------------------------------------------
+
+/*
+ * Description: 
+ */
+std::string httpd::parseCPUFile() {
+	std::string result = "";
+
+	return result;
+}
+
+/*
+ * Description:
+ */
+std::string httpd::parseGPUNvidiaFile() {
+	std::string result = "";
+
+	return result;
+}
+
+/*
+ * Description:
+ */
+std::string httpd::parseGPUAMD() {
+	std::string result = "";
+
+	return result;
+}
+
+/*
+ * Description:
+ */
+std::string httpd::parseConfigFile() {
+	std::string result = "";
+
+	return result;
+}
+
+/*
+ * Description:
+ */
+std::string httpd::parsePoolFile() {
+	std::string result = "";
+
+	return result;
+}
+
+// Getting data from config files - end --------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------
+#pragma endregion
+
+#pragma region updatingFiles
+//----------------------------------------------------------------------------------------------------------
+// Updating config files - start ---------------------------------------------------------------------------
+
+/*
+ * Description:
+ */
+bool httpd::updateCPUFile() {
+	bool result = false;
+
+	return result;
+}
+
+/*
+ * Description:
+ */
+bool httpd::updateGPUNvidiaFile() {
+	bool result = false;
+
+	return result;
+}
+
+/*
+ * Description:
+ */
+bool httpd::updateGPUAMD() {
+	bool result = false;
+
+	return result;
+}
+
+/*
+ * Description:
+ */
+bool httpd::updateConfigFile() {
+	bool result = false;
+
+	return result;
+}
+
+/*
+ * Description:
+ */
+bool httpd::updatePoolFile() {
+	bool result = false;
+
+	return result;
+}
+
+// Updating config files - end -----------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------
+#pragma endregion
+
+#pragma region httpFunctionalities
+//----------------------------------------------------------------------------------------------------------
+// http functionalities - start ----------------------------------------------------------------------------
+
+/*
+ * Description:
+ */
+bool httpd::parsePostInfo() {
+	bool result = false;
+
+	return result;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*
  * Description: obtain data to send to frontend
@@ -560,22 +734,13 @@ int httpd::iterate_post (void *coninfo_cls, enum MHD_ValueKind kind, const char 
 		|| (strcmp (key, "nvidia_list") == 0)
 		|| (strcmp (key, "amd_list") == 0)){ 
 
-		int sum = 0;
-
 		if ((size > 0) && (size <= MAXNAMESIZE)) {
 			std::string keyParse (key);
-			sum += keyParse.size();
-
 			std::string valueParse (data);
-			sum += valueParse.size();
 
 			parseCustomInfo (keyParse, valueParse);
 			con_info->answerstring = "ok";
 
-			std::cout << "data count: " << sum << std::endl;
-			if (httpd::miner_config != nullptr) {
-				httpd::miner_config->sizeLeft = sum;
-			}
 		}  else  {
 			con_info->answerstring = NULL;
 		}
@@ -832,6 +997,8 @@ bool httpd::start_daemon() {
 
 	return true;
 }
-
+// http functionalities - end ------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------
+#pragma endregion
 #endif
 

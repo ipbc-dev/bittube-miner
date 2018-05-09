@@ -1,6 +1,5 @@
 bin/
 obj/
-build/
 xmr-stak-cpu.layout
 xmr-stak-cpu.depend
 config-debug.txt

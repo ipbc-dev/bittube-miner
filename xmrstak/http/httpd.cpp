@@ -25,20 +25,21 @@
  * TODO:
  *	+- simple refactor current code 
  *
- *	- get and config http port throw post:
+ *	+- get and config http port throw post:
  *     +- create backup of config.txt -> in ./xmrstack/cli/cli-miner -> do_guided_config() [366]
  *     +- parse config.txt to get http port
  *     +- save port (default and custom) on runtime memory
- *     - get port from post
+ *     +- get port from post
  *     +- update config.txt
  *
- *  - get and config [pool adress, wallet id] throw post:
+ *  +- get and config [pool adress, wallet id] throw post:
  *     +- create backup of pool.txt -> in ./xmrstack/cli/cli-miner -> do_guided_pool_config() [324]
  *     +- parse pool.txt to get the interesting data
  *     +- save data on runtime menory
- *     - get data[pool adress, wallet id] from post
+ *     +- get data[pool adress, wallet id] from post
  *     +- update pool.txt
  *
+ *  - Test all this changes
  */
 
 #ifndef CONF_NO_HTTPD
@@ -113,6 +114,14 @@ const int POST = 1;
 
 config_data* httpd::miner_config = nullptr;
 
+httpd* httpd::oInst = nullptr;
+
+httpd::httpd() {
+	if (httpd::miner_config == nullptr) {
+		httpd::miner_config = new config_data();
+	}
+}
+
 // http types and configuration - end ----------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------
 #pragma endregion
@@ -163,7 +172,7 @@ const char* askpage = "<html><body>\
 // Getting data from config files - start ------------------------------------------------------------------
 
 /*
- * Description: 
+ * Description: Get important configuration data from cpu.txt
  */
 std::string httpd::parseCPUFile() {
 	std::string result = "";
@@ -198,7 +207,7 @@ std::string httpd::parseCPUFile() {
 }
 
 /*
- * Description:
+ * Description: Get important configuration data from nvidia.txt
  */
 std::string httpd::parseGPUNvidiaFile() {
 	std::string result = "";
@@ -250,7 +259,7 @@ std::string httpd::parseGPUNvidiaFile() {
 }
 
 /*
- * Description:
+ * Description: Get important configuration data from amd.txt
  */
 std::string httpd::parseGPUAMD() {
 	std::string result = "";
@@ -303,7 +312,7 @@ std::string httpd::parseGPUAMD() {
 }
 
 /*
- * Description:
+ * Description: Get important configuration data from config.txt
  */
 std::string httpd::parseConfigFile() {
 	std::string result = "";
@@ -337,7 +346,7 @@ std::string httpd::parseConfigFile() {
 }
 
 /*
- * Description:
+ * Description: Get important configuration data from pools.txt
  */
 std::string httpd::parsePoolFile() {
 	std::string result = "";
@@ -386,7 +395,7 @@ std::string httpd::parsePoolFile() {
 // Updating config files - start ---------------------------------------------------------------------------
 
 /*
- * Description:
+ * Description: Update cpu.txt with new config data
  */
 bool httpd::updateCPUFile() {
 	bool result = false;
@@ -503,7 +512,7 @@ bool httpd::updateCPUFile() {
 }
 
 /*
- * Description:
+ * Description: Update nvidia.txt with new config data
  */
 bool httpd::updateGPUNvidiaFile() {
 	bool result = false;
@@ -568,7 +577,7 @@ bool httpd::updateGPUNvidiaFile() {
 }
 
 /*
- * Description:
+ * Description: Update amd.txt with new config data
  */
 bool httpd::updateGPUAMD() {
 	bool result = false;
@@ -633,7 +642,7 @@ bool httpd::updateGPUAMD() {
 }
 
 /*
- * Description:
+ * Description: Update config.txt with new config data
  */
 bool httpd::updateConfigFile() {
 	bool result = false;
@@ -698,7 +707,7 @@ bool httpd::updateConfigFile() {
 }
 
 /*
- * Description:
+ * Description: Update pools.txt with new config data
  */
 bool httpd::updatePoolFile() {
 	bool result = false;
@@ -780,31 +789,6 @@ bool httpd::updatePoolFile() {
 //----------------------------------------------------------------------------------------------------------
 // http functionalities - start ----------------------------------------------------------------------------
 
-/*
- * Description:
- */
-bool httpd::parsePostInfo() {
-	bool result = false;
-
-	return result;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*
  * Description: obtain data to send to frontend
@@ -812,7 +796,26 @@ bool httpd::parsePostInfo() {
  * TODO: Optimize using, not parsing config files for every get request
  */
 std::string httpd::getCustomInfo () {
-	bool filldata = false;
+	std::string result = "";
+	std::string partialRes = "-1";
+
+	partialRes = parseCPUFile();
+	partialRes += parseGPUNvidiaFile();
+	partialRes += parseGPUAMD();
+	partialRes += parseConfigFile();
+	partialRes += parsePoolFile();
+	
+	if ((partialRes.compare("-1") != 0) &&
+		!(partialRes.empty())){
+
+		result = " { ";
+		result += partialRes;
+		result += " } ";
+	}
+	return result;
+	
+	//FIXME: delete this backup code when the current bahaviour are tested
+	/*bool filldata = false;
 
 	if (httpd::miner_config == NULL) {
 		httpd::miner_config = new config_data();
@@ -948,13 +951,11 @@ std::string httpd::getCustomInfo () {
 	//---std::cout << "--------------------------------<<" << std::endl;
 	//---std::cout << result << std::endl;
 
-	return result;
+	return result;*/
 }
 
 /*
  * Description: parsing data received from frontend
- * 
- *  TODO: 
  */
 bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 	bool result = false;
@@ -988,20 +989,7 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 			(valueIN.compare("1") == 0)) {
 			resultTmp = true;
 		}
-
-		try {
-			httpd::miner_config->current_use_nvidia = resultTmp;
-		}
-		catch (int param) {
-			std::cout << "int exception";
-		}
-		catch (char param) {
-			std::cout << "char exception";
-		}
-		catch (...) {
-			std::cout << "default exception";
-		}
-
+		httpd::miner_config->current_use_nvidia = resultTmp;
 		result = true;
 	} else if (keyIN.compare("amd_list") == 0) {
 		std::cout << "amd_list key found" << std::endl;
@@ -1012,9 +1000,14 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 			(valueIN.compare("1") == 0)) {
 			resultTmp = true;
 		}
+		httpd::miner_config->current_use_amd = resultTmp;
+		result = true;
+	}
+	else if (keyIN.compare("httpd_port") == 0) {
+		std::cout << "httpd_port key found" << std::endl;
 
 		try {
-			httpd::miner_config->current_use_amd = resultTmp;
+			httpd::miner_config->http_port = std::stoi(valueIN);
 		}
 		catch (int param) {
 			std::cout << "int exception";
@@ -1025,23 +1018,44 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 		catch (...) {
 			std::cout << "default exception";
 		}
+	
+	}
+	else if (keyIN.compare("pool_address") == 0) {
+		std::cout << "pool_address key found" << std::endl;
 
-		result = true;
-	} else {
+		httpd::miner_config->pool_address = std::stoi(valueIN);
+
+	}
+	else if (keyIN.compare("wallet_address") == 0) {
+		std::cout << "wallet_address key found" << std::endl;
+
+		httpd::miner_config->wallet_address = std::stoi(valueIN);
+	}
+	else {
 		std::cout << "Key not found!!" << std::endl;
 	}
-
 	return result;
 }
 
 
 /*
- * Description:
- * 
- * TODO: select a concrete cpu or gpu to disable or enable, not only using counters
+ * Description: updates all config files with new config data
  */
 void httpd::updateConfigFiles () {
-	bool isUpdateData = true;
+	bool result = false;
+
+	if (!(updateCPUFile() ||
+		updateGPUNvidiaFile() ||
+		updateGPUAMD() ||
+		updateConfigFile() ||
+		updatePoolFile())) {
+		std::cout << "Something went wrong with updating config files" << std::endl;
+
+		//TODO: error hadling
+	}
+
+	//FIXME: delete this backup code when the current bahaviour are tested
+	/*bool isUpdateData = true;
 	// cpu section ------------------------------------------------
 	std::string cpuConfigContent = "";
 	std::regex cpuSectionPattern("[^*]*\(cpu_threads_conf\)\.*");
@@ -1202,7 +1216,7 @@ void httpd::updateConfigFiles () {
 	//-------------------------------------------------------------
 	if (httpd::miner_config != nullptr) {
 		miner_config->isConfiguring = false;
-	}
+	}*/
 }
 
 //----------------------------------------------------------------------------------------------------------
@@ -1210,8 +1224,6 @@ void httpd::updateConfigFiles () {
 
 /*
  *	Description: sending reponses to frontend 
- *
- * TODO: change name and refactor to optimize function for sending json data not html
  */
 int httpd::send_page (struct MHD_Connection *connection, const char *page) {
 	int ret;
@@ -1232,9 +1244,7 @@ int httpd::send_page (struct MHD_Connection *connection, const char *page) {
 }
 
 /*
- * Description: Function called for every ¿Post chunk?
- * 
- * TODO: check why this function is only calling with the first field of the post form
+ * Description: Function called for every post field
  */
 int httpd::iterate_post (void *coninfo_cls, enum MHD_ValueKind kind, const char *key,
 								 const char *filename, const char *content_type,
@@ -1272,7 +1282,6 @@ int httpd::iterate_post (void *coninfo_cls, enum MHD_ValueKind kind, const char 
 
 /*
  * Description: Function called when the post finish 
- * ¿sure? TODO: check this behaviour
  */
 void httpd::request_completed (void *cls, 
 							   struct MHD_Connection *connection, 
@@ -1340,18 +1349,10 @@ int httpd::starting_process_post (MHD_Connection* connection,
 
 	return send_page(connection, errorpage);
 }
-// POST additions end ---
-//----------------------------------------------------------------------------------------------------------
 
-
-httpd* httpd::oInst = nullptr;
-
-httpd::httpd() {
-	if (httpd::miner_config != nullptr) {
-		httpd::miner_config = new config_data();
-	}
-}
-
+/*
+ * Description: Function called for every http request
+ */
 int httpd::req_handler(void * cls,
 							  MHD_Connection* connection,
 							  const char* url,
@@ -1371,18 +1372,12 @@ int httpd::req_handler(void * cls,
 	int retValue;
 
 	if (strcmp(method, "GET") != 0) {
-		//--------------------------------------------------------------------------------------
-		// POST additions 2 start ---
 		if ((strcmp(method, "POST") == 0) &&
 			(strcasecmp(url, "/config") == 0)) {
 
 			retValue = starting_process_post(connection, method, upload_data, upload_data_size, ptr);
-
 			return retValue;
-
 		} else {
-		// POST additions 2 end ---
-		//--------------------------------------------------------------------------------------
 			return MHD_NO;
 		}
 	}
@@ -1499,7 +1494,7 @@ int httpd::req_handler(void * cls,
 }
 
 /*
- * Description: ...
+ * Description: Starting the http daemon
  */
 bool httpd::start_daemon() {
 	/*d = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION,

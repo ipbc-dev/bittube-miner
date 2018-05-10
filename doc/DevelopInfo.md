@@ -10,7 +10,7 @@ Using new http features (microhttpd)
   If you set http port to 1600
 
   - [Develop page for testing](http://localhost:1600/devtest)  
-  - To get json config info from app, send a get request to http://localhost:1600/info
+  - To get json config info from app, send a get request to http://localhost:1600/info  
       Example result:  
 
       ```javascript  

@@ -17,7 +17,10 @@ Using new http features (microhttpd)
 		{  
 		  "cpu_count" : 4,  
 		  "nvidia_list" : [],  
-		  "amd_list" : []  
+		  "amd_list" : [],  
+		  "httpd_port" : 1600,
+		  "pool_address" : "pool.ipbc.io:13333",
+		  "wallet_address" : "someWalletHashAddress..."
 		}  
       '''  
 
@@ -28,6 +31,9 @@ Using new http features (microhttpd)
 		{
 		  "cpu_count" : 1,
 		  "nvidia_list" : false,
-		  "amd_list" : false
+		  "amd_list" : false,
+		  "httpd_port" : 1600,
+		  "pool_address" : "pool.ipbc.io:13333",
+		  "wallet_address" : "someWalletHashAddress..."
 		}
       '''

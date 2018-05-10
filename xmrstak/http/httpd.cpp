@@ -23,19 +23,21 @@
 
 /*
  * TODO:
+ *	+- simple refactor current code 
+ *
  *	- get and config http port throw post:
- *     - create backup of config.txt -> in ./xmrstack/cli/cli-miner -> do_guided_config() [366]
- *     - parse config.txt to get http port
- *     - save port (default and custom) on runtime memory
+ *     +- create backup of config.txt -> in ./xmrstack/cli/cli-miner -> do_guided_config() [366]
+ *     +- parse config.txt to get http port
+ *     +- save port (default and custom) on runtime memory
  *     - get port from post
- *     - update config.txt
+ *     +- update config.txt
  *
  *  - get and config [pool adress, wallet id] throw post:
- *     - create backup of pool.txt -> in ./xmrstack/cli/cli-miner -> do_guided_pool_config() [324]
- *     - parse pool.txt to get the interesting data
- *     - save data on runtime menory
- *     - get data from post
- *     - update pool.txt
+ *     +- create backup of pool.txt -> in ./xmrstack/cli/cli-miner -> do_guided_pool_config() [324]
+ *     +- parse pool.txt to get the interesting data
+ *     +- save data on runtime menory
+ *     - get data[pool adress, wallet id] from post
+ *     +- update pool.txt
  *
  */
 
@@ -72,8 +74,8 @@
 
 struct config_data {
 	int http_port = 1600;
-	std::string pool_adress = "pool.ipbc.io:13333";
-	std::string wallet_id = "";
+	std::string pool_address = "pool.ipbc.io:13333";
+	std::string wallet_address = "";
 
 	bool isConfiguring = false;//FIXME: really needed, there is posible parallel updatings¿?
 
@@ -305,7 +307,32 @@ std::string httpd::parseGPUAMD() {
  */
 std::string httpd::parseConfigFile() {
 	std::string result = "";
+	std::regex regPattern("[^*]*\(httpd_port\)\.*\([0-9]\+\)\.*");
+	std::smatch base_match;
 
+	//TODO: check if we have parse this info before
+
+	std::ifstream configFile(CONFIG_FILE);
+
+	if (configFile.fail()) {
+		//---std::cout << "config.txt file NOT exists 001\n" << std::endl;
+
+		//TODO: error handling. Search for cpu backup file and try to get info there  
+
+	} else {
+		//---std::cout << "config.txt file exists\n" << std::endl;
+		for (std::string line; std::getline(configFile, line); ) {
+			//---std::cout << line << std::endl;
+			if (std::regex_match(line, base_match, regPattern)) {
+				//---std::cout << "Found httpd_port value: " << base_match[2] << std::endl;
+				result = " \"httpd_port\" : ";
+				result += base_match[2];
+				result += ", \n";
+				httpd::miner_config->http_port = std::stoi(base_match[2]);
+			}
+		}
+		//---std::cout << result << std::endl;
+	}
 	return result;
 }
 
@@ -314,6 +341,38 @@ std::string httpd::parseConfigFile() {
  */
 std::string httpd::parsePoolFile() {
 	std::string result = "";
+	std::regex regPattern("[^*]*\(pool_address\)\.*[:]\.*\(\"[a-zA-Z0-9:]+\"\)\.*[,]\.*\(wallet_address\)\.*[:]\.*\(\"[a-zA-Z0-9]+\"\)\.*[,]\.*");
+	std::smatch base_match;
+
+	//TODO: check if we have parse this info before
+
+	std::ifstream poolFile(POOL_FILE);
+
+	if (poolFile.fail()) {
+		//---std::cout << "pool.txt file NOT exists 001\n" << std::endl;
+
+		//TODO: error handling. Search for pool backup file and try to get info there  
+
+	} else {
+		//---std::cout << "pool.txt file exists\n" << std::endl;
+		for (std::string line; std::getline(poolFile, line); ) {
+			//---std::cout << line << std::endl;
+			if (std::regex_match(line, base_match, regPattern)) {
+				//---std::cout << "Found pool_address value: " << base_match[2] << " and wallet_address value: " << base_match[3] << std::endl;
+
+				result = " \"pool_address\" : ";
+				result += base_match[2];
+				result += ", \n";
+				httpd::miner_config->pool_address = std::stoi(base_match[2]);
+
+				result = " \"wallet_address\" : ";
+				result += base_match[4];
+				result += ", \n";
+				httpd::miner_config->wallet_address = std::stoi(base_match[4]);
+			}
+		}
+		//---std::cout << result << std::endl;
+	}
 
 	return result;
 }
@@ -578,6 +637,62 @@ bool httpd::updateGPUAMD() {
  */
 bool httpd::updateConfigFile() {
 	bool result = false;
+	bool isUpdateData = true;
+
+	std::regex regPattern("[^*]*\(httpd_port\)\.*\([0-9]\+\)\.*");
+	std::smatch base_match;
+	int httpdPort = -1;
+
+	std::string genConfigContent = "";
+
+	if (httpd::miner_config != nullptr) {
+		httpdPort = miner_config->http_port;
+
+		//miner_config->isConfiguring = true;
+	} else {
+		isUpdateData = false;
+
+		//TODO: error handling
+
+	}
+
+	//TODO: check if needed to update cpu.txt with the new config
+
+	// Updating cpu.txt file --------------------------------------
+	if (isUpdateData) {
+		if (httpdPort > -1) {
+			std::ifstream configFile(CONFIG_FILE);
+
+			if (configFile.fail()) {
+				std::cout << "not config.txt found" << std::endl;
+
+				//TODO: error handling. Search for cpu backup file and try to get info there  
+
+			} else {
+				//---std::cout << "config.txt file exists\n" << std::endl;
+				for (std::string line; std::getline(configFile, line); ) {
+					if (std::regex_match(line, base_match, regPattern)) {
+					
+						genConfigContent += "\"httpd_port\" : " + httpdPort;
+						genConfigContent += ", \n";
+
+					} else {
+						genConfigContent += line;
+						genConfigContent += "\n";
+					}
+				}
+			}
+			configFile.close();
+			std::ofstream out(CONFIG_FILE);
+			out << genConfigContent;
+			out.close();
+		}
+
+		//TODO: check if cpu.txt file was updated and set result value
+
+		result = true;
+	}
+	//-------------------------------------------------------------
 
 	return result;
 }
@@ -587,6 +702,72 @@ bool httpd::updateConfigFile() {
  */
 bool httpd::updatePoolFile() {
 	bool result = false;
+	bool isUpdateData = true;
+
+	std::regex regPattern("[^*]*\(pool_address\)\.*[:]\.*\(\"[a-zA-Z0-9:]+\"\)\.*[,]\.*\(wallet_address\)\.*[:]\.*\(\"[a-zA-Z0-9]+\"\)\.*[,]\.*");
+	std::smatch base_match;
+	std::string poolAddress = "-1";
+	std::string walletAddress = "-1";
+
+	std::string poolConfigContent = "";
+
+	if (httpd::miner_config != nullptr) {
+		poolAddress = miner_config->pool_address;
+		walletAddress = miner_config->wallet_address;
+
+		//miner_config->isConfiguring = true;
+	} else {
+		isUpdateData = false;
+
+		//TODO: error handling
+
+	}
+
+	//TODO: check if needed to update cpu.txt with the new config
+
+	// Updating cpu.txt file --------------------------------------
+	if (isUpdateData) {
+		if ((poolAddress.compare("-1") != 0) &&
+			(walletAddress.compare("-1") != 0)) {
+			
+			std::ifstream poolFile(POOL_FILE);
+
+			if (poolFile.fail()) {
+				std::cout << "not config.txt found" << std::endl;
+
+				//TODO: error handling. Search for cpu backup file and try to get info there  
+
+			} else {
+				//---std::cout << "config.txt file exists\n" << std::endl;
+				for (std::string line; std::getline(poolFile, line); ) {
+					if (std::regex_match(line, base_match, regPattern)) {
+
+						poolConfigContent += "{\"pool_address\" : \"";
+						poolConfigContent += poolAddress;
+						poolConfigContent += "\", \"wallet_address\" : \"";
+						poolConfigContent += walletAddress;
+						poolConfigContent += "\", \"rig_id\" : \"\", ";
+						poolConfigContent += "\"pool_password\" : \"x\", ";
+						poolConfigContent += "\"use_nicehash\" : false, ";
+						poolConfigContent += "\"use_tls\" : false, ";
+						poolConfigContent += "\"tls_fingerprint\" : \"\", ";
+						poolConfigContent += "\"pool_weight\" : 1 }, ";
+						poolConfigContent += "\n";
+
+					} else {
+						poolConfigContent += line;
+						poolConfigContent += "\n";
+					}
+				}
+			}
+
+		}
+
+		//TODO: check if cpu.txt file was updated and set result value
+
+		result = true;
+	}
+	//-------------------------------------------------------------
 
 	return result;
 }

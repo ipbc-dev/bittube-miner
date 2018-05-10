@@ -322,6 +322,15 @@ void do_guided_pool_config()
 	configTpl.replace("POOLCONF", pool_table);
 	configTpl.write(params::inst().configFilePools);
 	std::cout<<"Pool configuration stored in file '"<<params::inst().configFilePools<<"'"<<std::endl;
+	try {
+		std::ifstream  src("pools.txt", std::ios::binary);
+		std::ofstream  dst("pools-bck.txt", std::ios::binary);
+
+		dst << src.rdbuf();
+	}
+	catch (...) {
+		std::cout << "ERROR doing a config files backup" << std::endl;
+	}
 }
 
 void do_guided_config()
@@ -364,6 +373,16 @@ void do_guided_config()
 	configTpl.replace("HTTP_PORT", std::to_string(http_port));
 	configTpl.write(params::inst().configFile);
 	std::cout<<"Configuration stored in file '"<<params::inst().configFile<<"'"<<std::endl;
+
+	try {
+		std::ifstream  src("config.txt", std::ios::binary);
+		std::ofstream  dst("config-bck.txt", std::ios::binary);
+
+		dst << src.rdbuf();
+	}
+	catch (...) {
+		std::cout << "ERROR doing a config files backup" << std::endl;
+	}
 }
 
 int main(int argc, char *argv[])

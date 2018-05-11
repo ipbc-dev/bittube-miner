@@ -39,7 +39,7 @@
  *     +- get data[pool adress, wallet id] from post
  *     +- update pool.txt
  *
- *  - Test all this changes
+ *  +- Test all this changes
  */
 
 #ifndef CONF_NO_HTTPD
@@ -88,9 +88,9 @@ struct config_data {
 	bool current_use_nvidia = false;
 	bool current_use_amd = false;
 
-	bool* current_cpu;//TODO: using for disable concrete cpu not only the counter
-	bool* current_nvidia; //TODO: using for disable concrete gpu, not only gpu process or not
-	bool* current_amd; //TODO: using for disable concrete gpu, not only gpu process or not
+	//bool* current_cpu;//TODO: using for disable concrete cpu not only the counter
+	//bool* current_nvidia; //TODO: using for disable concrete gpu, not only gpu process or not
+	//bool* current_amd; //TODO: using for disable concrete gpu, not only gpu process or not
 
 };
 
@@ -119,6 +119,7 @@ httpd* httpd::oInst = nullptr;
 httpd::httpd() {
 	if (httpd::miner_config == nullptr) {
 		httpd::miner_config = new config_data();
+		getCustomInfo();
 	}
 }
 
@@ -141,12 +142,12 @@ const char* askpage = "<html><body>\
 					   <hr>\
                        <form action=\"/config\" method=\"post\">\
 						  <label for=\"portin\">Http port: </label>\
-                          <input id=\"portin\" name=\"http_port\" type=\"number\">\
+                          <input id=\"portin\" name=\"httpd_port\" type=\"number\">\
 						  <hr>\
 						  <label for=\"poolin\">Pool adress: </label>\
-                          <input id=\"poolin\" name=\"pool_adress\" type=\"number\">\
+                          <input id=\"poolin\" name=\"pool_address\" type=\"text\">\
 						  <label for=\"walletin\">Wallet id: </label>\
-                          <input id=\"walletin\" name=\"wallet_id\" type=\"number\">\
+                          <input id=\"walletin\" name=\"wallet_address\" type=\"text\">\
 						  <hr>\
 					      <label for=\"cpuin\">Using cpu </label>\
                           <input id=\"cpuin\" name=\"cpu_count\" type=\"number\">\
@@ -213,7 +214,7 @@ std::string httpd::parseGPUNvidiaFile() {
 	std::string result = "";
 	std::regex mainPattern("\.*\(gpu_info\)\.*");
 	std::regex namePattern("\.*\(\"\.*\"\)\.*");
-	std::regex endPattern("\.*\],\.*");
+	std::regex endPattern("\.*\\],\.*");
 	std::smatch base_match;
 
 	bool initArray = false;
@@ -265,7 +266,7 @@ std::string httpd::parseGPUAMD() {
 	std::string result = "";
 	std::regex mainPattern("\.*\(gpu_info\)\.*");
 	std::regex namePattern("\.*\(\"\.*\"\)\.*");
-	std::regex endPattern("\.*\],\.*");
+	std::regex endPattern("\.*\\],\.*");
 	std::smatch base_match;
 
 	bool initArray = false;
@@ -316,7 +317,7 @@ std::string httpd::parseGPUAMD() {
  */
 std::string httpd::parseConfigFile() {
 	std::string result = "";
-	std::regex regPattern("[^*]*\(httpd_port\)\.*\([0-9]\+\)\.*");
+	std::regex regPattern("[^*]*\(httpd_port\)\.*[:][^0-9]*\([0-9]+\)\.*[,]\.*");
 	std::smatch base_match;
 
 	//TODO: check if we have parse this info before
@@ -350,7 +351,7 @@ std::string httpd::parseConfigFile() {
  */
 std::string httpd::parsePoolFile() {
 	std::string result = "";
-	std::regex regPattern("[^*]*\(pool_address\)\.*[:]\.*\(\"[a-zA-Z0-9:]+\"\)\.*[,]\.*\(wallet_address\)\.*[:]\.*\(\"[a-zA-Z0-9]+\"\)\.*[,]\.*");
+	std::regex regPattern("[^*]*\(pool_address\)\.*[:][^\"]*\(\"[a-zA-Z0-9.]+[:][0-9]+\"\)\.*[,]\.*(wallet_address)\.*[:]\.*(\"[a-zA-Z0-9]+\")\.*rig_id\.*");
 	std::smatch base_match;
 
 	//TODO: check if we have parse this info before
@@ -369,15 +370,17 @@ std::string httpd::parsePoolFile() {
 			if (std::regex_match(line, base_match, regPattern)) {
 				//---std::cout << "Found pool_address value: " << base_match[2] << " and wallet_address value: " << base_match[3] << std::endl;
 
+				//result += line;
+				//result += "\n";
 				result = " \"pool_address\" : ";
 				result += base_match[2];
 				result += ", \n";
-				httpd::miner_config->pool_address = std::stoi(base_match[2]);
+				httpd::miner_config->pool_address = base_match[2];
 
-				result = " \"wallet_address\" : ";
+				result += " \"wallet_address\" : ";
 				result += base_match[4];
 				result += ", \n";
-				httpd::miner_config->wallet_address = std::stoi(base_match[4]);
+				httpd::miner_config->wallet_address = base_match[4];
 			}
 		}
 		//---std::cout << result << std::endl;
@@ -648,8 +651,9 @@ bool httpd::updateConfigFile() {
 	bool result = false;
 	bool isUpdateData = true;
 
-	std::regex regPattern("[^*]*\(httpd_port\)\.*\([0-9]\+\)\.*");
-	std::smatch base_match;
+	std::regex regPattern("[^*]*\(httpd_port\)\.*[:][^0-9]*\([0-9]+\)\.*[,]\.*");
+	//std::regex regPattern("[^*]*\(httpd_port\)\.*\([0-9]\+\)\.*");
+	//std::smatch base_match;
 	int httpdPort = -1;
 
 	std::string genConfigContent = "";
@@ -657,6 +661,7 @@ bool httpd::updateConfigFile() {
 	if (httpd::miner_config != nullptr) {
 		httpdPort = miner_config->http_port;
 
+		//std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   httpd_port key loaded [" << httpdPort << "] " << std::endl;
 		//miner_config->isConfiguring = true;
 	} else {
 		isUpdateData = false;
@@ -680,9 +685,10 @@ bool httpd::updateConfigFile() {
 			} else {
 				//---std::cout << "config.txt file exists\n" << std::endl;
 				for (std::string line; std::getline(configFile, line); ) {
-					if (std::regex_match(line, base_match, regPattern)) {
+					if (std::regex_match(line, regPattern)) {
 					
-						genConfigContent += "\"httpd_port\" : " + httpdPort;
+						genConfigContent += "\"httpd_port\" : ";
+						genConfigContent += std::to_string(httpdPort);
 						genConfigContent += ", \n";
 
 					} else {
@@ -713,7 +719,8 @@ bool httpd::updatePoolFile() {
 	bool result = false;
 	bool isUpdateData = true;
 
-	std::regex regPattern("[^*]*\(pool_address\)\.*[:]\.*\(\"[a-zA-Z0-9:]+\"\)\.*[,]\.*\(wallet_address\)\.*[:]\.*\(\"[a-zA-Z0-9]+\"\)\.*[,]\.*");
+	std::regex regPattern("[^*]*\(pool_address\)\.*[:][^\"]*\(\"[a-zA-Z0-9.]+[:][0-9]+\"\)\.*[,]\.*(wallet_address)\.*[:]\.*(\"[a-zA-Z0-9]+\")\.*rig_id\.*");
+	//std::regex regPattern("[^*]*\(pool_address\)\.*[:]\.*\(\"[a-zA-Z0-9:]+\"\)\.*[,]\.*\(wallet_address\)\.*[:]\.*\(\"[a-zA-Z0-9]+\"\)\.*[,]\.*");
 	std::smatch base_match;
 	std::string poolAddress = "-1";
 	std::string walletAddress = "-1";
@@ -724,6 +731,7 @@ bool httpd::updatePoolFile() {
 		poolAddress = miner_config->pool_address;
 		walletAddress = miner_config->wallet_address;
 
+		//std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   pool_address key loaded [" << poolAddress << "] " << std::endl;
 		//miner_config->isConfiguring = true;
 	} else {
 		isUpdateData = false;
@@ -750,6 +758,7 @@ bool httpd::updatePoolFile() {
 				//---std::cout << "config.txt file exists\n" << std::endl;
 				for (std::string line; std::getline(poolFile, line); ) {
 					if (std::regex_match(line, base_match, regPattern)) {
+						std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   pool_address key loaded [" << poolAddress << "] " << std::endl;
 
 						poolConfigContent += "{\"pool_address\" : \"";
 						poolConfigContent += poolAddress;
@@ -769,7 +778,10 @@ bool httpd::updatePoolFile() {
 					}
 				}
 			}
-
+			poolFile.close();
+			std::ofstream out(POOL_FILE);
+			out << poolConfigContent;
+			out.close();
 		}
 
 		//TODO: check if cpu.txt file was updated and set result value
@@ -810,7 +822,7 @@ std::string httpd::getCustomInfo () {
 
 		result = " { ";
 		result += partialRes;
-		result += " } ";
+		result += " } \n";
 	}
 	return result;
 	
@@ -960,9 +972,9 @@ std::string httpd::getCustomInfo () {
 bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 	bool result = false;
 
-	if (httpd::miner_config == NULL) {
-		getCustomInfo ();
-	}
+	//if (httpd::miner_config == NULL) {
+	//	getCustomInfo ();
+	//}
 
 	std::cout << "Parsing post data \n   - key: " << keyIN << " \n   - value: " << valueIN << std::endl;
 
@@ -981,7 +993,7 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 
 		result = true;
 	} else if (keyIN.compare("nvidia_list") == 0) {
-		std::cout << "nvidia_list key found" << std::endl;
+		//std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   nvidia_list key found" << std::endl;
 		bool resultTmp = false;
 		if ((valueIN.compare("true") == 0) ||
 			(valueIN.compare("True") == 0) ||
@@ -992,7 +1004,7 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 		httpd::miner_config->current_use_nvidia = resultTmp;
 		result = true;
 	} else if (keyIN.compare("amd_list") == 0) {
-		std::cout << "amd_list key found" << std::endl;
+		//std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   amd_list key found" << std::endl;
 		bool resultTmp = false;
 		if ((valueIN.compare("true") == 0) ||
 			(valueIN.compare("True") == 0) ||
@@ -1004,7 +1016,7 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 		result = true;
 	}
 	else if (keyIN.compare("httpd_port") == 0) {
-		std::cout << "httpd_port key found" << std::endl;
+		//std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   httpd_port key found: [" << valueIN << "] " << std::endl;
 
 		try {
 			httpd::miner_config->http_port = std::stoi(valueIN);
@@ -1018,18 +1030,21 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 		catch (...) {
 			std::cout << "default exception";
 		}
+		//std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   httpd_port key updated [" << httpd::miner_config->http_port << "] " << std::endl;
 	
 	}
 	else if (keyIN.compare("pool_address") == 0) {
-		std::cout << "pool_address key found" << std::endl;
+		std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   pool_address key found [" << valueIN << "] " << std::endl;
 
-		httpd::miner_config->pool_address = std::stoi(valueIN);
+		httpd::miner_config->pool_address = valueIN;
+
+		std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   pool_address key updated [" << httpd::miner_config->pool_address << "] " << std::endl;
 
 	}
 	else if (keyIN.compare("wallet_address") == 0) {
-		std::cout << "wallet_address key found" << std::endl;
+		std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   wallet_address key found [" << valueIN << "] " << std::endl;
 
-		httpd::miner_config->wallet_address = std::stoi(valueIN);
+		httpd::miner_config->wallet_address = valueIN;
 	}
 	else {
 		std::cout << "Key not found!!" << std::endl;
@@ -1042,8 +1057,16 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
  * Description: updates all config files with new config data
  */
 void httpd::updateConfigFiles () {
-	bool result = false;
+	//bool result = false;
 
+	updateCPUFile();
+	updateGPUNvidiaFile();
+	updateGPUAMD();
+	updateConfigFile();
+	updatePoolFile();
+
+
+	/*
 	if (!(updateCPUFile() ||
 		updateGPUNvidiaFile() ||
 		updateGPUAMD() ||
@@ -1052,7 +1075,7 @@ void httpd::updateConfigFiles () {
 		std::cout << "Something went wrong with updating config files" << std::endl;
 
 		//TODO: error hadling
-	}
+	}*/
 
 	//FIXME: delete this backup code when the current bahaviour are tested
 	/*bool isUpdateData = true;
@@ -1251,18 +1274,23 @@ int httpd::iterate_post (void *coninfo_cls, enum MHD_ValueKind kind, const char 
 								 const char *transfer_encoding, const char *data, 
 								 uint64_t off, size_t size) {
 
-	std::cout << "----[httpd::iterate_post(...)]" << std::endl;
-	std::cout << "Reciving post 002a[iterate_post]\n   - key: " << key << "\n   - value: " << data << std::endl;
-	std::cout << "off: " << off << std::endl;
-	std::cout << "size: " << size << std::endl;
+	//std::cout << "----[httpd::iterate_post(...)]" << std::endl;
+	//std::cout << "Reciving post data [iterate_post]\n   - key: " << key << "\n   - value: " << data << std::endl;
+	//std::cout << "off: " << off << std::endl;
+	//std::cout << "size: " << size << std::endl;
 	
 	//---std::cout << "Data: " << data << std::endl; 
 
 	struct connection_info_struct *con_info = (connection_info_struct*)coninfo_cls;
 
-	if ((strcmp (key, "cpu_count") == 0)
-		|| (strcmp (key, "nvidia_list") == 0)
-		|| (strcmp (key, "amd_list") == 0)){ 
+	if ((strcmp (key, "cpu_count") == 0) || 
+		(strcmp (key, "nvidia_list") == 0) || 
+		(strcmp (key, "amd_list") == 0) || 
+		(strcmp(key, "httpd_port") == 0) || 
+		(strcmp(key, "pool_address") == 0) || 
+		(strcmp(key, "wallet_address") == 0)){
+
+		//std::cout << "---------------------------------------------------<<<<<< found !!!!!!!!!" << std::endl;
 
 		if ((size > 0) && (size <= MAXNAMESIZE)) {
 			std::string keyParse (key);
@@ -1276,7 +1304,9 @@ int httpd::iterate_post (void *coninfo_cls, enum MHD_ValueKind kind, const char 
 		}
 
 		return MHD_YES;
-	}
+	}//else {
+		//std::cout << "---------------------------------------------------<<<<<< NOT found !!!!!!!!!Error" << std::endl;
+	//}
 	return MHD_YES;
 }
 
@@ -1330,14 +1360,14 @@ int httpd::starting_process_post (MHD_Connection* connection,
 	int postResult = -1;
 
 	if (*upload_data_size != 0) {
-		std::cout << "-------------------------- upload_data_size: " << *upload_data_size << std::endl;
+		//std::cout << "-------------------------- upload_data_size: " << *upload_data_size << std::endl;
 
 		postResult = MHD_post_process (con_infoEx->postprocessor, upload_data,	
 								*upload_data_size);
 
 
-		std::cout << "-------------------------- upload_data_size: " << *upload_data_size << std::endl;
-		std::cout << "-------------------------- postResult: " << postResult << std::endl;
+		//std::cout << "-------------------------- upload_data_size: " << *upload_data_size << std::endl;
+		//std::cout << "-------------------------- postResult: " << postResult << std::endl;
 
 
 		*upload_data_size = 0;
@@ -1406,13 +1436,13 @@ int httpd::req_handler(void * cls,
 		}
 	}
 
-	char transform[1024]; //TODO: optimize, really need this transform ¿?
+	char transform[2048]; //TODO: optimize, really need this transform ¿?
 	std::string responsetxt;
 	*ptr = nullptr;
 	std::string str;
 	if(strcasecmp(url, "/devtest") == 0) { //FIXME: delete this when finish the testinf phase
 		
-		snprintf(transform, 1024, askpage, getCustomInfo().c_str());
+		snprintf(transform, 2048, askpage, getCustomInfo().c_str());
 		std::string responsetxtAux(transform);
 		responsetxt = responsetxtAux;
 

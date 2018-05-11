@@ -107,8 +107,8 @@ const std::string NVIDIA_FILE = "./nvidia.txt";
 const std::string AMD_FILE = "./amd.txt";
 
 const int POSTBUFFERSIZE = 512;
-const int MAXNAMESIZE = 20;
-const int MAXANSWERSIZE = 512;
+const int MAXNAMESIZE = 124;
+const int MAXANSWERSIZE = 1024;
 const int GET = 0;
 const int POST = 1;
 
@@ -351,7 +351,7 @@ std::string httpd::parseConfigFile() {
  */
 std::string httpd::parsePoolFile() {
 	std::string result = "";
-	std::regex regPattern("[^*]*\(pool_address\)\.*[:][^\"]*\(\"[a-zA-Z0-9.]+[:][0-9]+\"\)\.*[,]\.*(wallet_address)\.*[:]\.*(\"[a-zA-Z0-9]+\")\.*rig_id\.*");
+	std::regex regPattern("[^*]*\(pool_address\)\.*[:][^\"]*\"\([a-zA-Z0-9.]+[:][0-9]+\)\"\.*[,]\.*(wallet_address)\.*[:]\.*\"\([a-zA-Z0-9]+\)\"\.*rig_id\.*");
 	std::smatch base_match;
 
 	//TODO: check if we have parse this info before
@@ -758,9 +758,10 @@ bool httpd::updatePoolFile() {
 				//---std::cout << "config.txt file exists\n" << std::endl;
 				for (std::string line; std::getline(poolFile, line); ) {
 					if (std::regex_match(line, base_match, regPattern)) {
-						std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   pool_address key loaded [" << poolAddress << "] " << std::endl;
+						//std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   pool_address key loaded [" << poolAddress << "] " << std::endl;
+						//std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   wallet_address key loaded [" << walletAddress << "] " << std::endl;
 
-						poolConfigContent += "{\"pool_address\" : \"";
+						poolConfigContent += " {\"pool_address\" : \"";
 						poolConfigContent += poolAddress;
 						poolConfigContent += "\", \"wallet_address\" : \"";
 						poolConfigContent += walletAddress;
@@ -976,7 +977,7 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 	//	getCustomInfo ();
 	//}
 
-	std::cout << "Parsing post data \n   - key: " << keyIN << " \n   - value: " << valueIN << std::endl;
+	//std::cout << "Parsing post data \n   - key: " << keyIN << " \n   - value: " << valueIN << std::endl;
 
 	if (keyIN.compare("cpu_count") == 0) {
 		std::cout << "cpu_count key found" << std::endl;
@@ -1034,17 +1035,19 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 	
 	}
 	else if (keyIN.compare("pool_address") == 0) {
-		std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   pool_address key found [" << valueIN << "] " << std::endl;
+		//std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   pool_address key found [" << valueIN << "] " << std::endl;
 
 		httpd::miner_config->pool_address = valueIN;
 
-		std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   pool_address key updated [" << httpd::miner_config->pool_address << "] " << std::endl;
+		//std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   pool_address key updated [" << httpd::miner_config->pool_address << "] " << std::endl;
 
 	}
 	else if (keyIN.compare("wallet_address") == 0) {
-		std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   wallet_address key found [" << valueIN << "] " << std::endl;
+		//std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   wallet_address key found [" << valueIN << "] " << std::endl;
 
 		httpd::miner_config->wallet_address = valueIN;
+
+		//std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   wallet_address key updated [" << httpd::miner_config->wallet_address << "] " << std::endl;
 	}
 	else {
 		std::cout << "Key not found!!" << std::endl;
@@ -1275,7 +1278,7 @@ int httpd::iterate_post (void *coninfo_cls, enum MHD_ValueKind kind, const char 
 								 uint64_t off, size_t size) {
 
 	//std::cout << "----[httpd::iterate_post(...)]" << std::endl;
-	//std::cout << "Reciving post data [iterate_post]\n   - key: " << key << "\n   - value: " << data << std::endl;
+	std::cout << "Reciving post data [iterate_post]\n   - key: " << key << "\n   - value: " << data << std::endl;
 	//std::cout << "off: " << off << std::endl;
 	//std::cout << "size: " << size << std::endl;
 	
@@ -1287,12 +1290,12 @@ int httpd::iterate_post (void *coninfo_cls, enum MHD_ValueKind kind, const char 
 		(strcmp (key, "nvidia_list") == 0) || 
 		(strcmp (key, "amd_list") == 0) || 
 		(strcmp(key, "httpd_port") == 0) || 
-		(strcmp(key, "pool_address") == 0) || 
-		(strcmp(key, "wallet_address") == 0)){
+		(strcmp(key, "pool_address") == 0) || (strcmp(key, "wallet_address") == 0)){ //wallet_address
 
-		//std::cout << "---------------------------------------------------<<<<<< found !!!!!!!!!" << std::endl;
+		
 
 		if ((size > 0) && (size <= MAXNAMESIZE)) {
+			//std::cout << "---------------------------------------------------<<<<<< found !!!!!!!!!" << std::endl;
 			std::string keyParse (key);
 			std::string valueParse (data);
 

@@ -388,9 +388,8 @@ void do_guided_config()
 int main(int argc, char *argv[])
 {
 //Testing section ----
-std::cout << "Ab Press enter to continue..." << std::endl;
+std::cout << "Press enter to start..." << std::endl;
 std::cin.get();
-
 
 
 //--------------------

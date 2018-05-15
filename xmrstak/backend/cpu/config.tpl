@@ -36,4 +36,6 @@ CPUCONFIG
 
 "cpu_count" : AVALAIBLECPU ,
 
+"current_cpu_count" : CURRENTCPU ,
+
 )==="

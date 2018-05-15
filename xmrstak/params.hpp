@@ -24,6 +24,7 @@ struct params
 	bool AMDCache;
 	bool useNVIDIA;
 	bool useCPU;
+	int realCPUCount = -1;
 	// user selected OpenCL vendor
 	std::string openCLVendor;
 

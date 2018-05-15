@@ -104,10 +104,12 @@ public:
 			}
 		}
 
-		std::string finalstr = std::to_string(corecnt)
+		std::string finalstr = std::to_string(corecnt); //TODO: get real cpu count 
+		std::string finalstr2 = std::to_string(corecnt);
 
 		configTpl.replace("CPUCONFIG",conf);
 		configTpl.replace("AVALAIBLECPU", finalstr);
+		configTpl.replace("CURRENTCPU", finalstr2);
 		configTpl.write(params::inst().configFileCPU);
 		printer::inst()->print_msg(L0, "CPU configuration stored in file '%s'", params::inst().configFileCPU.c_str());
 

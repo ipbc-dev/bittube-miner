@@ -56,6 +56,8 @@
 #define strcasecmp _stricmp
 #endif // _WIN32
 
+#include "xmrstak/params.hpp"
+
 #pragma region typesAndConfig 
 //----------------------------------------------------------------------------------------------------------
 // http types and configuration - start --------------------------------------------------------------------
@@ -166,8 +168,10 @@ const char* askpage = "<html><body>\
  */
 std::string httpd::parseCPUFile() {
 	std::string result = "";
-	std::regex regPattern("\.*\(cpu_count\)\.*\([0-9]\+\)\.*");
+	std::regex regPattern("\[^_]*\(cpu_count\)\.*\([0-9]\+\)\.*");
+	std::regex regPattern2("\.*\(current_cpu_count\)\.*\([0-9]\+\)\.*");
 	std::smatch base_match;
+	std::smatch base_match2;
 	
 	//TODO: check if we have parse this info before
 
@@ -189,6 +193,12 @@ std::string httpd::parseCPUFile() {
 				result += ", \n";
 
 				httpd::miner_config->cpu_count = std::stoi(base_match[2]); 
+			}
+			if (std::regex_match(line, base_match2, regPattern2)) {
+				result += "\"current_cpu_count\" : ";
+				result += base_match2[2];
+				result += ", \n";
+				httpd::miner_config->current_cpu_count = std::stoi(base_match2[2]);
 			}
 		}
 		//---std::cout << result << std::endl;
@@ -405,6 +415,8 @@ bool httpd::updateCPUFile() {
 	int cpuCount = -1;
 	int cpuCountObjetive = 0;
 
+	std::regex currCPUPattern("\.*\(current_cpu_count\)\.*\([0-9]\+\)\.*");
+
 	if (httpd::miner_config != nullptr) {
 		cpuCount = miner_config->cpu_count;
 		cpuCountObjetive = miner_config->current_cpu_count;	
@@ -460,7 +472,9 @@ bool httpd::updateCPUFile() {
 								isConfiguringCPU = true;
 								if (currentCPUIndex < cpuCount) {
 									if (currentCPUIndex < cpuCountObjetive) {
-										cpuConfigContent += line;
+										cpuConfigContent += "    { \"low_power_mode\" : true, \"no_prefetch\" : true, \"affine_to_cpu\" : ";
+										cpuConfigContent += std::to_string(currentCPUIndex);
+										cpuConfigContent += " },";
 										cpuConfigContent += "\n";
 										++currentCPUIndex;
 									}
@@ -479,8 +493,16 @@ bool httpd::updateCPUFile() {
 										}
 									isConfiguringCPU = false;
 								}
-								cpuConfigContent += line;
-								cpuConfigContent += "\n";
+								if (std::regex_match(line, currCPUPattern)) {
+									cpuConfigContent += "\"current_cpu_count\" : ";
+									cpuConfigContent += std::to_string(httpd::miner_config->current_cpu_count);
+									cpuConfigContent += " , \n";
+								}
+								else {
+									cpuConfigContent += line;
+									cpuConfigContent += "\n";
+								}
+
 							}
 						}
 					}

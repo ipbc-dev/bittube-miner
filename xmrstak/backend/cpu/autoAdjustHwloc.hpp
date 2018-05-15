@@ -84,10 +84,12 @@ public:
 		}
 
 		//AVCPU
-		std::string finalstr = std::to_string(results.size());
+		std::string finalstr = std::to_string(params::inst().realCPUCount);
+		std::string finalstr2 = std::to_string(results.size());
 
 		configTpl.replace("CPUCONFIG",conf);
 		configTpl.replace("AVALAIBLECPU", finalstr);
+		configTpl.replace("CURRENTCPU", finalstr2);
 		configTpl.write(params::inst().configFileCPU);
 		printer::inst()->print_msg(L0, "CPU configuration stored in file '%s'", params::inst().configFileCPU.c_str());
 		/* Destroy topology object. */
@@ -163,6 +165,8 @@ private:
 		//Strange case, but we will handle it silently, surely there must be one PU somewhere?
 		if(PUs == 0)
 			return;
+
+		params::inst().realCPUCount = PUs;
 
 		if(obj->attr->cache.size == 0)
 		{

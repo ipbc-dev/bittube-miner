@@ -456,76 +456,86 @@ void minethd::work_main()
 	uint8_t version = 0;
 	size_t lastPoolId = 0;
 
+
 	while (bQuit == 0)
 	{
-		if (oWork.bStall)
-		{
-			/* We are stalled here because the executor didn't find a job for us yet,
-			 * either because of network latency, or a socket problem. Since we are
-			 * raison d'etre of this software it us sensible to just wait until we have something
-			 */
+			if (oWork.bStall)
+			{
+				/* We are stalled here because the executor didn't find a job for us yet,
+				 * either because of network latency, or a socket problem. Since we are
+				 * raison d'etre of this software it us sensible to just wait until we have something
+				 */
+
+				while (globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
+					std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+				consume_work();
+				continue;
+			}
+
+			size_t nonce_ctr = 0;
+			constexpr size_t nonce_chunk = 4096; // Needs to be a power of 2
+
+			assert(sizeof(job_result::sJobID) == sizeof(pool_job::sJobID));
+			memcpy(result.sJobID, oWork.sJobID, sizeof(job_result::sJobID));
+
+			if (oWork.bNiceHash)
+				result.iNonce = *piNonce;
+
+			uint8_t new_version = oWork.getVersion();
+			if (::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgo() == cryptonight_ipbc) new_version = oWork.bWorkBlob[1];
+			if (new_version != version || oWork.iPoolId != lastPoolId)
+			{
+				coinDescription coinDesc = ::jconf::inst()->GetCurrentCoinSelection().GetDescription(oWork.iPoolId);
+				if (new_version >= coinDesc.GetMiningForkVersion())
+				{
+					miner_algo = coinDesc.GetMiningAlgo();
+					hash_fun = func_selector(::jconf::inst()->HaveHardwareAes(), bNoPrefetch, miner_algo);
+				}
+				else
+				{
+					miner_algo = coinDesc.GetMiningAlgoRoot();
+					hash_fun = func_selector(::jconf::inst()->HaveHardwareAes(), bNoPrefetch, miner_algo);
+				}
+				lastPoolId = oWork.iPoolId;
+				version = new_version;
+			}
 
 			while (globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
-				std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			{
+				if ((iCount++ & 0xF) == 0) //Store stats every 16 hashes
+				{
+					uint64_t iStamp = get_timestamp_ms();
+					iHashCount.store(iCount, std::memory_order_relaxed);
+					iTimestamp.store(iStamp, std::memory_order_relaxed);
+				}
+
+				if ((nonce_ctr++ & (nonce_chunk - 1)) == 0)
+				{
+					globalStates::inst().calc_start_nonce(result.iNonce, oWork.bNiceHash, nonce_chunk);
+				}
+
+				*piNonce = result.iNonce;
+
+				hash_fun(oWork.bWorkBlob, oWork.iWorkSize, result.bResult, ctx);
+
+				if (*piHashVal < oWork.iTarget)
+					executor::inst()->push_event(ex_event(result, oWork.iPoolId));
+				result.iNonce++;
+
+				if (!executor::isPaused) {
+					std::this_thread::yield();
+				}
+				else {
+					while (executor::isPaused) {
+						std::this_thread::sleep_for(std::chrono::milliseconds(50));
+						std::this_thread::yield();
+					}
+				}
+			}
 
 			consume_work();
-			continue;
-		}
-
-		size_t nonce_ctr = 0;
-		constexpr size_t nonce_chunk = 4096; // Needs to be a power of 2
-
-		assert(sizeof(job_result::sJobID) == sizeof(pool_job::sJobID));
-		memcpy(result.sJobID, oWork.sJobID, sizeof(job_result::sJobID));
-
-		if(oWork.bNiceHash)
-			result.iNonce = *piNonce;
-
-		uint8_t new_version = oWork.getVersion();
-		if (::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgo() == cryptonight_ipbc) new_version = oWork.bWorkBlob[1];
-		if(new_version != version || oWork.iPoolId != lastPoolId)
-		{
-			coinDescription coinDesc = ::jconf::inst()->GetCurrentCoinSelection().GetDescription(oWork.iPoolId);
-			if(new_version >= coinDesc.GetMiningForkVersion())
-			{
-				miner_algo = coinDesc.GetMiningAlgo();
-				hash_fun = func_selector(::jconf::inst()->HaveHardwareAes(), bNoPrefetch, miner_algo);
-			}
-			else
-			{
-				miner_algo = coinDesc.GetMiningAlgoRoot();
-				hash_fun = func_selector(::jconf::inst()->HaveHardwareAes(), bNoPrefetch, miner_algo);
-			}
-			lastPoolId = oWork.iPoolId;
-			version = new_version;
-		}
-
-		while(globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
-		{
-			if ((iCount++ & 0xF) == 0) //Store stats every 16 hashes
-			{
-				uint64_t iStamp = get_timestamp_ms();
-				iHashCount.store(iCount, std::memory_order_relaxed);
-				iTimestamp.store(iStamp, std::memory_order_relaxed);
-			}
-
-			if((nonce_ctr++ & (nonce_chunk-1)) == 0)
-			{
-				globalStates::inst().calc_start_nonce(result.iNonce, oWork.bNiceHash, nonce_chunk);
-			}
-
-			*piNonce = result.iNonce;
-
-			hash_fun(oWork.bWorkBlob, oWork.iWorkSize, result.bResult, ctx);
-
-			if (*piHashVal < oWork.iTarget)
-				executor::inst()->push_event(ex_event(result, oWork.iPoolId));
-			result.iNonce++;
-
-			std::this_thread::yield();
-		}
-
-		consume_work();
+		//}
 	}
 
 	cryptonight_free_ctx(ctx);
@@ -745,81 +755,91 @@ void minethd::multiway_work_main()
 
 	while (bQuit == 0)
 	{
-		if (oWork.bStall)
-		{
-			/*	We are stalled here because the executor didn't find a job for us yet,
-			either because of network latency, or a socket problem. Since we are
-			raison d'etre of this software it us sensible to just wait until we have something*/
+
+			if (oWork.bStall)
+			{
+				/*	We are stalled here because the executor didn't find a job for us yet,
+				either because of network latency, or a socket problem. Since we are
+				raison d'etre of this software it us sensible to just wait until we have something*/
+
+				while (globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
+					std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+				consume_work();
+				prep_multiway_work<N>(bWorkBlob, piNonce);
+				continue;
+			}
+
+			constexpr uint32_t nonce_chunk = 4096;
+			int64_t nonce_ctr = 0;
+
+			assert(sizeof(job_result::sJobID) == sizeof(pool_job::sJobID));
+
+			if (oWork.bNiceHash)
+				iNonce = *piNonce[0];
+
+			uint8_t new_version = oWork.getVersion();
+			if (::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgo() == cryptonight_ipbc) new_version = oWork.bWorkBlob[1];
+			if (new_version != version || oWork.iPoolId != lastPoolId)
+			{
+				coinDescription coinDesc = ::jconf::inst()->GetCurrentCoinSelection().GetDescription(oWork.iPoolId);
+				if (new_version >= coinDesc.GetMiningForkVersion())
+				{
+					miner_algo = coinDesc.GetMiningAlgo();
+					hash_fun_multi = func_multi_selector(N, ::jconf::inst()->HaveHardwareAes(), bNoPrefetch, miner_algo);
+				}
+				else
+				{
+					miner_algo = coinDesc.GetMiningAlgoRoot();
+					hash_fun_multi = func_multi_selector(N, ::jconf::inst()->HaveHardwareAes(), bNoPrefetch, miner_algo);
+				}
+				lastPoolId = oWork.iPoolId;
+				version = new_version;
+			}
 
 			while (globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
-				std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			{
+				if ((iCount++ & 0x7) == 0)  //Store stats every 8*N hashes
+				{
+					uint64_t iStamp = get_timestamp_ms();
+					iHashCount.store(iCount * N, std::memory_order_relaxed);
+					iTimestamp.store(iStamp, std::memory_order_relaxed);
+				}
+
+				nonce_ctr -= N;
+				if (nonce_ctr <= 0)
+				{
+					globalStates::inst().calc_start_nonce(iNonce, oWork.bNiceHash, nonce_chunk);
+					nonce_ctr = nonce_chunk;
+				}
+
+				for (size_t i = 0; i < N; i++)
+					*piNonce[i] = iNonce++;
+
+				hash_fun_multi(bWorkBlob, oWork.iWorkSize, bHashOut, ctx);
+
+				for (size_t i = 0; i < N; i++)
+				{
+					if (*piHashVal[i] < oWork.iTarget)
+					{
+						executor::inst()->push_event(ex_event(job_result(oWork.sJobID, iNonce - N + i, bHashOut + 32 * i, iThreadNo), oWork.iPoolId));
+					}
+				}
+
+				if (!executor::isPaused) {
+					std::this_thread::yield();
+				}
+				else {
+					while (executor::isPaused) {
+						std::this_thread::sleep_for(std::chrono::milliseconds(50));
+						std::this_thread::yield();
+					}
+				}
+				
+			}
 
 			consume_work();
 			prep_multiway_work<N>(bWorkBlob, piNonce);
-			continue;
-		}
-
-		constexpr uint32_t nonce_chunk = 4096;
-		int64_t nonce_ctr = 0;
-
-		assert(sizeof(job_result::sJobID) == sizeof(pool_job::sJobID));
-
-		if(oWork.bNiceHash)
-			iNonce = *piNonce[0];
-
-		uint8_t new_version = oWork.getVersion();
-		if (::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgo() == cryptonight_ipbc) new_version = oWork.bWorkBlob[1];
-		if(new_version != version || oWork.iPoolId != lastPoolId)
-		{
-			coinDescription coinDesc = ::jconf::inst()->GetCurrentCoinSelection().GetDescription(oWork.iPoolId);
-			if(new_version >= coinDesc.GetMiningForkVersion())
-			{
-				miner_algo = coinDesc.GetMiningAlgo();
-				hash_fun_multi = func_multi_selector(N, ::jconf::inst()->HaveHardwareAes(), bNoPrefetch, miner_algo);
-			}
-			else
-			{
-				miner_algo = coinDesc.GetMiningAlgoRoot();
-				hash_fun_multi = func_multi_selector(N, ::jconf::inst()->HaveHardwareAes(), bNoPrefetch, miner_algo);
-			}
-			lastPoolId = oWork.iPoolId;
-			version = new_version;
-		}
-
-		while (globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
-		{
-			if ((iCount++ & 0x7) == 0)  //Store stats every 8*N hashes
-			{
-				uint64_t iStamp = get_timestamp_ms();
-				iHashCount.store(iCount * N, std::memory_order_relaxed);
-				iTimestamp.store(iStamp, std::memory_order_relaxed);
-			}
-
-			nonce_ctr -= N;
-			if(nonce_ctr <= 0)
-			{
-				globalStates::inst().calc_start_nonce(iNonce, oWork.bNiceHash, nonce_chunk);
-				nonce_ctr = nonce_chunk;
-			}
-
-			for (size_t i = 0; i < N; i++)
-				*piNonce[i] = iNonce++;
-
-			hash_fun_multi(bWorkBlob, oWork.iWorkSize, bHashOut, ctx);
-
-			for (size_t i = 0; i < N; i++)
-			{
-				if (*piHashVal[i] < oWork.iTarget)
-				{
-					executor::inst()->push_event(ex_event(job_result(oWork.sJobID, iNonce - N + i, bHashOut + 32 * i, iThreadNo), oWork.iPoolId));
-				}
-			}
-
-			std::this_thread::yield();
-		}
-
-		consume_work();
-		prep_multiway_work<N>(bWorkBlob, piNonce);
 	}
 
 	for (int i = 0; i < N; i++)

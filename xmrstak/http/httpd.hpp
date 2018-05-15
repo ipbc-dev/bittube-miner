@@ -20,6 +20,25 @@ public:
 		return oInst;
 	};
 
+	static void cls() {
+		if (httpd::miner_config != nullptr) {
+			delete httpd::miner_config;
+			httpd::miner_config = nullptr;
+		}
+
+		if (oInst->d != nullptr) {
+			MHD_stop_daemon(oInst->d);
+			
+			//delete oInst->d;
+			//oInst->d = nullptr;
+
+			delete oInst;
+			oInst = nullptr;
+		}
+
+
+	}
+
 	static config_data* miner_config;
 
 	bool start_daemon();
@@ -27,6 +46,8 @@ public:
 private:
 	httpd();
 	static httpd* oInst;
+
+
 
 	static std::string parseCPUFile();
 	static std::string parseGPUNvidiaFile();
@@ -39,9 +60,6 @@ private:
 	static bool updateGPUAMD();
 	static bool updateConfigFile();
 	static bool updatePoolFile();
-
-	static bool parsePostInfo();
-
 
 	static std::string getCustomInfo ();
 	static bool parseCustomInfo (std::string keyIN, std::string valueIN);

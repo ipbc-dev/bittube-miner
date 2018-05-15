@@ -56,7 +56,7 @@ private:
 
 	nvid_ctx ctx;
 
-	bool bQuit;
+	//bool bQuit;
 };
 
 } // namespace nvidia

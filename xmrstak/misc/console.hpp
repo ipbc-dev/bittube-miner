@@ -34,8 +34,22 @@ public:
 		return env.pPrinter;
 	};
 
+	static inline void cls()
+	{
+		auto& env = xmrstak::environment::inst();
+		if (env.pPrinter != nullptr) {
+			env.pPrinter->static_delete();
+		}
+	};
+
 	inline void set_verbose_level(size_t level) { verbose_level = (verbosity)level; }
 	inline void set_flush_stdout(bool status) { b_flush_stdout = status; }
+	inline void static_delete() {
+		if (logfile != nullptr) {
+			delete logfile;
+			logfile = nullptr;
+		}
+	}
 	void print_msg(verbosity verbose, const char* fmt, ...);
 	void print_str(const char* str);
 	bool open_logfile(const char* file);

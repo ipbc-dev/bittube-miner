@@ -43,7 +43,7 @@ private:
 	std::thread oWorkThd;
 	int64_t affinity;
 
-	bool bQuit;
+	//bool bQuit;
 	bool bNoPrefetch;
 
 	//Mutable ptr to vector below, different for each thread

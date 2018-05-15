@@ -25,6 +25,7 @@
  * TODO:
  *	+- prevent xmrstack auto reload nvidia.txt
  *  - finish error handling
+ *  - for getting data from files, not parsing these files every time we need data if we parsed before
  *  
  */
 
@@ -60,6 +61,8 @@
 // http types and configuration - start --------------------------------------------------------------------
 
 struct config_data {
+	bool isNeedUpdate = false;
+
 	int http_port = 1600;
 	std::string pool_address = "pool.ipbc.io:13333";
 	std::string wallet_address = "";
@@ -152,6 +155,7 @@ const char* askpage = "<html><body>\
 // Dev and test http templates - end -----------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------
 #pragma endregion
+
 
 #pragma region gettingData 
 //----------------------------------------------------------------------------------------------------------
@@ -357,14 +361,14 @@ std::string httpd::parsePoolFile() {
 				//result += line;
 				//result += "\n";
 
-				result = " \"pool_address\" : ";
+				result = " \"pool_address\" : \"";
 				result += base_match[2];
-				result += ", \n";
+				result += "\", \n";
 				httpd::miner_config->pool_address = base_match[2];
 
-				result += " \"wallet_address\" : ";
+				result += " \"wallet_address\" : \"";
 				result += base_match[4];
-				result += ", \n";
+				result += "\" \n";
 				httpd::miner_config->wallet_address = base_match[4];
 			}
 		}
@@ -481,11 +485,11 @@ bool httpd::updateCPUFile() {
 						}
 					}
 				}
+				cpuFile.close();
+				std::ofstream out(CPU_FILE);
+				out << cpuConfigContent;
+				out.close();
 			}
-			cpuFile.close();
-			std::ofstream out(CPU_FILE);
-			out << cpuConfigContent;
-			out.close();
 		}
 
 		//TODO: check if cpu.txt file was updated and set result value
@@ -579,18 +583,11 @@ bool httpd::updateGPUNvidiaFile() {
 						}
 					}
 				}
+				nvidiaFile.close();
+				std::ofstream out(NVIDIA_FILE);
+				out << nvidiaConfigContent;
+				out.close();
 			}
-
-
-			//if (remove(NVIDIA_FILE.c_str()) != 0) {
-			//	std::cout << "Error deleting file [nvidia.txt]" << std::endl;
-			//} else {
-			//	std::cout << "File successfully deleted [nvidia.txt]" << std::endl;
-			//}
-			nvidiaFile.close();
-			std::ofstream out(NVIDIA_FILE);
-			out << nvidiaConfigContent;
-			out.close();
 		}
 
 		//TODO: check if nvidia.txt file was updated and set result value
@@ -684,16 +681,11 @@ bool httpd::updateGPUAMD() {
 						}
 					}
 				}
+				amdFile.close();
+				std::ofstream out(AMD_FILE);
+				out << amdConfigContent;
+				out.close();
 			}
-			//if (remove(AMD_FILE.c_str()) != 0) {
-			//	std::cout << "Error deleting file [amd.txt]" << std::endl;
-			//} else {
-			//	std::cout << "File successfully deleted [amd.txt]" << std::endl;
-			//}
-			amdFile.close();
-			std::ofstream out(AMD_FILE);
-			out << amdConfigContent;
-			out.close();
 		}
 
 		//TODO: check if nvidia.txt file was updated and set result value
@@ -752,11 +744,11 @@ bool httpd::updateConfigFile() {
 						genConfigContent += "\n";
 					}
 				}
+				configFile.close();
+				std::ofstream out(CONFIG_FILE);
+				out << genConfigContent;
+				out.close();
 			}
-			configFile.close();
-			std::ofstream out(CONFIG_FILE);
-			out << genConfigContent;
-			out.close();
 		}
 
 		//TODO: check if cpu.txt file was updated and set result value
@@ -827,11 +819,11 @@ bool httpd::updatePoolFile() {
 						poolConfigContent += "\n";
 					}
 				}
+				poolFile.close();
+				std::ofstream out(POOL_FILE);
+				out << poolConfigContent;
+				out.close();
 			}
-			poolFile.close();
-			std::ofstream out(POOL_FILE);
-			out << poolConfigContent;
-			out.close();
 		}
 
 		//TODO: check if cpu.txt file was updated and set result value
@@ -884,12 +876,19 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 	bool result = false;
 
 	//std::cout << "Parsing post data \n   - key: " << keyIN << " \n   - value: " << valueIN << std::endl;
-
 	if (keyIN.compare("cpu_count") == 0) {
 		std::cout << "cpu_count key found" << std::endl;
 
 		try {
-			httpd::miner_config->current_cpu_count= std::stoi(valueIN);
+
+			int cpu_countTMP = std::stoi(valueIN);
+			if ((httpd::miner_config->current_cpu_count != cpu_countTMP) &&
+				(cpu_countTMP <= httpd::miner_config->cpu_count)) {
+
+				httpd::miner_config->current_cpu_count = cpu_countTMP;
+				httpd::miner_config->isNeedUpdate = true;
+			}
+
 		} catch (int param) { 
 			std::cout << "int exception"; 
 		} catch (char param) { 
@@ -907,7 +906,11 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 			(valueIN.compare("1") == 0)) {
 			resultTmp = true;
 		}
-		httpd::miner_config->current_use_nvidia = resultTmp;
+
+		if (httpd::miner_config->current_use_nvidia != resultTmp) {
+			httpd::miner_config->current_use_nvidia = resultTmp;
+			httpd::miner_config->isNeedUpdate = true;
+		}
 		result = true;
 	} else if (keyIN.compare("amd_list") == 0) {
 		bool resultTmp = false;
@@ -917,12 +920,21 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 			(valueIN.compare("1") == 0)) {
 			resultTmp = true;
 		}
-		httpd::miner_config->current_use_amd = resultTmp;
+
+		if (httpd::miner_config->current_use_amd != resultTmp) {
+			httpd::miner_config->current_use_amd = resultTmp;
+			httpd::miner_config->isNeedUpdate = true;
+		}
 		result = true;
 	}
 	else if (keyIN.compare("httpd_port") == 0) {
 		try {
-			httpd::miner_config->http_port = std::stoi(valueIN);
+			int hhtp_portTMP = std::stoi(valueIN);
+			if (httpd::miner_config->http_port != hhtp_portTMP) {
+				httpd::miner_config->http_port = std::stoi(valueIN);
+				httpd::miner_config->isNeedUpdate = true;
+			}
+			
 		}
 		catch (int param) {
 			std::cout << "int exception";
@@ -935,10 +947,17 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 		}
 	}
 	else if (keyIN.compare("pool_address") == 0) {
-		httpd::miner_config->pool_address = valueIN;
+		if (valueIN.compare(httpd::miner_config->pool_address) != 0) {
+			httpd::miner_config->pool_address = valueIN;
+			httpd::miner_config->isNeedUpdate = true;
+		}
+		
 	}
 	else if (keyIN.compare("wallet_address") == 0) {
-		httpd::miner_config->wallet_address = valueIN;
+		if (valueIN.compare(httpd::miner_config->wallet_address) != 0) {
+			httpd::miner_config->wallet_address = valueIN;
+			httpd::miner_config->isNeedUpdate = true;
+		}
 	}
 	else {
 		std::cout << "Key not found!!" << std::endl;
@@ -953,12 +972,15 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
  * TODO: error handling
  */
 void httpd::updateConfigFiles () {
-
-	updateCPUFile();
-	updateGPUNvidiaFile();
-	updateGPUAMD();
-	updateConfigFile();
-	updatePoolFile();
+	if ((httpd::miner_config != nullptr) && (httpd::miner_config->isNeedUpdate)) {
+		updateCPUFile();
+		updateGPUNvidiaFile();
+		updateGPUAMD();
+		updateConfigFile();
+		updatePoolFile();
+		httpd::miner_config->isNeedUpdate = false;
+		executor::needRestart = true;
+	}
 
 
 	/*
@@ -1164,7 +1186,29 @@ int httpd::req_handler(void * cls,
 		rsp = MHD_create_response_from_buffer(responsetxt.size(), (void*)responsetxt.c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
 
-	} else if(strcasecmp(url, "/style.css") == 0) {
+	} 
+	else if (strcasecmp(url, "/start") == 0) {
+		executor::isPaused = false;
+		str = "{\"status\": \"ok\"}";
+
+		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
+		MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
+	}
+	else if (strcasecmp(url, "/stop") == 0) {
+		executor::isPaused = true;
+		str = "{\"status\": \"ok\"}";
+
+		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
+		MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
+	}
+	else if (strcasecmp(url, "/info") == 0)
+	{
+		str = getCustomInfo();
+
+		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
+		MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
+	}
+	/*else if(strcasecmp(url, "/style.css") == 0) {
 		const char* req_etag = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "If-None-Match");
 
 		if(req_etag != NULL && strcmp(req_etag, sHtmlCssEtag) == 0)
@@ -1183,13 +1227,6 @@ int httpd::req_handler(void * cls,
 	else if(strcasecmp(url, "/api.json") == 0)
 	{
 		executor::inst()->get_http_report(EV_HTML_JSON, str);
-
-		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
-		MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
-	}
-	else if(strcasecmp(url, "/info") == 0)
-	{
-		str =  getCustomInfo ();
 
 		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
@@ -1214,11 +1251,16 @@ int httpd::req_handler(void * cls,
 
 		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
-	}
+	}*/
 	else
 	{
+		//send_page(connection, errorpage);
+		std::string responseT(errorpage);
+		rsp = MHD_create_response_from_buffer(responseT.size(), (void*)responseT.c_str(), MHD_RESPMEM_MUST_COPY);
+		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
+
 		//Do a 302 redirect to /h
-		char loc_path[256];
+		/*char loc_path[256];
 		const char* host_val = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "Host");
 
 		if(host_val != nullptr)
@@ -1230,7 +1272,7 @@ int httpd::req_handler(void * cls,
 		int ret = MHD_queue_response(connection, MHD_HTTP_TEMPORARY_REDIRECT, rsp);
 		MHD_add_response_header(rsp, "Location", loc_path);
 		MHD_destroy_response(rsp);
-		return ret;
+		return ret;*/
 	}
 
 	int ret = MHD_queue_response(connection, MHD_HTTP_OK, rsp);
@@ -1242,11 +1284,6 @@ int httpd::req_handler(void * cls,
  * Description: Starting the http daemon
  */
 bool httpd::start_daemon() {
-	/*d = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION,
-		jconf::inst()->GetHttpdPort(), NULL, NULL,
-		&httpd::req_handler,
-		NULL, MHD_OPTION_END);*/
-
 	d = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION,
 		jconf::inst()->GetHttpdPort(), NULL, NULL,
 		&httpd::req_handler,

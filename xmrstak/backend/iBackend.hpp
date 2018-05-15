@@ -37,13 +37,20 @@ namespace xmrstak
 			return backendNames[i];
 		}
 
+		void static_quit() {
+			bQuit = 1;
+		}
+
 		std::atomic<uint64_t> iHashCount;
 		std::atomic<uint64_t> iTimestamp;
 		uint32_t iThreadNo;
 		BackendType backendType = UNKNOWN;
 
+		bool bQuit;
+
 		iBackend() : iHashCount(0), iTimestamp(0)
 		{
+			bQuit = 0;
 		}
 	};
 

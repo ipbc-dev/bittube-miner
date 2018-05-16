@@ -85,7 +85,6 @@ void executor::static_delete() {
 
 executor::executor()
 {
-	//executor::isPaused = true;
 }
 
 void executor::push_timed_event(ex_event&& ev, size_t sec)
@@ -97,19 +96,9 @@ void executor::push_timed_event(ex_event&& ev, size_t sec)
 void executor::ex_clock_thd()
 {
 	size_t tick = 0;
-	//uint64_t lastTimeW = get_timestamp_ms();
 
 	while (true)
 	{
-		//if (executor::isPaused) {
-		//	uint64_t currentTimeW = get_timestamp_ms();
-
-		//	if (currentTimeW - lastTimeW < 100) {
-		//		std::this_thread::sleep_for(std::chrono::milliseconds(100 - (currentTimeW - lastTimeW)));
-		//	}
-		//	lastTimeW = currentTimeW;
-		//}
-		//else {
 			std::this_thread::sleep_for(std::chrono::milliseconds(size_t(iTickTime)));
 
 			push_event(ex_event(EV_PERF_TICK));
@@ -133,7 +122,6 @@ void executor::ex_clock_thd()
 					ev++;
 			}
 			lck.unlock();
-		//}
 	}
 }
 

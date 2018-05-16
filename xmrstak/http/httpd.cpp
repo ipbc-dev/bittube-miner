@@ -23,7 +23,6 @@
 
 /*
  * TODO:
- *	+- prevent xmrstack auto reload nvidia.txt
  *  - finish error handling
  *  - for getting data from files, not parsing these files every time we need data if we parsed before
  *  
@@ -69,19 +68,14 @@ struct config_data {
 	std::string pool_address = "support.ipbc.io:13333";
 	std::string wallet_address = "bxdrUctzVxK7Rac6iKDN4n9NgGKiCmeg45bSgqvQ99HTNFnmb94nenMXmGhcgS3RhKPSMArzrQxbV3fXAtp2pCGz2o13F2HMw";
 
-	bool isConfiguring = false;//FIXME: really needed, there is posible parallel updatings¿?
-
 	int cpu_count = -1;
-	std::vector<std::string> nvidia_list; //TODO: fill the list and using internally, not parse file every post request
-	std::vector<std::string> amd_list;	//TODO: fill the list and using internally, not parse file every post request
+	std::vector<std::string> nvidia_list;
+	std::vector<std::string> amd_list;
 
 	int current_cpu_count = -1;
 	bool current_use_nvidia = false;
 	bool current_use_amd = false;
 
-	//bool* current_cpu;//TODO: using for disable concrete cpu not only the counter
-	//bool* current_nvidia; //TODO: using for disable concrete gpu, not only gpu process or not
-	//bool* current_amd; //TODO: using for disable concrete gpu, not only gpu process or not
 };
 
 struct connection_info_struct {
@@ -178,16 +172,12 @@ std::string httpd::parseCPUFile() {
 	std::ifstream cpuFile(CPU_FILE);
 
 	if (cpuFile.fail()) {
-		//---std::cout << "cpu.txt file NOT exists 001\n" << std::endl;
 
 		//TODO: error handling. Search for cpu backup file and try to get info there  
 
 	} else {
-		//---std::cout << "cpu.txt file exists\n" << std::endl;
 		for (std::string line; std::getline(cpuFile, line); ) {
-			//---std::cout << line << std::endl;
 			if (std::regex_match(line, base_match, regPattern)) {
-				//---std::cout << "Found cpu_count value: " << base_match[2] << std::endl;
 				result = " \"cpu_count\" : ";
 				result += base_match[2];
 				result += ", \n";
@@ -201,7 +191,6 @@ std::string httpd::parseCPUFile() {
 				httpd::miner_config->current_cpu_count = std::stoi(base_match2[2]);
 			}
 		}
-		//---std::cout << result << std::endl;
 	}
 	return result;
 }
@@ -224,22 +213,16 @@ std::string httpd::parseGPUNvidiaFile() {
 	std::ifstream nvidiaFile(NVIDIA_FILE);
 
 	if (nvidiaFile.fail()) {
-		//---std::cout << "nvidia.txt file couldn\'t be opened (not existing or failed to open)\n";
 
 		//TODO: error handling. Search for nvidia backup file and try to get info there
 
 	} else {
-		//---std::cout << "nvidia.txt file exists\n" << std::endl;
 		for (std::string line; std::getline(nvidiaFile, line); ) {
-			//---std::cout << line << std::endl;
-
 			if (initArray && std::regex_match(line, endPattern)) {
-				//---std::cout << ">>>>>----Found end of array" << std::endl;
 				initArray = false;
 				result += "], \n";
 			} else if (initArray) {
 				if (std::regex_match(line, base_match, namePattern)) {
-					//---std::cout << ">>>>>---- Found end of name" << std::endl;
 					if (primera) {
 						primera = false;
 						result += "\"nvidia_list\" : [";
@@ -250,7 +233,6 @@ std::string httpd::parseGPUNvidiaFile() {
 					httpd::miner_config->nvidia_list.push_back(base_match[1]);
 				}
 			} else if (!initArray && std::regex_match(line, mainPattern)) {
-				//---std::cout << ">>>>>---- Found gpu_info value" << std::endl;
 				initArray = true;
 			}
 		}
@@ -276,23 +258,17 @@ std::string httpd::parseGPUAMD() {
 	std::ifstream amdFile(AMD_FILE);
 
 	if (amdFile.fail()) {
-		//---std::cout << "amd.txt file couldn\'t be opened (not existing or failed to open)\n";
 
 		//TODO: error handling. Search for amd backup file and try to get info there
 	}
 	else {
-		//---std::cout << "amd.txt file exists\n" << std::endl;
 		for (std::string line; std::getline(amdFile, line); ) {
-			std::cout << line << std::endl;
-
 			if (initArray && std::regex_match(line, endPattern)) {
-				//---std::cout << ">>>>>----Found end of array" << std::endl;
 				initArray = false;
 				result += "], \n";
 			}
 			else if (initArray) {
 				if (std::regex_match(line, base_match, namePattern)) {
-					//---std::cout << ">>>>>---- Found end of name" << std::endl;
 					if (primera) {
 						primera = false;
 						result += "\"amd_list\" : [";
@@ -303,7 +279,6 @@ std::string httpd::parseGPUAMD() {
 					httpd::miner_config->amd_list.push_back(base_match[1]);
 				}
 			} else if (!initArray && std::regex_match(line, mainPattern)) {
-				//---std::cout << ">>>>>---- Found gpu_info value" << std::endl;
 				initArray = true;
 			}
 		}
@@ -324,23 +299,18 @@ std::string httpd::parseConfigFile() {
 	std::ifstream configFile(CONFIG_FILE);
 
 	if (configFile.fail()) {
-		//---std::cout << "config.txt file NOT exists 001\n" << std::endl;
 
 		//TODO: error handling. Search for cpu backup file and try to get info there  
 
 	} else {
-		//---std::cout << "config.txt file exists\n" << std::endl;
 		for (std::string line; std::getline(configFile, line); ) {
-			//---std::cout << line << std::endl;
 			if (std::regex_match(line, base_match, regPattern)) {
-				//---std::cout << "Found httpd_port value: " << base_match[2] << std::endl;
 				result = " \"httpd_port\" : ";
 				result += base_match[2];
 				result += ", \n";
 				httpd::miner_config->http_port = std::stoi(base_match[2]);
 			}
 		}
-		//---std::cout << result << std::endl;
 	}
 	return result;
 }
@@ -358,18 +328,12 @@ std::string httpd::parsePoolFile() {
 	std::ifstream poolFile(POOL_FILE);
 
 	if (poolFile.fail()) {
-		//---std::cout << "pool.txt file NOT exists 001\n" << std::endl;
 
 		//TODO: error handling. Search for pool backup file and try to get info there  
 
 	} else {
-		//---std::cout << "pool.txt file exists\n" << std::endl;
 		for (std::string line; std::getline(poolFile, line); ) {
-			//---std::cout << line << std::endl;
 			if (std::regex_match(line, base_match, regPattern)) {
-				//---std::cout << "Found pool_address value: " << base_match[2] << " and wallet_address value: " << base_match[3] << std::endl;
-				//result += line;
-				//result += "\n";
 
 				result = " \"pool_address\" : \"";
 				result += base_match[2];
@@ -382,7 +346,6 @@ std::string httpd::parsePoolFile() {
 				httpd::miner_config->wallet_address = base_match[4];
 			}
 		}
-		//---std::cout << result << std::endl;
 	}
 
 	return result;
@@ -441,7 +404,6 @@ bool httpd::updateCPUFile() {
 
 			}
 			else {
-				//---std::cout << "cpu.txt file exists\n" << std::endl;
 				for (std::string line; std::getline(cpuFile, line); ) {
 					if (!isCpuSection) {
 						if (std::regex_match(line, cpuSectionPattern)) {
@@ -502,7 +464,6 @@ bool httpd::updateCPUFile() {
 									cpuConfigContent += line;
 									cpuConfigContent += "\n";
 								}
-
 							}
 						}
 					}
@@ -585,7 +546,6 @@ bool httpd::updateGPUNvidiaFile() {
 				//TODO: error handling. Search for cpu backup file and try to get info there  
 
 			} else {
-				//---std::cout << "nvidia.txt file exists\n" << std::endl;
 				for (std::string line; std::getline(nvidiaFile, line); ) {
 					if (!isGpuSection) {
 						nvidiaConfigContent += line;
@@ -593,7 +553,6 @@ bool httpd::updateGPUNvidiaFile() {
 						if (std::regex_match(line, gpuSectionPattern)) {
 							isGpuSection = true;
 							nvidiaConfigContent += "[ \n";
-							//nvidiaConfigContent += "\n";
 						}
 					}
 					else {
@@ -683,7 +642,6 @@ bool httpd::updateGPUAMD() {
 
 			}
 			else {
-				//---std::cout << "nvidia.txt file exists\n" << std::endl;
 				for (std::string line; std::getline(amdFile, line); ) {
 					if (!isGpuSection) {
 						amdConfigContent += line;
@@ -691,7 +649,6 @@ bool httpd::updateGPUAMD() {
 						if (std::regex_match(line, gpuSectionPattern)) {
 							isGpuSection = true;
 							amdConfigContent += "[ \n";
-							//amdConfigContent += "\n";
 						}
 					}
 					else {
@@ -753,7 +710,6 @@ bool httpd::updateConfigFile() {
 				//TODO: error handling. Search for cpu backup file and try to get info there  
 
 			} else {
-				//---std::cout << "config.txt file exists\n" << std::endl;
 				for (std::string line; std::getline(configFile, line); ) {
 					if (std::regex_match(line, regPattern)) {
 					
@@ -821,7 +777,6 @@ bool httpd::updatePoolFile() {
 				//TODO: error handling. Search for cpu backup file and try to get info there  
 
 			} else {
-				//---std::cout << "config.txt file exists\n" << std::endl;
 				for (std::string line; std::getline(poolFile, line); ) {
 					if (std::regex_match(line, base_match, regPattern)) {
 						poolConfigContent += " {\"pool_address\" : \"";
@@ -897,7 +852,6 @@ std::string httpd::getCustomInfo () {
 bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 	bool result = false;
 
-	//std::cout << "Parsing post data \n   - key: " << keyIN << " \n   - value: " << valueIN << std::endl;
 	if (keyIN.compare("cpu_count") == 0) {
 		std::cout << "cpu_count key found" << std::endl;
 
@@ -1039,9 +993,6 @@ int httpd::iterate_post (void *coninfo_cls, enum MHD_ValueKind kind, const char 
 								 const char *transfer_encoding, const char *data, 
 								 uint64_t off, size_t size) {
 
-	//std::cout << "----[httpd::iterate_post(...)]" << std::endl;
-	//std::cout << "Reciving post data [iterate_post]\n   - key: " << key << "\n   - value: " << data << std::endl;
-
 	struct connection_info_struct *con_info = (connection_info_struct*)coninfo_cls;
 
 	if ((strcmp (key, "cpu_count") == 0) || 
@@ -1143,10 +1094,6 @@ int httpd::req_handler(void * cls,
 
 	struct MHD_Response * rsp;
 	std::cout << "Receiving a http request..."  << std::endl;
-	//std::cout << "   - url: " << url  << std::endl;
-	//std::cout << "   - method: " << method  << std::endl;
-	//std::cout << "   - version: " << version  << std::endl;
-	//std::cout << "   - upload_data: " << upload_data  << std::endl;
 
 	int retValue;
 
@@ -1185,11 +1132,11 @@ int httpd::req_handler(void * cls,
 		}
 	}
 
-	char transform[2048]; //TODO: optimize, really need this transform ¿?
+	char transform[2048];
 	std::string responsetxt;
 	*ptr = nullptr;
 	std::string str;
-	if(strcasecmp(url, "/devtest") == 0) { //FIXME: delete this when finish the testinf phase
+	if(strcasecmp(url, "/devtest") == 0) {
 		
 		snprintf(transform, 2048, askpage, getCustomInfo().c_str());
 		std::string responsetxtAux(transform);
@@ -1219,53 +1166,7 @@ int httpd::req_handler(void * cls,
 
 		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
-	}
-	/*else if(strcasecmp(url, "/style.css") == 0) {
-		const char* req_etag = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "If-None-Match");
-
-		if(req_etag != NULL && strcmp(req_etag, sHtmlCssEtag) == 0)
-		{ //Cache hit
-			rsp = MHD_create_response_from_buffer(0, nullptr, MHD_RESPMEM_PERSISTENT);
-
-			int ret = MHD_queue_response(connection, MHD_HTTP_NOT_MODIFIED, rsp);
-			MHD_destroy_response(rsp);
-			return ret;
-		}
-
-		rsp = MHD_create_response_from_buffer(sHtmlCssSize, (void*)sHtmlCssFile, MHD_RESPMEM_PERSISTENT);
-		MHD_add_response_header(rsp, "ETag", sHtmlCssEtag);
-		MHD_add_response_header(rsp, "Content-Type", "text/css; charset=utf-8");
-	}
-	else if(strcasecmp(url, "/api.json") == 0)
-	{
-		executor::inst()->get_http_report(EV_HTML_JSON, str);
-
-		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
-		MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
-	}
-	else if(strcasecmp(url, "/h") == 0 || strcasecmp(url, "/hashrate") == 0)
-	{
-		executor::inst()->get_http_report(EV_HTML_HASHRATE, str);
-
-		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
-		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
-	}
-	else if(strcasecmp(url, "/c") == 0 || strcasecmp(url, "/connection") == 0)
-	{
-		executor::inst()->get_http_report(EV_HTML_CONNSTAT, str);
-
-		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
-		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
-	}
-	else if(strcasecmp(url, "/r") == 0 || strcasecmp(url, "/results") == 0)
-	{
-		executor::inst()->get_http_report(EV_HTML_RESULTS, str);
-
-		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
-		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
-	}*/
-	else
-	{
+	} else {
 		//send_page(connection, errorpage);
 		std::string responseT(errorpage);
 		rsp = MHD_create_response_from_buffer(responseT.size(), (void*)responseT.c_str(), MHD_RESPMEM_MUST_COPY);

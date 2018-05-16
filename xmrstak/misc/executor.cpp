@@ -101,6 +101,15 @@ void executor::ex_clock_thd()
 
 	while (true)
 	{
+		if (executor::isPaused) {
+			uint64_t currentTimeW = get_timestamp_ms();
+
+			if (currentTimeW - lastTimeW < 100) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(100 - (currentTimeW - lastTimeW)));
+			}
+			lastTimeW = currentTimeW;
+		}
+		else {
 			std::this_thread::sleep_for(std::chrono::milliseconds(size_t(iTickTime)));
 
 			push_event(ex_event(EV_PERF_TICK));
@@ -124,6 +133,7 @@ void executor::ex_clock_thd()
 					ev++;
 			}
 			lck.unlock();
+		}
 	}
 }
 
@@ -636,19 +646,19 @@ void executor::ex_main()
 	if(jconf::inst()->GetVerboseLevel() >= 4)
 		push_timed_event(ex_event(EV_HASHRATE_LOOP), jconf::inst()->GetAutohashTime());
 
-	//uint64_t lastTimeW = get_timestamp_ms();
+	uint64_t lastTimeW = get_timestamp_ms();
 
 	size_t cnt = 0;
 	while (true)
 	{
-		//if (executor::isPaused) {
-		//	uint64_t currentTimeW = get_timestamp_ms();
+		if (executor::isPaused) {
+			uint64_t currentTimeW = get_timestamp_ms();
 
-		//	if (currentTimeW - lastTimeW < 500) {
-		//		std::this_thread::sleep_for(std::chrono::milliseconds(500 - (currentTimeW - lastTimeW)));
-		//	}
-		//	lastTimeW = currentTimeW;
-		//} else {
+			if (currentTimeW - lastTimeW < 100) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(100 - (currentTimeW - lastTimeW)));
+			}
+			lastTimeW = currentTimeW;
+		} else {
 
 			ev = oEventQ.pop();
 			switch (ev.iName)
@@ -730,7 +740,7 @@ void executor::ex_main()
 				assert(false);
 				break;
 			}
-		//}
+		}
 	}
 }
 

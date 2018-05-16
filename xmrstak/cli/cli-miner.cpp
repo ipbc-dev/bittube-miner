@@ -852,54 +852,90 @@ void delete_miner() {
 
 		httpd::cls();
 	}
-	catch (...) {//FIXME: test and delete this 
+	catch (...) {
 		std::cout << "Error deleting current miner execution" << std::endl;
 	}
 }
 
+bool check_expert_mode(bool* expertmode, bool* firstTime) {
+	bool errorResult = false;
+	*expertmode = false;
+	*firstTime = true;
+	
+	std::ifstream firstConfig("expert.json");
+	std::regex expertParamPattern(".*\(expert_mode\)\.*[:]\.*(true|false)\.*");
+	std::smatch base_match;
 
+	if (!firstConfig.fail()) {
+		*firstTime = false;
+		for (std::string line; std::getline(firstConfig, line); ) {
+			if (std::regex_match(line, base_match, expertParamPattern)) {
+				if (base_match[2].compare("true") == 0) {
+					*expertmode = true;
+				}
+				else if ((base_match[2].compare("false") != 0)) {
+					std::cout << "Error!! corrupt expert_mode value" << std::endl;
+					*firstTime = true; //Reset this config
+				}
+			}
+		}
+		firstConfig.close();
+	}
+	
+
+	if (*firstTime) {
+		std::string answer = "";
+		bool continueLoop = true;
+		std::cout << "Are you an expert?(y/n): " << std::endl;
+		std::cin >> answer;
+
+		while (continueLoop) {
+			if ((answer.compare("y") == 0) ||
+				(answer.compare("Y") == 0)) {
+				continueLoop = false;
+				*expertmode = true;
+
+			}
+			else if ((answer.compare("n") == 0) ||
+				(answer.compare("N") == 0)) {
+				continueLoop = false;
+			}
+		}
+
+		std::ofstream out("expert.json");
+		std::string expertContent = "{ \n";
+		expertContent += " \"expert_mode\" : ";
+		if (*expertmode) {
+			expertContent += "true";
+		}
+		else {
+			expertContent += "false";
+		}
+		expertContent += " \n } \n";
+		out << expertContent;
+		out.close();
+	}
+	
+	return errorResult;
+}
 
 void restart_miner(bool expertMode) {
 	delete_miner();
 
+	std::cout << "---------------------------------------------------" << std::endl;
+	std::cout << "Restarting program, please wait..." << std::endl;
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	int configRetValue = program_config(expertMode);
 	show_credits();
 	show_manage_info();
+	executor::isPaused = true;
 }
 
-int main(int argc, char *argv[])
-{
-	//Testing section ----
+int main(int argc, char *argv[]) {
 	bool expertMode = false;
-	bool watchdogLoopContinue = true;
-
-	std::string answer = "";
-	bool continueLoop = true;
-	std::cout << "Are you an expert?(y/n): " << std::endl;
-	std::cin >> answer;
-
-	while (continueLoop) {
-		if ((answer.compare("y") == 0) || 
-			(answer.compare("Y") == 0)) {
-			continueLoop = false;
-			expertMode = true;
-
-		}
-		else if ((answer.compare("n") == 0) ||
-			(answer.compare("N") == 0)) {
-			continueLoop = false;
-			//httpd::genDefaultConfig();
-		}
-	
-	
-	}
-
-	//std::cout << "Press enter to start..." << std::endl;
-	//std::cin.get();
-	//std::exit(42);
-
-	//--------------------
-
+	bool firstTime = false;
+	bool expertRetValue = check_expert_mode(&expertMode, &firstTime);
 
 #ifndef CONF_NO_TLS
 	SSL_library_init();
@@ -925,41 +961,52 @@ int main(int argc, char *argv[])
 	bool fromPause = false;
 
 	uint64_t lastTimeW = get_timestamp_ms();
-	//int key;
+	bool watchdogLoopContinue = true;
 
 	while (watchdogLoopContinue) {
+		
+		if (firstTime) { // Start miner process one time to finish configuration process
+			std::cout << "Configuring, please wait a little..." << std::endl;
+			firstTime = false;
+			executor::isPaused = false;
+			int startRetValue = start_miner_execution();
 
-		if (!executor::needRestart) {
-
-			if ((!executor::isPaused) && (!wasStarted)) {
-				wasStarted = true;
-				show_runtime_help();
-				int startRetValue = start_miner_execution();
-			}
-
-			if (!executor::isPaused) {
-				if (fromPause) {
-					fromPause = false;
-					std::cin.clear();
-					std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-				}
-				runningM = true;
-				parse_runtime_input();
-			}
-			else {
-				fromPause = true;
-				if (runningM) {
-					runningM = false;
-					show_manage_info();
-				}
-			}
-		}
-		else {
-			executor::needRestart = false;
-			restart_miner(expertMode);
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 			executor::isPaused = true;
-			wasStarted = false;
-			runningM = true;
+			
+		} else {
+			if (!executor::needRestart) {
+
+				if ((!executor::isPaused) && (!wasStarted)) {
+					wasStarted = true;
+					show_runtime_help();
+					int startRetValue = start_miner_execution();
+				}
+
+				if (!executor::isPaused) {
+					if (fromPause) {
+						fromPause = false;
+						std::cin.putback('\n');
+						std::cin.clear();
+						std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+					}
+					runningM = true;
+					parse_runtime_input();
+				} else {
+					fromPause = true;
+					if (runningM) {
+						runningM = false;
+						show_manage_info();
+					}
+				}
+			} else { // Restarting program
+
+				executor::needRestart = false;
+				restart_miner(expertMode);
+				executor::isPaused = true;
+				wasStarted = false;
+				runningM = true;
+			}
 		}
 		
 		uint64_t currentTimeW = get_timestamp_ms();

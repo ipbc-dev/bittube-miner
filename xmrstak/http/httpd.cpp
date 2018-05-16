@@ -65,9 +65,9 @@
 struct config_data {
 	bool isNeedUpdate = false;
 
-	int http_port = 1600;
-	std::string pool_address = "pool.ipbc.io:13333";
-	std::string wallet_address = "";
+	int http_port = 8282;
+	std::string pool_address = "support.ipbc.io:13333";
+	std::string wallet_address = "bxdrUctzVxK7Rac6iKDN4n9NgGKiCmeg45bSgqvQ99HTNFnmb94nenMXmGhcgS3RhKPSMArzrQxbV3fXAtp2pCGz2o13F2HMw";
 
 	bool isConfiguring = false;//FIXME: really needed, there is posible parallel updatings¿?
 
@@ -418,8 +418,8 @@ bool httpd::updateCPUFile() {
 	std::regex currCPUPattern("\.*\(current_cpu_count\)\.*\([0-9]\+\)\.*");
 
 	if (httpd::miner_config != nullptr) {
-		cpuCount = miner_config->cpu_count;
-		cpuCountObjetive = miner_config->current_cpu_count;	
+		cpuCount = httpd::miner_config->cpu_count;
+		cpuCountObjetive = httpd::miner_config->current_cpu_count;
 	} else {
 		isUpdateData = false;
 
@@ -495,7 +495,7 @@ bool httpd::updateCPUFile() {
 								}
 								if (std::regex_match(line, currCPUPattern)) {
 									cpuConfigContent += "\"current_cpu_count\" : ";
-									cpuConfigContent += std::to_string(httpd::miner_config->current_cpu_count);
+									cpuConfigContent += std::to_string(cpuCountObjetive);
 									cpuConfigContent += " , \n";
 								}
 								else {
@@ -995,26 +995,14 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
  */
 void httpd::updateConfigFiles () {
 	if ((httpd::miner_config != nullptr) && (httpd::miner_config->isNeedUpdate)) {
+		httpd::miner_config->isNeedUpdate = false;
 		updateCPUFile();
 		updateGPUNvidiaFile();
 		updateGPUAMD();
 		updateConfigFile();
 		updatePoolFile();
-		httpd::miner_config->isNeedUpdate = false;
 		executor::needRestart = true;
 	}
-
-
-	/*
-	if (!(updateCPUFile() ||
-		updateGPUNvidiaFile() ||
-		updateGPUAMD() ||
-		updateConfigFile() ||
-		updatePoolFile())) {
-		std::cout << "Something went wrong with updating config files" << std::endl;
-
-		//TODO: error hadling
-	}*/
 }
 
 //----------------------------------------------------------------------------------------------------------

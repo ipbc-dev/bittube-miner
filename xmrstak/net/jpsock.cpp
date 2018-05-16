@@ -243,41 +243,54 @@ bool jpsock::jpsock_thd_main()
 
 	char buf[iSockBufferSize];
 	size_t datalen = 0;
+
+	uint64_t lastTimeW = get_timestamp_ms();
+
 	while (true)
 	{
-		int ret = sck->recv(buf + datalen, sizeof(buf) - datalen);
+		if (executor::isPaused) {
+			uint64_t currentTimeW = get_timestamp_ms();
 
-		if(ret <= 0)
-			return false;
-
-		datalen += ret;
-
-		if (datalen >= sizeof(buf))
-		{
-			sck->close(false);
-			return set_socket_error("RECEIVE error: data overflow");
+			if (currentTimeW - lastTimeW < 100) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(100 - (currentTimeW - lastTimeW)));
+			}
+			lastTimeW = currentTimeW;
 		}
+		else {
+			int ret = sck->recv(buf + datalen, sizeof(buf) - datalen);
 
-		char* lnend;
-		char* lnstart = buf;
-		while ((lnend = (char*)memchr(lnstart, '\n', datalen)) != nullptr)
-		{
-			lnend++;
-			int lnlen = lnend - lnstart;
+			if (ret <= 0)
+				return false;
 
-			if (!process_line(lnstart, lnlen))
+			datalen += ret;
+
+			if (datalen >= sizeof(buf))
 			{
 				sck->close(false);
-				return false;
+				return set_socket_error("RECEIVE error: data overflow");
 			}
 
-			datalen -= lnlen;
-			lnstart = lnend;
-		}
+			char* lnend;
+			char* lnstart = buf;
+			while ((lnend = (char*)memchr(lnstart, '\n', datalen)) != nullptr)
+			{
+				lnend++;
+				int lnlen = lnend - lnstart;
 
-		//Got leftover data? Move it to the front
-		if (datalen > 0 && buf != lnstart)
-			memmove(buf, lnstart, datalen);
+				if (!process_line(lnstart, lnlen))
+				{
+					sck->close(false);
+					return false;
+				}
+
+				datalen -= lnlen;
+				lnstart = lnend;
+			}
+
+			//Got leftover data? Move it to the front
+			if (datalen > 0 && buf != lnstart)
+				memmove(buf, lnstart, datalen);
+		}
 	}
 }
 

@@ -1001,7 +1001,9 @@ void httpd::updateConfigFiles () {
 		updateGPUAMD();
 		updateConfigFile();
 		updatePoolFile();
+		
 		executor::needRestart = true;
+		executor::isPaused = true;
 	}
 }
 

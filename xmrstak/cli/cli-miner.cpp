@@ -812,23 +812,30 @@ int start_miner_execution() {
 	return result;
 }
 
-void parse_runtime_input() {
+void parse_runtime_input(bool* running) {
+	*running = true;
+
 	int key = get_key();
 
-	switch (key)
-	{
-	case 'h':
-		executor::inst()->push_event(ex_event(EV_USR_HASHRATE));
-		break;
-	case 'r':
-		executor::inst()->push_event(ex_event(EV_USR_RESULTS));
-		break;
-	case 'c':
-		executor::inst()->push_event(ex_event(EV_USR_CONNSTAT));
-		break;
-	default:
-		break;
+	if ((!executor::isPaused) && (!executor::needRestart)) {
+
+		switch (key)
+		{
+		case 'h':
+			executor::inst()->push_event(ex_event(EV_USR_HASHRATE));
+			break;
+		case 'r':
+			executor::inst()->push_event(ex_event(EV_USR_RESULTS));
+			break;
+		case 'c':
+			executor::inst()->push_event(ex_event(EV_USR_CONNSTAT));
+			break;
+		default:
+			break;
+		}
 	}
+
+	*running = false;
 
 }
 
@@ -959,9 +966,11 @@ int main(int argc, char *argv[]) {
 	bool wasStarted = false;
 	bool runningM = true;
 	bool fromPause = false;
+	bool runningInputParser = false;
 
 	uint64_t lastTimeW = get_timestamp_ms();
 	bool watchdogLoopContinue = true;
+	std::thread* inputThread = nullptr;
 
 	while (watchdogLoopContinue) {
 		
@@ -991,7 +1000,11 @@ int main(int argc, char *argv[]) {
 						std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 					}
 					runningM = true;
-					parse_runtime_input();
+					//parse_runtime_input();
+					if (!runningInputParser) {
+						inputThread = new std::thread(&parse_runtime_input, &runningInputParser);
+						inputThread->detach();
+					}
 				} else {
 					fromPause = true;
 					if (runningM) {

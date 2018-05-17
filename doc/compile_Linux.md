@@ -1,4 +1,4 @@
-# Compile **ipbc-miner** for Linux
+# Compile **bittube-miner** for Linux
 
 ## Install Dependencies
 
@@ -18,25 +18,25 @@
 ```
     # Ubuntu / Debian
     sudo apt install libmicrohttpd-dev libssl-dev cmake build-essential libhwloc-dev
-    git clone https://github.com/ipbc-dev/ipbc-miner.git
-    mkdir ipbc-miner/build
-    cd ipbc-miner/build
+    git clone https://github.com/ipbc-dev/bittube-miner.git
+    mkdir bittube-miner/build
+    cd bittube-miner/build
     cmake ..
     make install
 
     # Arch
     sudo pacman -S --needed base-devel hwloc openssl cmake libmicrohttpd
-    git clone https://github.com/ipbc-dev/ipbc-miner.git
-    mkdir ipbc-miner/build
-    cd ipbc-miner/build
+    git clone https://github.com/ipbc-dev/bittube-miner.git
+    mkdir bittube-miner/build
+    cd bittube-miner/build
     cmake ..
     make install
 
     # Fedora
     sudo dnf install gcc gcc-c++ hwloc-devel libmicrohttpd-devel libstdc++-static make openssl-devel cmake
-    git clone https://github.com/ipbc-dev/ipbc-miner.git
-    mkdir ipbc-miner/build
-    cd ipbc-miner/build
+    git clone https://github.com/ipbc-dev/bittube-miner.git
+    mkdir bittube-miner/build
+    cd bittube-miner/build
     cmake ..
     make install
 
@@ -44,9 +44,9 @@
     sudo yum install centos-release-scl epel-release
     sudo yum install cmake3 devtoolset-4-gcc* hwloc-devel libmicrohttpd-devel openssl-devel make
     scl enable devtoolset-4 bash
-    git clone https://github.com/ipbc-dev/ipbc-miner.git
-    mkdir ipbc-miner/build
-    cd ipbc-miner/build
+    git clone https://github.com/ipbc-dev/bittube-miner.git
+    mkdir bittube-miner/build
+    cd bittube-miner/build
     cmake3 ..
     make install
 
@@ -59,9 +59,9 @@
     cd /tmp/cmake-3.4.1/ && ./configure && make && sudo make install && cd -
     sudo update-alternatives --install /usr/bin/cmake cmake /usr/local/bin/cmake 1 --force
     sudo apt install libmicrohttpd-dev libssl-dev libhwloc-dev
-    git clone https://github.com/ipbc-dev/ipbc-miner.git
-    mkdir ipbc-miner/build
-    cd ipbc-miner/build
+    git clone https://github.com/ipbc-dev/bittube-miner.git
+    mkdir bittube-miner/build
+    cd bittube-miner/build
     cmake ..
     make install
     
@@ -84,7 +84,7 @@
     make
     sudo make install
     cd ..
-    git clone https://github.com/ipbc-dev/ipbc-miner.git
+    git clone https://github.com/ipbc-dev/bittube-miner.git
     cd xmr-stak
     mkdir build
     cd build

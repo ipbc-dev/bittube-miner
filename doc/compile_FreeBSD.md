@@ -1,4 +1,4 @@
-# Compile **ipbc-miner** for FreeBSD
+# Compile **bittube-miner** for FreeBSD
 
 ## Install Dependencies
 
@@ -10,10 +10,10 @@ From the root shell, run the following commands:
 
 Type 'y' and hit enter to proceed with installing the packages.
 
-    git clone https://github.com/ipbc-dev/ipbc-miner.git
-    mkdir ipbc-miner/build
-    cd ipbc-miner/build
+    git clone https://github.com/ipbc-dev/bittube-miner.git
+    mkdir bittube-miner/build
+    cd bittube-miner/build
     cmake ..
     make install
 
-Now you have the binary located at "bin/ipbc-miner" and the needed shared libraries.
+Now you have the binary located at "bin/bittube-miner" and the needed shared libraries.

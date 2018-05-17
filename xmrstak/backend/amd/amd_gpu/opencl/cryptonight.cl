@@ -553,7 +553,7 @@ __kernel void JOIN(cn0,ALGO)(__global ulong *input, __global uint4 *Scratchpad, 
 
 __attribute__((reqd_work_group_size(WORKSIZE, 1, 1)))
 __kernel void JOIN(cn1,ALGO) (__global uint4 *Scratchpad, __global ulong *states, ulong Threads
-// cryptonight_monero || cryptonight_aeon || cryptonight_ipbc
+// cryptonight_monero || cryptonight_aeon || cryptonight_bittube
 #if(ALGO == 3 || ALGO == 5 || ALGO == 6)
 , __global ulong *input
 #endif

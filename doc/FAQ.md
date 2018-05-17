@@ -62,4 +62,4 @@ This typically means you are trying to run it on a CPU that does not have [AES](
 ## Virus Protection Alert
 
 Some virus protection software flags the miner binary as *malware*. This is a false positive — the software does not contain any malware (and since it is open source, you can verify that yourself!)
-If your antivirus software flags **ipbc-miner**, it will likely move it to its quarantine area. You may have to whitelist **ipbc-miner** in your antivirus.
+If your antivirus software flags **bittube-miner**, it will likely move it to its quarantine area. You may have to whitelist **bittube-miner** in your antivirus.

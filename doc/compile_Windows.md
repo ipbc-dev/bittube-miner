@@ -1,4 +1,4 @@
-# Compile **ipbc-miner** for Windows
+# Compile **bittube-miner** for Windows
 
 ## Install Dependencies
 

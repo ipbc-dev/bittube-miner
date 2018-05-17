@@ -1,4 +1,4 @@
-project(ipbc-miner)
+project(bittube-miner)
 
 cmake_minimum_required(VERSION 3.4.0)
 
@@ -450,15 +450,15 @@ endif()
 # compile C files
 file(GLOB SRCFILES_C "xmrstak/backend/cpu/crypto/*.c")
 
-add_library(ipbc-miner-c
+add_library(bittube-miner-c
     STATIC
     ${SRCFILES_C}
 )
-set_property(TARGET ipbc-miner-c PROPERTY C_STANDARD 99)
+set_property(TARGET bittube-miner-c PROPERTY C_STANDARD 99)
 if(MICROHTTPD_ENABLE)
-    target_link_libraries(ipbc-miner-c ${MHTD})
+    target_link_libraries(bittube-miner-c ${MHTD})
 endif()
-target_link_libraries(ipbc-miner-c ${LIBS})
+target_link_libraries(bittube-miner-c ${LIBS})
 
 # compile generic backend files
 file(GLOB BACKEND_CPP
@@ -470,11 +470,11 @@ file(GLOB BACKEND_CPP
     "xmrstak/misc/*.cpp"
     "xmrstak/net/*.cpp")
 
-add_library(ipbc-miner-backend
+add_library(bittube-miner-backend
     STATIC
     ${BACKEND_CPP}
 )
-target_link_libraries(ipbc-miner-backend ipbc-miner-c ${CMAKE_DL_LIBS})
+target_link_libraries(bittube-miner-backend bittube-miner-c ${CMAKE_DL_LIBS})
 
 # compile CUDA backend
 if(CUDA_FOUND)
@@ -485,23 +485,23 @@ if(CUDA_FOUND)
     if(CUDA_COMPILER STREQUAL "clang")
         # build device code with clang
         add_library(
-            ipbc-miner-cuda-backend
+            bittube-miner-cuda-backend
             SHARED
             ${CUDASRCFILES}
         )
-        set_target_properties(ipbc-miner-cuda-backend PROPERTIES COMPILE_FLAGS ${CLANG_BUILD_FLAGS})
-        set_target_properties(ipbc-miner-cuda-backend PROPERTIES LINKER_LANGUAGE CXX)
+        set_target_properties(bittube-miner-cuda-backend PROPERTIES COMPILE_FLAGS ${CLANG_BUILD_FLAGS})
+        set_target_properties(bittube-miner-cuda-backend PROPERTIES LINKER_LANGUAGE CXX)
         set_source_files_properties(${CUDASRCFILES} PROPERTIES LANGUAGE CXX)
     else()
         #  build device code with nvcc
         cuda_add_library(
-            ipbc-miner-cuda-backend
+            bittube-miner-cuda-backend
             SHARED
             ${CUDASRCFILES}
         )
     endif()
-    target_link_libraries(ipbc-miner-cuda-backend ${CUDA_LIBRARIES})
-    target_link_libraries(ipbc-miner-cuda-backend ipbc-miner-backend)
+    target_link_libraries(bittube-miner-cuda-backend ${CUDA_LIBRARIES})
+    target_link_libraries(bittube-miner-cuda-backend bittube-miner-backend)
 endif()
 
 # compile AMD backend
@@ -509,12 +509,12 @@ if(OpenCL_FOUND)
     file(GLOB OPENCLSRCFILES  
         "xmrstak/backend/amd/amd_gpu/*.cpp"
         "xmrstak/backend/amd/*.cpp")
-    add_library(ipbc-miner-opencl-backend
+    add_library(bittube-miner-opencl-backend
         SHARED
         ${OPENCLSRCFILES}
     )
-    target_link_libraries(ipbc-miner-opencl-backend ${OpenCL_LIBRARY} )
-    target_link_libraries(ipbc-miner-opencl-backend ipbc-miner-backend)
+    target_link_libraries(bittube-miner-opencl-backend ${OpenCL_LIBRARY} )
+    target_link_libraries(bittube-miner-opencl-backend bittube-miner-backend)
 endif()
 
 # compile final binary
@@ -522,15 +522,15 @@ file(GLOB SRCFILES_CPP "xmrstak/cli/*.cpp")
 set_source_files_properties(${SRCFILES_CPP} PROPERTIES LANGUAGE CXX)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    add_executable(ipbc-miner ${SRCFILES_CPP} xmrstak/cli/ipbc-miner.manifest)
+    add_executable(bittube-miner ${SRCFILES_CPP} xmrstak/cli/bittube-miner.manifest)
 else()
-    add_executable(ipbc-miner ${SRCFILES_CPP})
+    add_executable(bittube-miner ${SRCFILES_CPP})
 endif()
 
 set(EXECUTABLE_OUTPUT_PATH "bin" CACHE STRING "Path to place executables relative to ${CMAKE_INSTALL_PREFIX}")
 set(LIBRARY_OUTPUT_PATH "bin" CACHE STRING "Path to place libraries relative to ${CMAKE_INSTALL_PREFIX}")
 
-target_link_libraries(ipbc-miner ${LIBS} ipbc-miner-c ipbc-miner-backend)
+target_link_libraries(bittube-miner ${LIBS} bittube-miner-c bittube-miner-backend)
 
 ################################################################################
 # Install
@@ -539,27 +539,27 @@ target_link_libraries(ipbc-miner ${LIBS} ipbc-miner-c ipbc-miner-backend)
 
 # do not install the binary if the project and install are equal
 if( NOT CMAKE_INSTALL_PREFIX STREQUAL PROJECT_BINARY_DIR )
-    install(TARGETS ipbc-miner
+    install(TARGETS bittube-miner
             RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/${EXECUTABLE_OUTPUT_PATH}")
     if(CUDA_FOUND)
         if(WIN32)
-            install(TARGETS ipbc-miner-cuda-backend
+            install(TARGETS bittube-miner-cuda-backend
                 RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/${LIBRARY_OUTPUT_PATH}")
         else()
-            install(TARGETS ipbc-miner-cuda-backend
+            install(TARGETS bittube-miner-cuda-backend
                 LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/${LIBRARY_OUTPUT_PATH}")
         endif()
     endif()
     if(OpenCL_FOUND)
         if(WIN32)
-            install(TARGETS ipbc-miner-opencl-backend
+            install(TARGETS bittube-miner-opencl-backend
                 RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/${LIBRARY_OUTPUT_PATH}")
         else()
-            install(TARGETS ipbc-miner-opencl-backend
+            install(TARGETS bittube-miner-opencl-backend
                 LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/${LIBRARY_OUTPUT_PATH}")
         endif()
     endif()
 else()
     # this rule is used if the install prefix is the build directory
-    install(CODE "MESSAGE(\"ipbc-miner installed to folder 'bin'\")")
+    install(CODE "MESSAGE(\"bittube-miner installed to folder 'bin'\")")
 endif()

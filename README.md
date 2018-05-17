@@ -1,6 +1,6 @@
-# IPBC-Miner
+# BitTube-Miner
 
-[IPBC](https://ipbc.io/)
+[BitTube](https://coin.bit.tube/)
 
 Based on XMR-Stak by fireice_uk and psychocrypt
 
@@ -25,4 +25,4 @@ Based on XMR-Stak by fireice_uk and psychocrypt
 
 ## Download
 
-You can find the latest releases and precompiled binaries on GitHub under [Releases](https://github.com/ipbc-dev/ipbc-miner/releases).
+You can find the latest releases and precompiled binaries on GitHub under [Releases](https://github.com/ipbc-dev/bittube-miner/releases).

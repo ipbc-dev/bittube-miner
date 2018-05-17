@@ -1,4 +1,4 @@
-# HowTo Use ipbc-miner
+# HowTo Use bittube-miner
 
 ## Content Overview
 * [Configuration](#configuration)
@@ -19,7 +19,7 @@ The number of files depends on the available backends.
 Note: If the pool is ignoring the option `rig_id` in `pools.txt` to name your worker please check the pool documentation how a worker name can be set.
 
 ## Usage on Windows
-1) Double click the `ipbc-miner.exe` file
+1) Double click the `bittube-miner.exe` file
 2) Fill in the pool url settings, currency, username and password
 
 `set XMRSTAK_NOWAIT=1` disable the dialog `Press any key to exit.` for non UAC execution.
@@ -27,27 +27,27 @@ Note: If the pool is ignoring the option `rig_id` in `pools.txt` to name your wo
 
 ## Usage on Linux & macOS
 1) Open a terminal within the folder with the binary
-2) Start the miner with `./ipbc-miner`
+2) Start the miner with `./bittube-miner`
 
 ## Command Line Options
 
 The miner allow to overwrite some of the settings via command line options.
-Run `ipbc-miner --help` to show all available command line options.
+Run `bittube-miner --help` to show all available command line options.
 
 ## Docker image usage
 
 You can run the Docker image the following way:
 
 ```
-docker run --rm -it -u $(id -u):$(id -g) --name ipbc-dev/ipbc-miner -v "$PWD":/mnt ipbc-miner
-docker stop ipbc-miner
-docker run --rm -it -u $(id -u):$(id -g) --name ipbc-dev/ipbc-miner -v "$PWD":/mnt ipbc-miner --config config.txt
+docker run --rm -it -u $(id -u):$(id -g) --name ipbc-dev/bittube-miner -v "$PWD":/mnt bittube-miner
+docker stop bittube-miner
+docker run --rm -it -u $(id -u):$(id -g) --name ipbc-dev/bittube-miner -v "$PWD":/mnt bittube-miner --config config.txt
 ```
 
 Debug the docker image by getting inside:
 
 ```
-docker run --entrypoint=/bin/bash --rm -it -u $(id -u):$(id -g) --name ipbc-dev/ipbc-miner -v "$PWD":/mnt ipbc-miner
+docker run --entrypoint=/bin/bash --rm -it -u $(id -u):$(id -g) --name ipbc-dev/bittube-miner -v "$PWD":/mnt bittube-miner
 ```
 
 ## HTML and JSON API report configuraton

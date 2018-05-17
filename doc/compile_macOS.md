@@ -1,8 +1,8 @@
-# Compile **ipbc-miner** for macOS
+# Compile **bittube-miner** for macOS
 
 ## Dependencies
 
-Assuming you already have [Homebrew](https://brew.sh) installed, the installation of dependencies is pretty straightforward and will generate the `ipbc-miner` binary in the `bin/` directory.
+Assuming you already have [Homebrew](https://brew.sh) installed, the installation of dependencies is pretty straightforward and will generate the `bittube-miner` binary in the `bin/` directory.
 
 ### For NVIDIA GPUs
 

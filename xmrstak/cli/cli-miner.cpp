@@ -203,7 +203,7 @@ void do_guided_pool_config()
 	auto& currency = params::inst().currency;
 	if(currency.empty() || !jconf::IsOnAlgoList(currency))
 	{
-		currency = "ipbc";
+		currency = "bittube";
 	}
 
 	auto& pool = params::inst().poolURL;
@@ -720,7 +720,7 @@ int main(int argc, char *argv[])
 	printer::inst()->print_str("-------------------------------------------------------------------\n");
 	printer::inst()->print_str(get_version_str_short().c_str());
 	printer::inst()->print_str("\n\n");
-	printer::inst()->print_str("Brought to you by IPBC.\n");
+	printer::inst()->print_str("Brought to you by BitTube.\n");
 	printer::inst()->print_str("Based on XMR-Stak by fireice_uk and psychocrypt.\n");
 	printer::inst()->print_str("Based on CPU mining code by wolf9466 (heavily optimized by fireice_uk).\n");
 #ifndef CONF_NO_CUDA

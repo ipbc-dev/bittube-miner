@@ -265,7 +265,7 @@ void minethd::work_main()
 			continue;
 		}
 		uint8_t new_version = oWork.getVersion();
-		if (::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgo() == cryptonight_ipbc) new_version = oWork.bWorkBlob[1];
+		if (::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgo() == cryptonight_bittube) new_version = oWork.bWorkBlob[1];
 		if(new_version != version || oWork.iPoolId != lastPoolId)
 		{
 			coinDescription coinDesc = ::jconf::inst()->GetCurrentCoinSelection().GetDescription(oWork.iPoolId);

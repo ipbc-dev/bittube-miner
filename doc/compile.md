@@ -1,4 +1,4 @@
-# Compile ipbc-miner
+# Compile bittube-miner
 
 ## Content Overview
 * [Build System](#build-system)
@@ -17,7 +17,7 @@ The build system is CMake, if you are not familiar with CMake you can learn more
 
 By default the miner will be build with all dependencies. Each optional dependency can be disabled (this will reduce the miner features).
 
-There are two easy ways to set variables for `cmake` to configure *ipbc-miner*
+There are two easy ways to set variables for `cmake` to configure *bittube-miner*
 - use the ncurses GUI
   - `ccmake ..`
   - edit your options
@@ -35,8 +35,8 @@ After the configuration you need to compile the miner, follow the guide for your
 
 ## Generic Build Options
 - `CMAKE_INSTALL_PREFIX` install miner to the home folder
-  - `cmake .. -DCMAKE_INSTALL_PREFIX=$HOME/ipbc-miner`
-  - you can find the binary and the `config.txt` file after `make install` in `$HOME/ipbc-miner/bin`
+  - `cmake .. -DCMAKE_INSTALL_PREFIX=$HOME/bittube-miner`
+  - you can find the binary and the `config.txt` file after `make install` in `$HOME/bittube-miner/bin`
 - `CMAKE_LINK_STATIC` link libgcc and libstdc++ libraries static (default OFF)
   - disable with `cmake .. -DCMAKE_LINK_STATIC=ON`
   - if you use static compile to run the miner on another system set `-DXMR-STAK_COMPILE=generic`

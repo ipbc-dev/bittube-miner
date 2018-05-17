@@ -799,6 +799,10 @@ void minethd::multiway_work_main()
 
 			while (globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
 			{
+				if (executor::needRestart) {
+					break;
+				}
+
 				if ((iCount++ & 0x7) == 0)  //Store stats every 8*N hashes
 				{
 					uint64_t iStamp = get_timestamp_ms();
@@ -833,6 +837,9 @@ void minethd::multiway_work_main()
 					while (executor::isPaused) {
 						std::this_thread::sleep_for(std::chrono::milliseconds(50));
 						std::this_thread::yield();
+						if (executor::needRestart) {
+							break;
+						}
 					}
 				}
 				

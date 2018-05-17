@@ -248,6 +248,10 @@ bool jpsock::jpsock_thd_main()
 
 	while (true)
 	{
+		if (executor::needRestart) {
+			break;
+		}
+
 		if (executor::isPaused) {
 			uint64_t currentTimeW = get_timestamp_ms();
 
@@ -277,6 +281,7 @@ bool jpsock::jpsock_thd_main()
 				lnend++;
 				int lnlen = lnend - lnstart;
 
+				if (!executor::isPaused)
 				if (!process_line(lnstart, lnlen))
 				{
 					sck->close(false);

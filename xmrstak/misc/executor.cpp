@@ -101,27 +101,34 @@ void executor::ex_clock_thd()
 	{
 			std::this_thread::sleep_for(std::chrono::milliseconds(size_t(iTickTime)));
 
-			push_event(ex_event(EV_PERF_TICK));
-
-			//Eval pool choice every fourth tick
-			if ((tick++ & 0x03) == 0)
-				push_event(ex_event(EV_EVAL_POOL_CHOICE));
-
-			// Service timed events
-			std::unique_lock<std::mutex> lck(timed_event_mutex);
-			std::list<timed_event>::iterator ev = lTimedEvents.begin();
-			while (ev != lTimedEvents.end())
-			{
-				ev->ticks_left--;
-				if (ev->ticks_left == 0)
-				{
-					push_event(std::move(ev->event));
-					ev = lTimedEvents.erase(ev);
-				}
-				else
-					ev++;
+			if (executor::needRestart) {
+				break;
 			}
-			lck.unlock();
+
+			if (!executor::isPaused) {
+				push_event(ex_event(EV_PERF_TICK));
+
+				//Eval pool choice every fourth tick
+				if ((tick++ & 0x03) == 0)
+					push_event(ex_event(EV_EVAL_POOL_CHOICE));
+
+
+				// Service timed events
+				std::unique_lock<std::mutex> lck(timed_event_mutex);
+				std::list<timed_event>::iterator ev = lTimedEvents.begin();
+				while (ev != lTimedEvents.end())
+				{
+					ev->ticks_left--;
+					if (ev->ticks_left == 0)
+					{
+						push_event(std::move(ev->event));
+						ev = lTimedEvents.erase(ev);
+					}
+					else
+						ev++;
+				}
+				lck.unlock();
+			}
 	}
 }
 
@@ -639,6 +646,10 @@ void executor::ex_main()
 	size_t cnt = 0;
 	while (true)
 	{
+		if (executor::needRestart) {
+			break;
+		}
+
 		if (executor::isPaused) {
 			uint64_t currentTimeW = get_timestamp_ms();
 

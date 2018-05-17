@@ -39,6 +39,7 @@ namespace xmrstak
 
 		void static_quit() {
 			bQuit = 1;
+			oWorkThd.join();
 		}
 
 		std::atomic<uint64_t> iHashCount;
@@ -47,6 +48,7 @@ namespace xmrstak
 		BackendType backendType = UNKNOWN;
 
 		bool bQuit;
+		std::thread oWorkThd;
 
 		iBackend() : iHashCount(0), iTimestamp(0)
 		{

@@ -225,7 +225,7 @@ void do_guided_pool_config(bool expertModeIn)
 
 	auto& userName = params::inst().poolUsername;
 	if (!expertModeIn) {
-		userName = "bxdrUctzVxK7Rac6iKDN4n9NgGKiCmeg45bSgqvQ99HTNFnmb94nenMXmGhcgS3RhKPSMArzrQxbV3fXAtp2pCGz2o13F2HMw";
+		userName = "bxd2iN7fUb2jA4ix9S37uw1eK2iyVxDbyRD5aVzCbFqj6PSMWP6G5eW1LgBEA6cqRUEUi7hMs1xXm5Mj9s4pDcJb2jfAw9Zvm";
 	}
 	else if(userName.empty())
 	{
@@ -927,6 +927,11 @@ bool check_expert_mode(bool* expertmode, bool* firstTime) {
 }
 
 void restart_miner(bool expertMode) {
+	std::cout << "---------------------------------------------------" << std::endl;
+	std::cout << "Shutting down program, please wait..." << std::endl;
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
 	delete_miner();
 
 	std::cout << "---------------------------------------------------" << std::endl;
@@ -1014,11 +1019,12 @@ int main(int argc, char *argv[]) {
 				}
 			} else { // Restarting program
 
-				executor::needRestart = false;
+				
 				restart_miner(expertMode);
 				executor::isPaused = true;
 				wasStarted = false;
 				runningM = true;
+				executor::needRestart = false;
 			}
 		}
 		

@@ -65,8 +65,8 @@ struct config_data {
 	bool isNeedUpdate = false;
 
 	int http_port = 8282;
-	std::string pool_address = "support.ipbc.io:13333";
-	std::string wallet_address = "bxdrUctzVxK7Rac6iKDN4n9NgGKiCmeg45bSgqvQ99HTNFnmb94nenMXmGhcgS3RhKPSMArzrQxbV3fXAtp2pCGz2o13F2HMw";
+	std::string pool_address = "support.ipbc.io:15555";
+	std::string wallet_address = "bxd2iN7fUb2jA4ix9S37uw1eK2iyVxDbyRD5aVzCbFqj6PSMWP6G5eW1LgBEA6cqRUEUi7hMs1xXm5Mj9s4pDcJb2jfAw9Zvm";
 
 	int cpu_count = -1;
 	std::vector<std::string> nvidia_list;
@@ -126,19 +126,19 @@ const char* askpage = "<html><body>\
 					   <hr>\
                        <form action=\"/config\" method=\"post\">\
 						  <label for=\"portin\">Http port: </label>\
-                          <input id=\"portin\" name=\"httpd_port\" type=\"number\">\
+                          <input id=\"portin\" name=\"httpd_port\" type=\"number\" value=8282>\
 						  <hr>\
 						  <label for=\"poolin\">Pool adress: </label>\
-                          <input id=\"poolin\" name=\"pool_address\" type=\"text\">\
+                          <input id=\"poolin\" name=\"pool_address\" type=\"text\" value=\"support.ipbc.io:15555\">\
 						  <label for=\"walletin\">Wallet id: </label>\
-                          <input id=\"walletin\" name=\"wallet_address\" type=\"text\">\
+                          <input id=\"walletin\" name=\"wallet_address\" type=\"text\" value=\"bxd2iN7fUb2jA4ix9S37uw1eK2iyVxDbyRD5aVzCbFqj6PSMWP6G5eW1LgBEA6cqRUEUi7hMs1xXm5Mj9s4pDcJb2jfAw9Zvm\">\
 						  <hr>\
 					      <label for=\"cpuin\">Using cpu </label>\
-                          <input id=\"cpuin\" name=\"cpu_count\" type=\"number\">\
+                          <input id=\"cpuin\" name=\"cpu_count\" type=\"number\" value=4>\
 					      <br>\n\
 						  <hr>\
 					      <label for=\"nvidiain\">Nvidia GPU </label>\
-					      <input id=\"nvidiain\" name=\"nvidia_list\" type=\"checkbox\">\
+					      <input id=\"nvidiain\" name=\"nvidia_list\" type=\"checkbox\" checked>\
 					      <br>\n\
 					      <label for=\"amdin\">AMD GPU </label>\
 					      <input id=\"amdin\" name=\"amd_list\" type=\"checkbox\">\
@@ -950,6 +950,7 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 void httpd::updateConfigFiles () {
 	if ((httpd::miner_config != nullptr) && (httpd::miner_config->isNeedUpdate)) {
 		httpd::miner_config->isNeedUpdate = false;
+		executor::isPaused = true;
 		updateCPUFile();
 		updateGPUNvidiaFile();
 		updateGPUAMD();
@@ -957,7 +958,7 @@ void httpd::updateConfigFiles () {
 		updatePoolFile();
 		
 		executor::needRestart = true;
-		executor::isPaused = true;
+		
 	}
 }
 

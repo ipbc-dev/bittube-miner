@@ -934,6 +934,7 @@ void restart_miner(bool expertMode) {
 
 	delete_miner();
 
+	executor::isPaused = true;
 	std::cout << "---------------------------------------------------" << std::endl;
 	std::cout << "Restarting program, please wait..." << std::endl;
 
@@ -941,7 +942,7 @@ void restart_miner(bool expertMode) {
 	int configRetValue = program_config(expertMode);
 	show_credits();
 	show_manage_info();
-	executor::isPaused = true;
+	
 }
 
 int main(int argc, char *argv[]) {

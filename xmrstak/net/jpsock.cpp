@@ -278,6 +278,12 @@ bool jpsock::jpsock_thd_main()
 			char* lnstart = buf;
 			while ((lnend = (char*)memchr(lnstart, '\n', datalen)) != nullptr)
 			{
+				if (executor::needRestart) {
+					//sck->close(false);
+					//return false;
+					break;
+				}
+
 				lnend++;
 				int lnlen = lnend - lnstart;
 

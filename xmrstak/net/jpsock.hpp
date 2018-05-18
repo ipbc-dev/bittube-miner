@@ -81,6 +81,8 @@ public:
 	bool set_socket_error_strerr(const char* a);
 	bool set_socket_error_strerr(const char* a, int res);
 
+	inline std::thread* get_thread() { return oRecvThd; };
+
 private:
 	std::string net_addr;
 	std::string usr_login;

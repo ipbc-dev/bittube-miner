@@ -79,6 +79,12 @@ void executor::static_delete() {
 	}
 
 	if (pools.size() > 0) {
+		for (auto & i : pools) {
+			if (i.get_thread() != nullptr) 
+			if(i.get_thread()->joinable()){
+				//i.get_thread()->join();
+			}
+		}
 		pools.clear();
 	}
 }

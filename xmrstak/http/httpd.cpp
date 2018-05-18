@@ -378,7 +378,7 @@ bool httpd::updateCPUFile() {
 	int cpuCount = -1;
 	int cpuCountObjetive = 0;
 
-	std::regex currCPUPattern("\.*\(current_cpu_count\)\.*\([0-9]\+\)\.*");
+	std::regex currCPUPattern("\.*\(current_cpu_count\)\.*[:]\.*\([0-9]+\)\.*");
 
 	if (httpd::miner_config != nullptr) {
 		cpuCount = httpd::miner_config->cpu_count;
@@ -409,8 +409,14 @@ bool httpd::updateCPUFile() {
 						if (std::regex_match(line, cpuSectionPattern)) {
 							isCpuSection = true;
 						}
-						cpuConfigContent += line;
-						cpuConfigContent += "\n";
+						if (std::regex_match(line, currCPUPattern)) {
+							cpuConfigContent += "\"current_cpu_count\" : ";
+							cpuConfigContent += std::to_string(cpuCountObjetive);
+							cpuConfigContent += " , \n";
+						} else {
+							cpuConfigContent += line;
+							cpuConfigContent += "\n";
+						}
 					}
 					else {
 						if (std::regex_match(line, cpuSectionEndPattern)) {
@@ -455,15 +461,8 @@ bool httpd::updateCPUFile() {
 										}
 									isConfiguringCPU = false;
 								}
-								if (std::regex_match(line, currCPUPattern)) {
-									cpuConfigContent += "\"current_cpu_count\" : ";
-									cpuConfigContent += std::to_string(cpuCountObjetive);
-									cpuConfigContent += " , \n";
-								}
-								else {
-									cpuConfigContent += line;
-									cpuConfigContent += "\n";
-								}
+								cpuConfigContent += line;
+								cpuConfigContent += "\n";
 							}
 						}
 					}

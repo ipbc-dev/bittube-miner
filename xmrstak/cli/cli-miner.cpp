@@ -21,6 +21,7 @@
   *
   */
 
+
 #include "xmrstak/misc/executor.hpp"
 #include "xmrstak/backend/miner_work.hpp"
 #include "xmrstak/backend/globalStates.hpp"
@@ -36,6 +37,8 @@
 #ifndef CONF_NO_HTTPD
 #	include "xmrstak/http/httpd.hpp"
 #endif
+
+
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -57,6 +60,13 @@
 
 #include "xmrstak/net/jpsock.hpp"
 //#include "../libwebsockets/ws_server.h"
+
+
+
+//Qt5 gui
+#include <QApplication>
+#include <QWidget>
+
 
 int do_benchmark(int block_version);
 
@@ -730,7 +740,7 @@ int program_config(bool expertMode) {
 	}
 
 #ifdef _WIN32
-	/* For Windows 7 and 8 request elevation at all times unless we are using slow memory */
+	// For Windows 7 and 8 request elevation at all times unless we are using slow memory 
 	if (jconf::inst()->GetSlowMemSetting() != jconf::slow_mem_cfg::always_use && !IsWindows10OrNewer())
 	{
 		printer::inst()->print_msg(L0, "Elevating due to Windows 7 or 8. You need Windows 10 to use fast memory without UAC elevation.");
@@ -945,10 +955,12 @@ void restart_miner(bool expertMode) {
 	
 }
 
-int main(int argc, char *argv[]) {
+int minerMain(int argc, char *argv[]) {
 	bool expertMode = false;
 	bool firstTime = false;
 	bool expertRetValue = check_expert_mode(&expertMode, &firstTime);
+
+
 
 #ifndef CONF_NO_TLS
 	SSL_library_init();
@@ -977,9 +989,10 @@ int main(int argc, char *argv[]) {
 	uint64_t lastTimeW = get_timestamp_ms();
 	bool watchdogLoopContinue = true;
 	std::thread* inputThread = nullptr;
+	
 
 	while (watchdogLoopContinue) {
-		
+
 		if (firstTime) { // Start miner process one time to finish configuration process
 			std::cout << "Configuring, please wait a little..." << std::endl;
 			firstTime = false;
@@ -988,8 +1001,9 @@ int main(int argc, char *argv[]) {
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 			executor::isPaused = true;
-			
-		} else {
+
+		}
+		else {
 			if (!executor::needRestart) {
 
 				if ((!executor::isPaused) && (!wasStarted)) {
@@ -1011,16 +1025,18 @@ int main(int argc, char *argv[]) {
 						inputThread = new std::thread(&parse_runtime_input, &runningInputParser);
 						inputThread->detach();
 					}
-				} else {
+				}
+				else {
 					fromPause = true;
 					if (runningM) {
 						runningM = false;
 						show_manage_info();
 					}
 				}
-			} else { // Restarting program
+			}
+			else { // Restarting program
 
-				
+
 				restart_miner(expertMode);
 				executor::isPaused = true;
 				wasStarted = false;
@@ -1028,7 +1044,7 @@ int main(int argc, char *argv[]) {
 				executor::needRestart = false;
 			}
 		}
-		
+
 		uint64_t currentTimeW = get_timestamp_ms();
 
 		if (currentTimeW - lastTimeW < 500) {
@@ -1039,6 +1055,7 @@ int main(int argc, char *argv[]) {
 
 	return 0;
 }
+
 
 int do_benchmark(int block_version)
 {
@@ -1059,9 +1076,9 @@ int do_benchmark(int block_version)
 	printer::inst()->print_msg(L0, "Wait 30 sec until all backends are initialized");
 	std::this_thread::sleep_for(std::chrono::seconds(30));
 
-	/* AMD and NVIDIA is currently only supporting work sizes up to 84byte
-	 * \todo fix this issue
-	 */
+	// AMD and NVIDIA is currently only supporting work sizes up to 84byte
+	 // \todo fix this issue
+	 //
 	xmrstak::miner_work benchWork = xmrstak::miner_work("", work, 84, 0, false, 0);
 	printer::inst()->print_msg(L0, "Start a 60 second benchmark...");
 	xmrstak::globalStates::inst().switch_work(benchWork, dat);
@@ -1085,4 +1102,31 @@ int do_benchmark(int block_version)
 
 	printer::inst()->print_msg(L0, "Benchmark Total: %.1f H/S", fTotalHps);
 	return 0;
+}
+
+int start_gui(int argc, char *argv[]) {
+	QApplication app(argc, argv);
+
+	QWidget window;
+
+	window.resize(250, 150);
+	window.setWindowTitle("Simple example");
+	window.show();
+
+	return app.exec();
+}
+
+int main(int argc, char *argv[]) {
+	std::thread* mainThread = new std::thread(&minerMain, argc, argv);
+	std::thread* guiThread = new std::thread(&start_gui, argc, argv);
+
+
+	guiThread->join();
+
+
+
+	return 0;
+
+
+
 }

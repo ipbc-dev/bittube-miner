@@ -94,6 +94,9 @@
   cd build
   
   set CMAKE_PREFIX_PATH=C:\xmr-stak-dep\hwloc;C:\xmr-stak-dep\libmicrohttpd;C:\xmr-stak-dep\openssl
+
+  #with qt
+  set CMAKE_PREFIX_PATH=C:\xmr-stak-dep\hwloc;C:\xmr-stak-dep\libmicrohttpd;C:\xmr-stak-dep\openssl;C:\Qt\5.9.1\msvc2015_64
   ```
 
 ### CMake

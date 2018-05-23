@@ -17,6 +17,15 @@ list(APPEND CMAKE_PREFIX_PATH "$ENV{CUDA_ROOT}")
 list(APPEND CMAKE_PREFIX_PATH "$ENV{CMAKE_PREFIX_PATH}")
 
 ################################################################################
+# QT5 config
+################################################################################
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+#set_target_properties(IPBC-Ui PROPERTIES CMAKE_AUTOMOC ON)
+
+
+################################################################################
 # CMake user options
 ################################################################################
 
@@ -378,6 +387,14 @@ if(WIN32)
     set(LIBS ${LIBS} wsock32 ws2_32)
 endif()
 
+################################################################################
+# find QT5
+################################################################################
+
+#Importing external libraires
+find_package(Qt5Core REQUIRED)
+find_package(Qt5Gui REQUIRED)
+find_package(Qt5Widgets REQUIRED)
 
 
 ################################################################################
@@ -534,7 +551,13 @@ endif()
 set(EXECUTABLE_OUTPUT_PATH "bin" CACHE STRING "Path to place executables relative to ${CMAKE_INSTALL_PREFIX}")
 set(LIBRARY_OUTPUT_PATH "bin" CACHE STRING "Path to place libraries relative to ${CMAKE_INSTALL_PREFIX}")
 
+#target_link_libraries(ipbc-miner ${LIBS} ipbc-miner-c ipbc-miner-backend ${Qt5Widgets_LIBRARIES})
 target_link_libraries(ipbc-miner ${LIBS} ipbc-miner-c ipbc-miner-backend)
+
+target_link_libraries(ipbc-miner Qt5::Core)
+target_link_libraries(ipbc-miner Qt5::Gui)
+target_link_libraries(ipbc-miner Qt5::Widgets)
+
 
 ################################################################################
 # WebSockets

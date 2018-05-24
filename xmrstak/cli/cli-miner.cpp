@@ -71,6 +71,7 @@
 #include <QTextEdit>
 #include <QPushButton>
 
+#include "xmrstak\gui\mainwindow.h"
 
 int do_benchmark(int block_version);
 
@@ -1114,58 +1115,9 @@ int do_benchmark(int block_version)
 int start_gui(int argc, char *argv[]) {
 	QApplication app(argc, argv);
 
-	QWidget window;
+	MainWindow mainQT_GUI(NULL);
 
-	QImage img(100, 100, QImage::Format_RGB888);
-	img.fill(QColor(Qt::red).rgb());
-
-	window.resize(750, 350);
-	window.setWindowTitle("Simple example");
-
-	QVBoxLayout *mainLayout = new QVBoxLayout;
-	QHBoxLayout *contentLayout = new QHBoxLayout;
-	QHBoxLayout *footerLayout = new QHBoxLayout;
-
-	QPalette palette;
-	palette.setBrush(window.backgroundRole(), QBrush(QPixmap::fromImage(img)));
-	window.setPalette(palette);
-
-	QWidget *contentWidget = new QWidget();
-	contentWidget->setStyleSheet("background-color: green");
-
-	// Main section
-	QHBoxLayout *innerContentLayout = new QHBoxLayout;
-	contentWidget->setLayout(innerContentLayout);
-
-	QTextEdit *outputText = new QTextEdit();
-	outputText->setText("Hello im testing it");
-	innerContentLayout->addWidget(outputText);
-	//---
-
-	QWidget *footerWidget = new QWidget();
-	footerWidget->setStyleSheet("background-color: white");
-
-	// Footer section
-	QHBoxLayout *innerFooterLayout = new QHBoxLayout;
-	footerWidget->setLayout(innerFooterLayout);
-
-	QPushButton* statsButton = new QPushButton("Stats");
-	innerFooterLayout->addWidget(statsButton);
-
-	QPushButton* startButton = new QPushButton("Start");
-	innerFooterLayout->addWidget(startButton);
-
-	//---
-	contentLayout->addWidget(contentWidget);
-	footerLayout->addWidget(footerWidget);
-
-	mainLayout->addLayout(contentLayout);
-	mainLayout->addLayout(footerLayout);
-
-	
-
-	window.setLayout(mainLayout);
-	window.show();
+	mainQT_GUI.show();
 
 	return app.exec();
 }

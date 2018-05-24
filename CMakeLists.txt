@@ -537,7 +537,8 @@ if(OpenCL_FOUND)
 endif()
 
 # compile final binary
-file(GLOB SRCFILES_CPP "xmrstak/cli/*.cpp")
+file(GLOB SRCFILES_CPP "xmrstak/cli/*.cpp"
+					   "xmrstak/gui/*.cpp")
                         #"xmrstak/libwebsockets/*.cpp")
                        
 set_source_files_properties(${SRCFILES_CPP} PROPERTIES LANGUAGE CXX)

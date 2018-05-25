@@ -1128,7 +1128,7 @@ int httpd::req_handler(void * cls,
 	}
 
 	if (!jconf::inst()->is_safe_to_touch()) {
-		std::cout << "ABORT HTTP HANDLER, jconf not safe to touch. " << method << std::endl;
+		std::cout << "ABORT HTTP HANDLER, jconf not safe to touch. " << method << " " << url << std::endl;
 		return MHD_NO;
 	}
 

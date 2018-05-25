@@ -296,6 +296,9 @@ void minethd::work_main()
 				while (executor::isPaused) {
 					std::this_thread::sleep_for(std::chrono::milliseconds(50));
 					std::this_thread::yield();
+					if (bQuit != 0) {
+						return;
+					}
 				}
 				std::this_thread::yield();
 			}

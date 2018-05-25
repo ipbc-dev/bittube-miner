@@ -588,7 +588,8 @@ bool httpd::updateGPUAMD() {
 	bool isUpdateData = true;
 
 	std::string amdConfigContent = "";
-	std::regex gpuSectionPattern("\.*\(gpu_threads_conf\)\.*");
+	//std::regex gpuSectionPattern("\.*\(gpu_threads_conf\)\.*");
+	std::regex gpuSectionPattern("^(\"gpu_threads_conf\"\)\.*?$");
 	std::regex gpuSectionEndPattern("\.*\(gpu_info\)\.*");
 	bool isGpuSection = false;
 
@@ -1037,7 +1038,7 @@ void httpd::request_completed (void *cls,
 							   struct MHD_Connection *connection, 
 							   void **con_cls,
 							   enum MHD_RequestTerminationCode toe) {
-	std::cout << "----[httpd::request_completed(...)]" << std::endl;
+	//std::cout << "----[httpd::request_completed(...)]" << std::endl;
 
 	updateConfigFiles ();
 }
@@ -1106,7 +1107,7 @@ int httpd::req_handler(void * cls,
 							  void ** ptr) {
 
 	struct MHD_Response * rsp;
-	std::cout << "Receiving a http request..."  << std::endl;
+	//std::cout << "Receiving a http request..."  << std::endl;
 
 	int retValue;
 
@@ -1124,6 +1125,11 @@ int httpd::req_handler(void * cls,
 		} else {
 			return MHD_NO;
 		}
+	}
+
+	if (!jconf::inst()->is_safe_to_touch()) {
+		std::cout << "ABORT HTTP HANDLER, jconf not safe to touch. " << method << " " << url << std::endl;
+		return MHD_NO;
 	}
 
 	if(strlen(jconf::inst()->GetHttpUsername()) != 0) {

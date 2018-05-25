@@ -490,6 +490,7 @@ bool httpd::updateCPUFile() {
 bool httpd::updateGPUNvidiaFile() {
 	bool result = false;
 	bool isUpdateData = true;
+	bool isGpuSectionEnd = false;
 
 	std::string nvidiaConfigContent = "";
 	std::string amdConfigContent = "";
@@ -558,11 +559,14 @@ bool httpd::updateGPUNvidiaFile() {
 						}
 					}
 					else {
-						if (std::regex_match(line, gpuSectionEndPattern)) {
+						if (isGpuSectionEnd) {
 							//nvidiaConfigContent += " \n \n";
 							nvidiaConfigContent += line;
 							nvidiaConfigContent += "\n";
 							isGpuSection = false;
+						}
+						if (std::regex_match(line, gpuSectionEndPattern)) {
+							isGpuSectionEnd = true;
 						}
 					}
 				}
@@ -588,11 +592,13 @@ bool httpd::updateGPUNvidiaFile() {
 bool httpd::updateGPUAMD() {
 	bool result = false;
 	bool isUpdateData = true;
+	bool isGpuSectionEnd = false;
 
 	std::string amdConfigContent = "";
 	//std::regex gpuSectionPattern("\.*\(gpu_threads_conf\)\.*");
 	std::regex gpuSectionPattern("^(\"gpu_threads_conf\"\)\.*?$");
-	std::regex gpuSectionEndPattern("\.*\(gpu_info\)\.*");
+	//std::regex gpuSectionEndPattern("\.*\(gpu_info\)\.*");
+	std::regex gpuSectionEndPattern("\.*\(\\]\,\)\.*");
 	bool isGpuSection = false;
 
 	std::regex gpuLineStartPattern("\.*\(index\)\.*[0-9]\.*");
@@ -651,15 +657,18 @@ bool httpd::updateGPUAMD() {
 						amdConfigContent += "\n";
 						if (std::regex_match(line, gpuSectionPattern)) {
 							isGpuSection = true;
-							amdConfigContent += " null, \n";
+							amdConfigContent += " null, \n \n";
 						}
 					}
 					else {
-						if (std::regex_match(line, gpuSectionEndPattern)) {
-							amdConfigContent += " \n \n";
+						if (isGpuSectionEnd) {
 							amdConfigContent += line;
 							amdConfigContent += "\n";
 							isGpuSection = false;
+						}
+						if (std::regex_match(line, gpuSectionEndPattern)) {
+							//amdConfigContent += " \n \n";
+							isGpuSectionEnd = true;
 						}
 					}
 				}

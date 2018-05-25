@@ -767,7 +767,11 @@ int program_config(bool expertMode) {
 
 
 
-void show_credits() {
+void show_credits(bool expertMode) {
+	if (!expertMode) {
+		printer::inst()->print_str("-------------------------------------------------------------------\n");
+		printer::inst()->print_str("Automatic configuration for non experts is in beta.");
+	}
 	printer::inst()->print_str("-------------------------------------------------------------------\n");
 	printer::inst()->print_str(get_version_str_short().c_str());
 	printer::inst()->print_str("\n\n");
@@ -940,7 +944,7 @@ void restart_miner(bool expertMode) {
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	int configRetValue = program_config(expertMode);
-	show_credits();
+	show_credits(expertMode);
 	show_manage_info();
 	
 }
@@ -963,7 +967,7 @@ int main(int argc, char *argv[]) {
 
 	int parseRetValue = parse_argv(argc, argv);
 	int configRetValue = program_config(expertMode);
-	show_credits();
+	show_credits(expertMode);
 	show_manage_info();
 
 	using namespace xmrstak;

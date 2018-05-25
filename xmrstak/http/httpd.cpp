@@ -1036,7 +1036,7 @@ void httpd::request_completed (void *cls,
 							   struct MHD_Connection *connection, 
 							   void **con_cls,
 							   enum MHD_RequestTerminationCode toe) {
-	std::cout << "----[httpd::request_completed(...)]" << std::endl;
+	//std::cout << "----[httpd::request_completed(...)]" << std::endl;
 
 	updateConfigFiles ();
 }
@@ -1105,7 +1105,7 @@ int httpd::req_handler(void * cls,
 							  void ** ptr) {
 
 	struct MHD_Response * rsp;
-	std::cout << "Receiving a http request..."  << std::endl;
+	//std::cout << "Receiving a http request..."  << std::endl;
 
 	int retValue;
 

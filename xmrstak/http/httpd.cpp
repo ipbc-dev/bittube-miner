@@ -57,6 +57,7 @@
 
 #include "xmrstak/params.hpp"
 
+
 #pragma region typesAndConfig 
 //----------------------------------------------------------------------------------------------------------
 // http types and configuration - start --------------------------------------------------------------------
@@ -79,6 +80,8 @@ struct config_data {
 	bool isMining = false;
 };
 
+
+
 struct connection_info_struct {
 	int connectiontype;
 	char *answerstring;
@@ -98,6 +101,7 @@ const int GET = 0;
 const int POST = 1;
 
 config_data* httpd::miner_config = nullptr;
+states_data* httpd::miner_states = nullptr;
 
 httpd* httpd::oInst = nullptr;
 
@@ -105,6 +109,10 @@ httpd::httpd() {
 	if (httpd::miner_config == nullptr) {
 		httpd::miner_config = new config_data();
 		getCustomInfo();
+	}
+
+	if (httpd::miner_states == nullptr) {
+		httpd::miner_states = new states_data();
 	}
 }
 
@@ -1203,6 +1211,10 @@ int httpd::req_handler(void * cls,
 
 		if (httpd::miner_config != nullptr) {
 			httpd::miner_config->isMining = true;
+		}
+
+		if (httpd::miner_states != nullptr) {
+			httpd::miner_states->gui_logQueque.push_back("Start mining...");
 		}
 	}
 	else if (strcasecmp(url, "/stop") == 0) {

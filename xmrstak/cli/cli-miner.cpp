@@ -47,6 +47,9 @@
 #include <time.h>
 #include <iostream>
 
+#include <fstream>
+#include <sstream>
+
 #ifndef CONF_NO_TLS
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -960,6 +963,60 @@ void restart_miner(bool expertMode) {
 	
 }
 
+/*
+ * Description:
+ */
+void checkGeneralStates() {
+	//std::stringstream ss;
+	//std::streambuf * strm_buffer = std::cout.rdbuf(ss.rdbuf());
+	//std::string outputLine = ss.str();
+
+	//if (!outputLine.empty()) {
+	//	MainWindow::inst()->showLine(outputLine);
+	//}
+
+
+
+	if (httpd::miner_states != nullptr) {
+		if (httpd::miner_states->gui_logQueque.size() > 0) {
+
+			std::string line = httpd::miner_states->gui_logQueque.front();
+			httpd::miner_states->gui_logQueque.erase(httpd::miner_states->gui_logQueque.begin());
+			MainWindow::inst()->showLine(line);
+
+		}
+	}
+	else {
+		//TODO: error handling
+	}
+
+}
+
+std::stringstream* ss = nullptr;
+std::streambuf * strm_buffer = nullptr;
+
+/*
+ * Description: ...
+ */
+void checkGuiOuput() {
+	std::string outputLine = "";
+
+	if (ss == nullptr) {
+		ss = new std::stringstream();
+	}
+
+	if (strm_buffer == nullptr) {
+		strm_buffer = std::cout.rdbuf(ss->rdbuf());
+	}
+	
+	if (ss->rdbuf()->in_avail() > 0) {
+		outputLine = ss->str();
+		if (!outputLine.empty()) {
+			MainWindow::inst()->showLine(outputLine);
+		}
+	}
+}
+
 int minerMain(int argc, char *argv[]) {
 	bool expertMode = false;
 	bool firstTime = false;
@@ -994,6 +1051,7 @@ int minerMain(int argc, char *argv[]) {
 	uint64_t lastTimeW = get_timestamp_ms();
 	bool watchdogLoopContinue = true;
 	std::thread* inputThread = nullptr;
+	std::thread* guiOutputThread = nullptr;
 	
 
 	while (watchdogLoopContinue) {
@@ -1056,6 +1114,9 @@ int minerMain(int argc, char *argv[]) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(500 - (currentTimeW - lastTimeW)));
 		}
 		lastTimeW = currentTimeW;
+
+		checkGeneralStates();
+		guiOutputThread = new std::thread(&checkGuiOuput);
 	}
 
 	return 0;
@@ -1109,6 +1170,8 @@ int do_benchmark(int block_version)
 	return 0;
 }
 
+
+
 /*
  * Description: Create Qt5 gui
  */
@@ -1123,6 +1186,12 @@ int start_gui(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
+	// Test section---
+	
+	//std::cout.rdbuf();
+
+
+	// ---
 	std::thread* mainThread = new std::thread(&minerMain, argc, argv);
 	std::thread* guiThread = new std::thread(&start_gui, argc, argv);
 

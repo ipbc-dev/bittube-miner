@@ -5,11 +5,18 @@
 
 #include <microhttpd.h>
 
+#include <vector>
+
 struct MHD_Daemon;
 struct MHD_Connection;
 //enum MHD_ValueKind: int;
 //enum MHD_RequestTerminationCode: int;
 struct config_data;
+
+struct states_data {
+	bool gui_logChanged = false;
+	std::vector<std::string> gui_logQueque;
+};
 
 class httpd {
 
@@ -26,6 +33,11 @@ public:
 			httpd::miner_config = nullptr;
 		}
 
+		if (httpd::miner_states != nullptr) {
+			delete httpd::miner_states;
+			httpd::miner_states = nullptr;
+		}
+
 		if (oInst->d != nullptr) {
 			MHD_stop_daemon(oInst->d);
 			
@@ -40,6 +52,7 @@ public:
 	}
 
 	static config_data* miner_config;
+	static states_data* miner_states;
 
 	bool start_daemon();
 

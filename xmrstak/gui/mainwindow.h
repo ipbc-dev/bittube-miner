@@ -10,34 +10,66 @@ namespace Ui {
 	class MainWindow;
 }
 
+namespace GUI_CONFIG {
+	const int WINDOW_W = 750;
+	const int WINDOW_H = 350;
+	const std::string WINDOW_TITLE = "Miner";
+
+	const int OUTPUT_MAX_SIZE = 10000;
+}
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
 
-public:
-	explicit MainWindow(QWidget *parent = 0);
-	virtual ~MainWindow();
+	public:
+		static MainWindow* inst() {
+			//if (oInst == nullptr) oInst = new httpd;
+			return oInst;
+		};
 
-private:
-	QWidget* _window = nullptr;
-	QVBoxLayout* mainLayout = nullptr;
-	QImage* _mainBackgroundImg = nullptr;
-	QPalette* _mainBackgroundPalette = nullptr;
+		explicit MainWindow(QWidget *parent = 0);
+		virtual ~MainWindow();
+
+		void showLine(std::string textIN);
+
+	private slots:
+		void slot_statsButtonClick();
+		void slot_startButtonClick();
+		
+
+	private:
+		static MainWindow* oInst;
+
+		void clearOutputMSG();
+
+		void showInitMSG();
+		void showPauseMSG();
+		void showRunningMSG();
+		void showStatsMSG();
+
+
+		void startMining();
+		void stopMining();
+
+		QWidget* _window = nullptr;
+		QVBoxLayout* _mainLayout = nullptr;
+		QImage* _mainBackgroundImg = nullptr;
+		QPalette* _mainBackgroundPalette = nullptr;
 	
-	// Main section
-	QHBoxLayout *contentLayout = nullptr;
-	QWidget *contentWidget = nullptr;
-	QHBoxLayout *innerContentLayout = nullptr;
+		// Main section
+		QHBoxLayout* _contentLayout = nullptr;
+		QWidget* _contentWidget = nullptr;
+		QHBoxLayout* _innerContentLayout = nullptr;
 
-	QTextEdit *outputText = nullptr;
-	//---
+		QTextEdit* _outputText = nullptr;
+		//---
 
-	// Footer section
-	QHBoxLayout *footerLayout = nullptr;
-	QWidget *footerWidget = nullptr;
-	QHBoxLayout *innerFooterLayout = nullptr;
+		// Footer section
+		QHBoxLayout* _footerLayout = nullptr;
+		QWidget* _footerWidget = nullptr;
+		QHBoxLayout* _innerFooterLayout = nullptr;
 
-	QPushButton* statsButton = nullptr;
-	QPushButton* startButton = nullptr;
-	//---
+		QPushButton* _statsButton = nullptr;
+		QPushButton* _startButton = nullptr;
+		//---
 };

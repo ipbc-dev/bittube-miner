@@ -343,7 +343,7 @@ std::string httpd::parsePoolFile() {
 
 				result += " \"wallet_address\" : \"";
 				result += base_match[4];
-				result += "\" \n";
+				result += "\",  \n";
 				httpd::miner_config->wallet_address = base_match[4];
 			}
 		}
@@ -843,7 +843,7 @@ std::string httpd::getCustomInfo () {
 		else {
 			partialRes += " false";
 		}
-		partialRes += " , \n";
+		partialRes += "  \n";
 	}
 	
 	
@@ -1163,7 +1163,34 @@ int httpd::req_handler(void * cls,
 		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
 		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", "*");
 
-	} 
+	}
+	else if (strcasecmp(url, "/api.json") == 0)
+	{
+		if (httpd::miner_config != nullptr) {
+			if (httpd::miner_config->isMining) {
+				executor::inst()->get_http_report(EV_HTML_JSON, str);
+
+				rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
+				MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
+				MHD_add_response_header(rsp, "Access-Control-Allow-Origin", "*");
+			}
+			else {
+				str = "{\"status\": \"error\", \"description\": \"need to start mining\"}";
+
+				rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
+				MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
+				MHD_add_response_header(rsp, "Access-Control-Allow-Origin", "*");
+			}
+			
+		}
+		else {
+			str = "{\"status\": \"error\", \"description\": \"unknow status, please restart the app\"}";
+
+			rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
+			MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
+			MHD_add_response_header(rsp, "Access-Control-Allow-Origin", "*");
+		}
+	}
 	else if (strcasecmp(url, "/start") == 0) {
 		executor::isPaused = false;
 		str = "{\"status\": \"ok\"}";

@@ -552,12 +552,12 @@ bool httpd::updateGPUNvidiaFile() {
 						nvidiaConfigContent += "\n";
 						if (std::regex_match(line, gpuSectionPattern)) {
 							isGpuSection = true;
-							nvidiaConfigContent += "[ \n";
+							nvidiaConfigContent += "null, \n";
 						}
 					}
 					else {
 						if (std::regex_match(line, gpuSectionEndPattern)) {
-							nvidiaConfigContent += "], \n \n";
+							nvidiaConfigContent += " \n \n";
 							nvidiaConfigContent += line;
 							nvidiaConfigContent += "\n";
 							isGpuSection = false;
@@ -654,7 +654,7 @@ bool httpd::updateGPUAMD() {
 					}
 					else {
 						if (std::regex_match(line, gpuSectionEndPattern)) {
-							amdConfigContent += "], \n \n";
+							amdConfigContent += " \n \n";
 							amdConfigContent += line;
 							amdConfigContent += "\n";
 							isGpuSection = false;

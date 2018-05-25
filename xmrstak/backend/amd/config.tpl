@@ -26,7 +26,8 @@ R"===(
  * null,
  */
 
-"gpu_threads_conf" : [
+"gpu_threads_conf" : 
+[
 GPUCONFIG
 ],
 

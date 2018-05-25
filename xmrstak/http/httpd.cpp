@@ -986,6 +986,7 @@ int httpd::send_page (struct MHD_Connection *connection, const char *page) {
 	response = MHD_create_response_from_buffer (strlen (page), 
 												(void *) page,
 												MHD_RESPMEM_PERSISTENT);
+	MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
 
   if (!response) {
     return MHD_NO;

@@ -649,7 +649,7 @@ bool httpd::updateGPUAMD() {
 						amdConfigContent += "\n";
 						if (std::regex_match(line, gpuSectionPattern)) {
 							isGpuSection = true;
-							amdConfigContent += " \n";
+							amdConfigContent += " null, \n";
 						}
 					}
 					else {

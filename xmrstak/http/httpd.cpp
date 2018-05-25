@@ -588,7 +588,8 @@ bool httpd::updateGPUAMD() {
 	bool isUpdateData = true;
 
 	std::string amdConfigContent = "";
-	std::regex gpuSectionPattern("\.*\(gpu_threads_conf\)\.*");
+	//std::regex gpuSectionPattern("\.*\(gpu_threads_conf\)\.*");
+	std::regex gpuSectionPattern("^(\"gpu_threads_conf\"\)\.*?$");
 	std::regex gpuSectionEndPattern("\.*\(gpu_info\)\.*");
 	bool isGpuSection = false;
 
@@ -1123,6 +1124,11 @@ int httpd::req_handler(void * cls,
 		} else {
 			return MHD_NO;
 		}
+	}
+
+	if (!jconf::inst()->is_safe_to_touch()) {
+		std::cout << "ABORT HTTP HANDLER, jconf not safe to touch. " << method << std::endl;
+		return MHD_NO;
 	}
 
 	if(strlen(jconf::inst()->GetHttpUsername()) != 0) {

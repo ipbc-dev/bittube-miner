@@ -28,6 +28,13 @@ public:
 
 	void static_delete();
 
+	bool is_safe_to_touch() {
+		if (prv != nullptr) {
+			return true;
+		}
+		return false;
+	}
+
 	bool parse_config(const char* sFilename, const char* sFilenamePools);
 
 	struct pool_cfg {

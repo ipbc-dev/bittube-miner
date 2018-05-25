@@ -530,6 +530,10 @@ void minethd::work_main()
 					while (executor::isPaused) {
 						std::this_thread::sleep_for(std::chrono::milliseconds(50));
 						std::this_thread::yield();
+						if (bQuit != 0) {
+							cryptonight_free_ctx(ctx);
+							return;
+						}
 					}
 				}
 			}
@@ -836,6 +840,12 @@ void minethd::multiway_work_main()
 					while (executor::isPaused) {
 						std::this_thread::sleep_for(std::chrono::milliseconds(50));
 						std::this_thread::yield();
+						if (bQuit != 0) {
+							for (int i = 0; i < N; i++)
+								cryptonight_free_ctx(ctx[i]);
+							return;
+						}
+
 						if (executor::needRestart) {
 							break;
 						}

@@ -18,6 +18,16 @@ public:
 		return env.pJconfConfig;
 	};
 
+	static inline void cls()
+	{
+		auto& env = xmrstak::environment::inst();
+		if (env.pJconfConfig != nullptr) {
+			env.pJconfConfig->static_delete();
+		}
+	};
+
+	void static_delete();
+
 	bool parse_config(const char* sFilename, const char* sFilenamePools);
 
 	struct pool_cfg {

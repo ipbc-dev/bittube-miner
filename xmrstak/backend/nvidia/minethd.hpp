@@ -51,12 +51,12 @@ private:
 	// block thread until all NVIDIA GPUs are initialized
 	std::future<void> thread_work_guard;
 
-	std::thread oWorkThd;
+	//std::thread oWorkThd;
 	int64_t affinity;
 
 	nvid_ctx ctx;
 
-	bool bQuit;
+	//bool bQuit;
 };
 
 } // namespace nvidia

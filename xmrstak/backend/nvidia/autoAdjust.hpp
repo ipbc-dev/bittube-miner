@@ -85,6 +85,9 @@ private:
 
 		constexpr size_t byte2mib = 1024u * 1024u;
 		std::string conf;
+		std::string info = "";
+
+
 		for(auto& ctx : nvidCtxVec)
 		{
 			if(ctx.device_threads * ctx.device_blocks > 0)
@@ -97,12 +100,24 @@ private:
 					"    \"bfactor\" : " + std::to_string(ctx.device_bfactor) + ", \"bsleep\" :  " + std::to_string(ctx.device_bsleep) + ",\n" +
 					"    \"affine_to_cpu\" : false, \"sync_mode\" : 3,\n" +
 					"  },\n";
+				
+				info += std::string(" \"") + ctx.name + "\", \n";
 			}
 		}
 
 		configTpl.replace("GPUCONFIG",conf);
+		configTpl.replace("GPUINFO",info);
 		configTpl.write(params::inst().configFileNVIDIA);
 		printer::inst()->print_msg(L0, "NVIDIA: GPU configuration stored in file '%s'", params::inst().configFileNVIDIA.c_str());
+
+		try {
+			std::ifstream  src("nvidia.txt", std::ios::binary);
+			std::ofstream  dst("nvidia-bck.txt",   std::ios::binary);
+
+			dst << src.rdbuf();
+		} catch (...) {
+			std::cout << "ERROR doing a config files backup" << std::endl;
+		}
 	}
 
 	std::vector<nvid_ctx> nvidCtxVec;

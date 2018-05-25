@@ -36,10 +36,15 @@ public:
 
 	void push(T&& item)
 	{
-		std::unique_lock<std::mutex> mlock(mutex_);
-		queue_.push(std::move(item));
-		mlock.unlock();
-		cond_.notify_one();
+		try {
+			std::unique_lock<std::mutex> mlock(mutex_);
+			queue_.push(std::move(item));
+			mlock.unlock();
+			cond_.notify_one();
+		}
+		catch (...) {
+			std::cout << "Error pushing an miner event" << std::endl;
+		}
 	}
 
 private:

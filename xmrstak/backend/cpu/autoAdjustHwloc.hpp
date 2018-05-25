@@ -16,6 +16,7 @@
 #include <hwloc.h>
 #include <stdio.h>
 
+#include <fstream>
 
 namespace xmrstak
 {
@@ -82,11 +83,26 @@ public:
 			printer::inst()->print_msg(L0, "Autoconf FAILED: %s. Create config for a single thread.", err.what());
 		}
 
+		//AVCPU
+		std::string finalstr = std::to_string(params::inst().realCPUCount);
+		std::string finalstr2 = std::to_string(results.size());
+
 		configTpl.replace("CPUCONFIG",conf);
+		configTpl.replace("AVALAIBLECPU", finalstr);
+		configTpl.replace("CURRENTCPU", finalstr2);
 		configTpl.write(params::inst().configFileCPU);
 		printer::inst()->print_msg(L0, "CPU configuration stored in file '%s'", params::inst().configFileCPU.c_str());
 		/* Destroy topology object. */
 		hwloc_topology_destroy(topology);
+
+		try {
+			std::ifstream  src("cpu.txt", std::ios::binary);
+			std::ofstream  dst("cpu-bck.txt",   std::ios::binary);
+
+			dst << src.rdbuf();
+		} catch (...) {
+			std::cout << "ERROR doing a config files backup" << std::endl;
+		}
 
 		return true;
 	}
@@ -149,6 +165,8 @@ private:
 		//Strange case, but we will handle it silently, surely there must be one PU somewhere?
 		if(PUs == 0)
 			return;
+
+		params::inst().realCPUCount = PUs;
 
 		if(obj->attr->cache.size == 0)
 		{

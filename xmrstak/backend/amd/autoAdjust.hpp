@@ -24,6 +24,7 @@
 #include <CL/cl.h>
 #endif
 
+#include <fstream>
 
 namespace xmrstak
 {
@@ -89,6 +90,8 @@ private:
 		);
 
 		std::string conf;
+		std::string info = "";
+
 		for(auto& ctx : devVec)
 		{
 			size_t minFreeMem = 128u * byteToMiB;
@@ -156,6 +159,8 @@ private:
 					"    \"affine_to_cpu\" : false, \"strided_index\" : " + (ctx.isNVIDIA ? "0" : "1") + ", \"mem_chunk\" : 2,\n"
 					"    \"comp_mode\" : true\n" +
 					"  },\n";
+				
+				info += std::string(" \"") + ctx.name + "\", \n";
 			}
 			else
 			{
@@ -165,10 +170,20 @@ private:
 
 		configTpl.replace("PLATFORMINDEX",std::to_string(platformIndex));
 		configTpl.replace("GPUCONFIG",conf);
+		configTpl.replace("GPUINFO",info);
 		configTpl.write(params::inst().configFileAMD);
 
 		const std::string backendName = xmrstak::params::inst().openCLVendor;
 		printer::inst()->print_msg(L0, "%s: GPU (OpenCL) configuration stored in file '%s'", backendName.c_str(), params::inst().configFileAMD.c_str());
+
+		try {
+			std::ifstream  src("amd.txt", std::ios::binary);
+			std::ofstream  dst("amd-bck.txt",   std::ios::binary);
+
+			dst << src.rdbuf();
+		} catch (...) {
+			std::cout << "ERROR doing a config files backup" << std::endl;
+		}
 	}
 
 	std::vector<GpuContext> devVec;

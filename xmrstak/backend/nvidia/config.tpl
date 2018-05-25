@@ -36,4 +36,8 @@ R"===(
 GPUCONFIG
 ],
 
+"gpu_info" : [
+GPUINFO
+],
+
 )==="

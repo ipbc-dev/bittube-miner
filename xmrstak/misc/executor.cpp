@@ -50,6 +50,45 @@
 #define strncasecmp _strnicmp
 #endif // _WIN32
 
+bool executor::isPaused = true;
+bool executor::needRestart = false;
+
+void executor::static_delete() {
+	if (telem != nullptr) {
+		
+		delete telem;
+		telem = nullptr;
+	}
+
+	if (pvThreads != nullptr) {
+		for (int i = 0; i < pvThreads->size(); ++i) {
+			if (pvThreads->at(i) != nullptr) {
+				pvThreads->at(i)->static_quit();
+				//TODO: wait for finishing threads
+				delete pvThreads->at(i);
+			}
+		}
+		pvThreads->clear();
+		delete pvThreads;
+		pvThreads = nullptr;
+	}
+
+	if (pHttpString != nullptr) {
+		delete pHttpString;
+		pHttpString = nullptr;
+	}
+
+	if (pools.size() > 0) {
+		for (auto & i : pools) {
+			if (i.get_thread() != nullptr) 
+			if(i.get_thread()->joinable()){
+				//i.get_thread()->join();
+			}
+		}
+		pools.clear();
+	}
+}
+
 executor::executor()
 {
 }
@@ -63,31 +102,39 @@ void executor::push_timed_event(ex_event&& ev, size_t sec)
 void executor::ex_clock_thd()
 {
 	size_t tick = 0;
+
 	while (true)
 	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(size_t(iTickTime)));
+			std::this_thread::sleep_for(std::chrono::milliseconds(size_t(iTickTime)));
 
-		push_event(ex_event(EV_PERF_TICK));
-
-		//Eval pool choice every fourth tick
-		if((tick++ & 0x03) == 0)
-			push_event(ex_event(EV_EVAL_POOL_CHOICE));
-
-		// Service timed events
-		std::unique_lock<std::mutex> lck(timed_event_mutex);
-		std::list<timed_event>::iterator ev = lTimedEvents.begin();
-		while (ev != lTimedEvents.end())
-		{
-			ev->ticks_left--;
-			if(ev->ticks_left == 0)
-			{
-				push_event(std::move(ev->event));
-				ev = lTimedEvents.erase(ev);
+			if (executor::needRestart) {
+				break;
 			}
-			else
-				ev++;
-		}
-		lck.unlock();
+
+			if (!executor::isPaused) {
+				push_event(ex_event(EV_PERF_TICK));
+
+				//Eval pool choice every fourth tick
+				if ((tick++ & 0x03) == 0)
+					push_event(ex_event(EV_EVAL_POOL_CHOICE));
+
+
+				// Service timed events
+				std::unique_lock<std::mutex> lck(timed_event_mutex);
+				std::list<timed_event>::iterator ev = lTimedEvents.begin();
+				while (ev != lTimedEvents.end())
+				{
+					ev->ticks_left--;
+					if (ev->ticks_left == 0)
+					{
+						push_event(std::move(ev->event));
+						ev = lTimedEvents.erase(ev);
+					}
+					else
+						ev++;
+				}
+				lck.unlock();
+			}
 	}
 }
 
@@ -600,88 +647,104 @@ void executor::ex_main()
 	if(jconf::inst()->GetVerboseLevel() >= 4)
 		push_timed_event(ex_event(EV_HASHRATE_LOOP), jconf::inst()->GetAutohashTime());
 
+	uint64_t lastTimeW = get_timestamp_ms();
+
 	size_t cnt = 0;
 	while (true)
 	{
-		ev = oEventQ.pop();
-		switch (ev.iName)
-		{
-		case EV_SOCK_READY:
-			on_sock_ready(ev.iPoolId);
+		if (executor::needRestart) {
 			break;
+		}
 
-		case EV_SOCK_ERROR:
-			on_sock_error(ev.iPoolId, std::move(ev.oSocketError.sSocketError), ev.oSocketError.silent);
-			break;
+		if (executor::isPaused) {
+			uint64_t currentTimeW = get_timestamp_ms();
 
-		case EV_POOL_HAVE_JOB:
-			on_pool_have_job(ev.iPoolId, ev.oPoolJob);
-			break;
-
-		case EV_MINER_HAVE_RESULT:
-			on_miner_result(ev.iPoolId, ev.oJobResult);
-			break;
-
-		case EV_EVAL_POOL_CHOICE:
-			eval_pool_choice();
-			break;
-
-		case EV_GPU_RES_ERROR:
-			log_result_error(std::string(ev.oGpuError.error_str + std::string(" GPU ID ") + std::to_string(ev.oGpuError.idx)));
-			break;
-
-		case EV_PERF_TICK:
-			for (i = 0; i < pvThreads->size(); i++)
-				telem->push_perf_value(i, pvThreads->at(i)->iHashCount.load(std::memory_order_relaxed),
-				pvThreads->at(i)->iTimestamp.load(std::memory_order_relaxed));
-
-			if((cnt++ & 0xF) == 0) //Every 16 ticks
-			{
-				double fHps = 0.0;
-				double fTelem;
-				bool normal = true;
-
-				for (i = 0; i < pvThreads->size(); i++)
-				{
-					fTelem = telem->calc_telemetry_data(10000, i);
-					if(std::isnormal(fTelem))
-					{
-						fHps += fTelem;
-					}
-					else
-					{
-						normal = false;
-						break;
-					}
-				}
-
-				if(normal && fHighestHps < fHps)
-					fHighestHps = fHps;
+			if (currentTimeW - lastTimeW < 100) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(100 - (currentTimeW - lastTimeW)));
 			}
-			break;
+			lastTimeW = currentTimeW;
+		} else {
 
-		case EV_USR_HASHRATE:
-		case EV_USR_RESULTS:
-		case EV_USR_CONNSTAT:
-			print_report(ev.iName);
-			break;
+			ev = oEventQ.pop();
+			switch (ev.iName)
+			{
+			case EV_SOCK_READY:
+				on_sock_ready(ev.iPoolId);
+				break;
 
-		case EV_HTML_HASHRATE:
-		case EV_HTML_RESULTS:
-		case EV_HTML_CONNSTAT:
-		case EV_HTML_JSON:
-			http_report(ev.iName);
-			break;
+			case EV_SOCK_ERROR:
+				on_sock_error(ev.iPoolId, std::move(ev.oSocketError.sSocketError), ev.oSocketError.silent);
+				break;
 
-		case EV_HASHRATE_LOOP:
-			print_report(EV_USR_HASHRATE);
-			push_timed_event(ex_event(EV_HASHRATE_LOOP), jconf::inst()->GetAutohashTime());
-			break;
+			case EV_POOL_HAVE_JOB:
+				on_pool_have_job(ev.iPoolId, ev.oPoolJob);
+				break;
 
-		case EV_INVALID_VAL:
-		default:
-			assert(false);
-			break;
+			case EV_MINER_HAVE_RESULT:
+				on_miner_result(ev.iPoolId, ev.oJobResult);
+				break;
+
+			case EV_EVAL_POOL_CHOICE:
+				eval_pool_choice();
+				break;
+
+			case EV_GPU_RES_ERROR:
+				log_result_error(std::string(ev.oGpuError.error_str + std::string(" GPU ID ") + std::to_string(ev.oGpuError.idx)));
+				break;
+
+			case EV_PERF_TICK:
+				for (i = 0; i < pvThreads->size(); i++)
+					telem->push_perf_value(i, pvThreads->at(i)->iHashCount.load(std::memory_order_relaxed),
+						pvThreads->at(i)->iTimestamp.load(std::memory_order_relaxed));
+
+				if ((cnt++ & 0xF) == 0) //Every 16 ticks
+				{
+					double fHps = 0.0;
+					double fTelem;
+					bool normal = true;
+
+					for (i = 0; i < pvThreads->size(); i++)
+					{
+						fTelem = telem->calc_telemetry_data(10000, i);
+						if (std::isnormal(fTelem))
+						{
+							fHps += fTelem;
+						}
+						else
+						{
+							normal = false;
+							break;
+						}
+					}
+
+					if (normal && fHighestHps < fHps)
+						fHighestHps = fHps;
+				}
+				break;
+
+			case EV_USR_HASHRATE:
+			case EV_USR_RESULTS:
+			case EV_USR_CONNSTAT:
+				print_report(ev.iName);
+				break;
+
+			case EV_HTML_HASHRATE:
+			case EV_HTML_RESULTS:
+			case EV_HTML_CONNSTAT:
+			case EV_HTML_JSON:
+				http_report(ev.iName);
+				break;
+
+			case EV_HASHRATE_LOOP:
+				print_report(EV_USR_HASHRATE);
+				push_timed_event(ex_event(EV_HASHRATE_LOOP), jconf::inst()->GetAutohashTime());
+				break;
+
+			case EV_INVALID_VAL:
+			default:
+				assert(false);
+				break;
+			}
 		}
 	}
 }

@@ -378,6 +378,8 @@ if(WIN32)
     set(LIBS ${LIBS} wsock32 ws2_32)
 endif()
 
+
+
 ################################################################################
 # Versioning
 ################################################################################
@@ -519,6 +521,8 @@ endif()
 
 # compile final binary
 file(GLOB SRCFILES_CPP "xmrstak/cli/*.cpp")
+                        #"xmrstak/libwebsockets/*.cpp")
+                       
 set_source_files_properties(${SRCFILES_CPP} PROPERTIES LANGUAGE CXX)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
@@ -531,6 +535,12 @@ set(EXECUTABLE_OUTPUT_PATH "bin" CACHE STRING "Path to place executables relativ
 set(LIBRARY_OUTPUT_PATH "bin" CACHE STRING "Path to place libraries relative to ${CMAKE_INSTALL_PREFIX}")
 
 target_link_libraries(bittube-miner ${LIBS} bittube-miner-c bittube-miner-backend)
+
+################################################################################
+# WebSockets
+################################################################################
+
+#include("${CMAKE_SOURCE_DIR}/libs/libwebsockets.cmake")
 
 ################################################################################
 # Install

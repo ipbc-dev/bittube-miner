@@ -35,4 +35,8 @@ GPUCONFIG
  */
 "platform_index" : PLATFORMINDEX,
 
+"gpu_info" : [
+GPUINFO
+],
+
 )==="

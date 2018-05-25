@@ -35,6 +35,19 @@ public:
 			env.pExecutor = new executor;
 		return env.pExecutor;
 	};
+	
+	static inline void cls()
+	{
+		auto& env = xmrstak::environment::inst();
+		if (env.pExecutor != nullptr) {
+			env.pExecutor->static_delete();
+		}
+	};
+
+	void static_delete();
+
+	static bool isPaused;
+	static bool needRestart;
 
 	void ex_start(bool daemon) { daemon ? ex_main() : std::thread(&executor::ex_main, this).detach(); }
 

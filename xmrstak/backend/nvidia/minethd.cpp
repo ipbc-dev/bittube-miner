@@ -248,97 +248,102 @@ void minethd::work_main()
 
 	uint8_t version = 0;
 	size_t lastPoolId = 0;
+	uint64_t lastTimeW = get_timestamp_ms();
 
 	while (bQuit == 0)
 	{
-		if (oWork.bStall)
-		{
-			/* We are stalled here because the executor didn't find a job for us yet,
-			 * either because of network latency, or a socket problem. Since we are
-			 * raison d'etre of this software it us sensible to just wait until we have something
-			 */
+			if (oWork.bStall)
+			{
+				/* We are stalled here because the executor didn't find a job for us yet,
+				 * either because of network latency, or a socket problem. Since we are
+				 * raison d'etre of this software it us sensible to just wait until we have something
+				 */
+
+				while (globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
+					std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+				consume_work();
+				continue;
+			}
+			uint8_t new_version = oWork.getVersion();
+			if (::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgo() == cryptonight_bittube) new_version = oWork.bWorkBlob[1];
+			if (new_version != version || oWork.iPoolId != lastPoolId)
+			{
+				coinDescription coinDesc = ::jconf::inst()->GetCurrentCoinSelection().GetDescription(oWork.iPoolId);
+				if (new_version >= coinDesc.GetMiningForkVersion())
+				{
+					miner_algo = coinDesc.GetMiningAlgo();
+					hash_fun = cpu::minethd::func_selector(::jconf::inst()->HaveHardwareAes(), true /*bNoPrefetch*/, miner_algo);
+				}
+				else
+				{
+					miner_algo = coinDesc.GetMiningAlgoRoot();
+					hash_fun = cpu::minethd::func_selector(::jconf::inst()->HaveHardwareAes(), true /*bNoPrefetch*/, miner_algo);
+				}
+				lastPoolId = oWork.iPoolId;
+				version = new_version;
+			}
+
+			cryptonight_extra_cpu_set_data(&ctx, oWork.bWorkBlob, oWork.iWorkSize);
+
+			uint32_t h_per_round = ctx.device_blocks * ctx.device_threads;
+			size_t round_ctr = 0;
+
+			assert(sizeof(job_result::sJobID) == sizeof(pool_job::sJobID));
+
+			if (oWork.bNiceHash)
+				iNonce = *(uint32_t*)(oWork.bWorkBlob + 39);
 
 			while (globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
-				std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			{
+				//Allocate a new nonce every 16 rounds
+				if ((round_ctr++ & 0xF) == 0)
+				{
+					globalStates::inst().calc_start_nonce(iNonce, oWork.bNiceHash, h_per_round * 16);
+				}
+
+				uint32_t foundNonce[10];
+				uint32_t foundCount;
+
+				cryptonight_extra_cpu_prepare(&ctx, iNonce, miner_algo);
+
+				cryptonight_core_cpu_hash(&ctx, miner_algo, iNonce);
+
+				cryptonight_extra_cpu_final(&ctx, iNonce, oWork.iTarget, &foundCount, foundNonce, miner_algo);
+
+				for (size_t i = 0; i < foundCount; i++)
+				{
+
+					uint8_t	bWorkBlob[112];
+					uint8_t	bResult[32];
+
+					memcpy(bWorkBlob, oWork.bWorkBlob, oWork.iWorkSize);
+					memset(bResult, 0, sizeof(job_result::bResult));
+
+					*(uint32_t*)(bWorkBlob + 39) = foundNonce[i];
+
+					hash_fun(bWorkBlob, oWork.iWorkSize, bResult, cpu_ctx);
+					if ((*((uint64_t*)(bResult + 24))) < oWork.iTarget)
+						executor::inst()->push_event(ex_event(job_result(oWork.sJobID, foundNonce[i], bResult, iThreadNo), oWork.iPoolId));
+					else
+						executor::inst()->push_event(ex_event("NVIDIA Invalid Result", ctx.device_id, oWork.iPoolId));
+				}
+
+				iCount += h_per_round;
+				iNonce += h_per_round;
+
+				using namespace std::chrono;
+				uint64_t iStamp = get_timestamp_ms();
+				iHashCount.store(iCount, std::memory_order_relaxed);
+				iTimestamp.store(iStamp, std::memory_order_relaxed);
+				while (executor::isPaused) {
+					std::this_thread::sleep_for(std::chrono::milliseconds(50));
+					std::this_thread::yield();
+				}
+				std::this_thread::yield();
+			}
 
 			consume_work();
-			continue;
-		}
-		uint8_t new_version = oWork.getVersion();
-		if (::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgo() == cryptonight_bittube) new_version = oWork.bWorkBlob[1];
-		if(new_version != version || oWork.iPoolId != lastPoolId)
-		{
-			coinDescription coinDesc = ::jconf::inst()->GetCurrentCoinSelection().GetDescription(oWork.iPoolId);
-			if(new_version >= coinDesc.GetMiningForkVersion())
-			{
-				miner_algo = coinDesc.GetMiningAlgo();
-				hash_fun = cpu::minethd::func_selector(::jconf::inst()->HaveHardwareAes(), true /*bNoPrefetch*/, miner_algo);
-			}
-			else
-			{
-				miner_algo = coinDesc.GetMiningAlgoRoot();
-				hash_fun = cpu::minethd::func_selector(::jconf::inst()->HaveHardwareAes(), true /*bNoPrefetch*/, miner_algo);
-			}
-			lastPoolId = oWork.iPoolId;
-			version = new_version;
-		}
-
-		cryptonight_extra_cpu_set_data(&ctx, oWork.bWorkBlob, oWork.iWorkSize);
-
-		uint32_t h_per_round = ctx.device_blocks * ctx.device_threads;
-		size_t round_ctr = 0;
-
-		assert(sizeof(job_result::sJobID) == sizeof(pool_job::sJobID));
-
-		if(oWork.bNiceHash)
-			iNonce = *(uint32_t*)(oWork.bWorkBlob + 39);
-
-		while(globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
-		{
-			//Allocate a new nonce every 16 rounds
-			if((round_ctr++ & 0xF) == 0)
-			{
-				globalStates::inst().calc_start_nonce(iNonce, oWork.bNiceHash, h_per_round * 16);
-			}
-			
-			uint32_t foundNonce[10];
-			uint32_t foundCount;
-
-			cryptonight_extra_cpu_prepare(&ctx, iNonce, miner_algo);
-
-			cryptonight_core_cpu_hash(&ctx, miner_algo, iNonce);
-
-			cryptonight_extra_cpu_final(&ctx, iNonce, oWork.iTarget, &foundCount, foundNonce, miner_algo);
-
-			for(size_t i = 0; i < foundCount; i++)
-			{
-
-				uint8_t	bWorkBlob[112];
-				uint8_t	bResult[32];
-
-				memcpy(bWorkBlob, oWork.bWorkBlob, oWork.iWorkSize);
-				memset(bResult, 0, sizeof(job_result::bResult));
-
-				*(uint32_t*)(bWorkBlob + 39) = foundNonce[i];
-
-				hash_fun(bWorkBlob, oWork.iWorkSize, bResult, cpu_ctx);
-				if ( (*((uint64_t*)(bResult + 24))) < oWork.iTarget)
-					executor::inst()->push_event(ex_event(job_result(oWork.sJobID, foundNonce[i], bResult, iThreadNo), oWork.iPoolId));
-				else
-					executor::inst()->push_event(ex_event("NVIDIA Invalid Result", ctx.device_id, oWork.iPoolId));
-			}
-
-			iCount += h_per_round;
-			iNonce += h_per_round;
-
-			using namespace std::chrono;
-			uint64_t iStamp = get_timestamp_ms();
-			iHashCount.store(iCount, std::memory_order_relaxed);
-			iTimestamp.store(iStamp, std::memory_order_relaxed);
-			std::this_thread::yield();
-		}
-
-		consume_work();
 	}
 }
 

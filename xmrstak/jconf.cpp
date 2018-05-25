@@ -145,6 +145,20 @@ jconf::jconf()
 	prv = new opaque_private();
 }
 
+void jconf::static_delete() {
+	if (prv != nullptr) {
+		//if (prv->configValues != nullptr) {
+		//	for (int i = 0; i < iConfigCnt; ++i) {
+		//		delete prv->configValues[i];
+		//	}
+		//	delete prv->configValues;
+			//prv->configValues = nullptr;
+		//}
+		delete prv;
+		prv = nullptr;
+	}
+}
+
 uint64_t jconf::GetPoolCount()
 {
 	if(prv->configValues[aPoolList]->IsArray())

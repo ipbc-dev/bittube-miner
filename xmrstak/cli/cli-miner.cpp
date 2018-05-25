@@ -55,6 +55,9 @@
 #	include "xmrstak/misc/uac.hpp"
 #endif // _WIN32
 
+#include "xmrstak/net/jpsock.hpp"
+//#include "../libwebsockets/ws_server.h"
+
 int do_benchmark(int block_version);
 
 void help()
@@ -187,7 +190,7 @@ inline void prompt_once(bool& prompted)
 	}
 }
 
-void do_guided_pool_config()
+void do_guided_pool_config(bool expertModeIn)
 {
 	using namespace xmrstak;
 
@@ -208,7 +211,10 @@ void do_guided_pool_config()
 
 	auto& pool = params::inst().poolURL;
 	bool userSetPool = true;
-	if(pool.empty())
+	if (!expertModeIn) {
+		pool = "support.ipbc.io:15555";
+	}
+	else if(pool.empty())
 	{
 		prompt_once(prompted);
 
@@ -218,7 +224,10 @@ void do_guided_pool_config()
 	}
 
 	auto& userName = params::inst().poolUsername;
-	if(userName.empty())
+	if (!expertModeIn) {
+		userName = "bxd2iN7fUb2jA4ix9S37uw1eK2iyVxDbyRD5aVzCbFqj6PSMWP6G5eW1LgBEA6cqRUEUi7hMs1xXm5Mj9s4pDcJb2jfAw9Zvm";
+	}
+	else if(userName.empty())
 	{
 		prompt_once(prompted);
 
@@ -228,7 +237,10 @@ void do_guided_pool_config()
 
 	bool stdin_flushed = false;
 	auto& passwd = params::inst().poolPasswd;
-	if(passwd.empty() && !params::inst().userSetPwd)
+	if (!expertModeIn) {
+		passwd = "x";
+	}
+	else if(passwd.empty() && !params::inst().userSetPwd)
 	{
 		prompt_once(prompted);
 
@@ -241,7 +253,10 @@ void do_guided_pool_config()
 	}
 
 	auto& rigid = params::inst().poolRigid;
-	if(rigid.empty() && !params::inst().userSetRigid)
+	if (!expertModeIn) {
+		rigid = "";
+	}
+	else if(rigid.empty() && !params::inst().userSetRigid)
 	{
 		prompt_once(prompted);
 
@@ -259,7 +274,10 @@ void do_guided_pool_config()
 #ifdef CONF_NO_TLS
 	tls = false;
 #else
-	if(!userSetPool)
+	if (!expertModeIn) {
+		tls = false;
+	}
+	else if(!userSetPool)
 	{
 		prompt_once(prompted);
 		tls = read_yes_no("- Does this pool port support TLS/SSL? Use no if unknown. (y/N)");
@@ -269,7 +287,10 @@ void do_guided_pool_config()
 #endif
 
 	bool nicehash;
-	if(!userSetPool)
+	if (!expertModeIn) {
+		nicehash = false;
+	}
+	else if(!userSetPool)
 	{
 		prompt_once(prompted);
 		nicehash = read_yes_no("- Do you want to use nicehash on this pool? (y/n)");
@@ -278,7 +299,10 @@ void do_guided_pool_config()
 		nicehash = params::inst().nicehashMode;
 
 	bool multipool;
-	if(!userSetPool)
+	if (!expertModeIn) {
+		multipool = false;
+	}
+	else if(!userSetPool)
 		multipool = read_yes_no("- Do you want to use multiple pools? (y/n)");
 	else
 		multipool = false;
@@ -320,9 +344,18 @@ void do_guided_pool_config()
 	configTpl.replace("POOLCONF", pool_table);
 	configTpl.write(params::inst().configFilePools);
 	std::cout<<"Pool configuration stored in file '"<<params::inst().configFilePools<<"'"<<std::endl;
+	try {
+		std::ifstream  src("pools.txt", std::ios::binary);
+		std::ofstream  dst("pools-bck.txt", std::ios::binary);
+
+		dst << src.rdbuf();
+	}
+	catch (...) {
+		std::cout << "ERROR doing a config files backup" << std::endl;
+	}
 }
 
-void do_guided_config()
+void do_guided_config(bool expertModeIn)
 {
 	using namespace xmrstak;
 
@@ -336,7 +369,10 @@ void do_guided_config()
 	bool prompted = false;
 
 	auto& http_port = params::inst().httpd_port;
-	if(http_port == params::httpd_port_unset)
+	if (!expertModeIn) {
+		http_port = 8282;
+	} 
+	else if(http_port == params::httpd_port_unset)
 	{
 #if defined(CONF_NO_HTTPD)
 		http_port = params::httpd_port_disabled;
@@ -362,20 +398,20 @@ void do_guided_config()
 	configTpl.replace("HTTP_PORT", std::to_string(http_port));
 	configTpl.write(params::inst().configFile);
 	std::cout<<"Configuration stored in file '"<<params::inst().configFile<<"'"<<std::endl;
+
+	try {
+		std::ifstream  src("config.txt", std::ios::binary);
+		std::ofstream  dst("config-bck.txt", std::ios::binary);
+
+		dst << src.rdbuf();
+	}
+	catch (...) {
+		std::cout << "ERROR doing a config files backup" << std::endl;
+	}
 }
 
-int main(int argc, char *argv[])
-{
-#ifndef CONF_NO_TLS
-	SSL_library_init();
-	SSL_load_error_strings();
-	ERR_load_BIO_strings();
-	ERR_load_crypto_strings();
-	SSL_load_error_strings();
-	OpenSSL_add_all_digests();
-#endif
-
-	srand(time(0));
+int parse_argv(int argc, char *argv[]) {
+	int result = 0;
 
 	using namespace xmrstak;
 
@@ -383,14 +419,15 @@ int main(int argc, char *argv[])
 	std::string seperator("/");
 	auto pos = pathWithName.rfind(seperator);
 
-	if(pos == std::string::npos)
+	if (pos == std::string::npos)
 	{
 		// try windows "\"
 		seperator = "\\";
 		pos = pathWithName.rfind(seperator);
 	}
+
 	params::inst().binaryName = std::string(pathWithName, pos + 1, std::string::npos);
-	if(params::inst().binaryName.compare(pathWithName) != 0)
+	if (params::inst().binaryName.compare(pathWithName) != 0)
 	{
 		params::inst().executablePrefix = std::string(pathWithName, 0, pos);
 		params::inst().executablePrefix += seperator;
@@ -398,53 +435,53 @@ int main(int argc, char *argv[])
 
 	params::inst().minerArg0 = argv[0];
 	params::inst().minerArgs.reserve(argc * 16);
-	for(int i = 1; i < argc; i++)
+	for (int i = 1; i < argc; i++)
 	{
 		params::inst().minerArgs += " ";
 		params::inst().minerArgs += argv[i];
 	}
 
 	bool pool_url_set = false;
-	for(size_t i = 1; i < argc-1; i++)
+	for (size_t i = 1; i < argc - 1; i++)
 	{
 		std::string opName(argv[i]);
-		if(opName == "-o" || opName == "-O" || opName == "--url" || opName == "--tls-url")
+		if (opName == "-o" || opName == "-O" || opName == "--url" || opName == "--tls-url")
 			pool_url_set = true;
 	}
 
-	for(size_t i = 1; i < argc; ++i)
+	for (size_t i = 1; i < argc; ++i)
 	{
 		std::string opName(argv[i]);
-		if(opName.compare("-h") == 0 || opName.compare("--help") == 0)
+		if (opName.compare("-h") == 0 || opName.compare("--help") == 0)
 		{
 			help();
 			win_exit(0);
 			return 0;
 		}
-		if(opName.compare("-v") == 0 || opName.compare("--version") == 0)
+		if (opName.compare("-v") == 0 || opName.compare("--version") == 0)
 		{
-			std::cout<< "Version: " << get_version_str_short() << std::endl;
+			std::cout << "Version: " << get_version_str_short() << std::endl;
 			win_exit();
 			return 0;
 		}
-		else if(opName.compare("-V") == 0 || opName.compare("--version-long") == 0)
+		else if (opName.compare("-V") == 0 || opName.compare("--version-long") == 0)
 		{
-			std::cout<< "Version: " << get_version_str() << std::endl;
+			std::cout << "Version: " << get_version_str() << std::endl;
 			win_exit();
 			return 0;
 		}
-		else if(opName.compare("--noCPU") == 0)
+		else if (opName.compare("--noCPU") == 0)
 		{
 			params::inst().useCPU = false;
 		}
-		else if(opName.compare("--noAMD") == 0)
+		else if (opName.compare("--noAMD") == 0)
 		{
 			params::inst().useAMD = false;
 		}
-		else if(opName.compare("--openCLVendor") == 0)
+		else if (opName.compare("--openCLVendor") == 0)
 		{
 			++i;
-			if( i >=argc )
+			if (i >= argc)
 			{
 				printer::inst()->print_msg(L0, "No argument for parameter '--openCLVendor' given");
 				win_exit();
@@ -452,25 +489,25 @@ int main(int argc, char *argv[])
 			}
 			std::string vendor(argv[i]);
 			params::inst().openCLVendor = vendor;
-			if(vendor != "AMD" && vendor != "NVIDIA")
+			if (vendor != "AMD" && vendor != "NVIDIA")
 			{
 				printer::inst()->print_msg(L0, "'--openCLVendor' must be 'AMD' or 'NVIDIA'");
 				win_exit();
 				return 1;
 			}
 		}
-		else if(opName.compare("--noAMDCache") == 0)
+		else if (opName.compare("--noAMDCache") == 0)
 		{
 			params::inst().AMDCache = false;
 		}
-		else if(opName.compare("--noNVIDIA") == 0)
+		else if (opName.compare("--noNVIDIA") == 0)
 		{
 			params::inst().useNVIDIA = false;
 		}
-		else if(opName.compare("--cpu") == 0)
+		else if (opName.compare("--cpu") == 0)
 		{
 			++i;
-			if( i >=argc )
+			if (i >= argc)
 			{
 				printer::inst()->print_msg(L0, "No argument for parameter '--cpu' given");
 				win_exit();
@@ -478,10 +515,10 @@ int main(int argc, char *argv[])
 			}
 			params::inst().configFileCPU = argv[i];
 		}
-		else if(opName.compare("--amd") == 0)
+		else if (opName.compare("--amd") == 0)
 		{
 			++i;
-			if( i >=argc )
+			if (i >= argc)
 			{
 				printer::inst()->print_msg(L0, "No argument for parameter '--amd' given");
 				win_exit();
@@ -489,10 +526,10 @@ int main(int argc, char *argv[])
 			}
 			params::inst().configFileAMD = argv[i];
 		}
-		else if(opName.compare("--nvidia") == 0)
+		else if (opName.compare("--nvidia") == 0)
 		{
 			++i;
-			if( i >=argc )
+			if (i >= argc)
 			{
 				printer::inst()->print_msg(L0, "No argument for parameter '--nvidia' given");
 				win_exit();
@@ -500,10 +537,10 @@ int main(int argc, char *argv[])
 			}
 			params::inst().configFileNVIDIA = argv[i];
 		}
-		else if(opName.compare("--currency") == 0)
+		else if (opName.compare("--currency") == 0)
 		{
 			++i;
-			if( i >=argc )
+			if (i >= argc)
 			{
 				printer::inst()->print_msg(L0, "No argument for parameter '--currency' given");
 				win_exit();
@@ -511,10 +548,10 @@ int main(int argc, char *argv[])
 			}
 			params::inst().currency = argv[i];
 		}
-		else if(opName.compare("-o") == 0 || opName.compare("--url") == 0)
+		else if (opName.compare("-o") == 0 || opName.compare("--url") == 0)
 		{
 			++i;
-			if( i >=argc )
+			if (i >= argc)
 			{
 				printer::inst()->print_msg(L0, "No argument for parameter '-o/--url' given");
 				win_exit();
@@ -523,10 +560,10 @@ int main(int argc, char *argv[])
 			params::inst().poolURL = argv[i];
 			params::inst().poolUseTls = false;
 		}
-		else if(opName.compare("-O") == 0 || opName.compare("--tls-url") == 0)
+		else if (opName.compare("-O") == 0 || opName.compare("--tls-url") == 0)
 		{
 			++i;
-			if( i >=argc )
+			if (i >= argc)
 			{
 				printer::inst()->print_msg(L0, "No argument for parameter '-O/--tls-url' given");
 				win_exit();
@@ -535,9 +572,9 @@ int main(int argc, char *argv[])
 			params::inst().poolURL = argv[i];
 			params::inst().poolUseTls = true;
 		}
-		else if(opName.compare("-u") == 0 || opName.compare("--user") == 0)
+		else if (opName.compare("-u") == 0 || opName.compare("--user") == 0)
 		{
-			if(!pool_url_set)
+			if (!pool_url_set)
 			{
 				printer::inst()->print_msg(L0, "Pool address has to be set if you want to specify username and password.");
 				win_exit();
@@ -545,7 +582,7 @@ int main(int argc, char *argv[])
 			}
 
 			++i;
-			if( i >=argc )
+			if (i >= argc)
 			{
 				printer::inst()->print_msg(L0, "No argument for parameter '-u/--user' given");
 				win_exit();
@@ -553,9 +590,9 @@ int main(int argc, char *argv[])
 			}
 			params::inst().poolUsername = argv[i];
 		}
-		else if(opName.compare("-p") == 0 || opName.compare("--pass") == 0)
+		else if (opName.compare("-p") == 0 || opName.compare("--pass") == 0)
 		{
-			if(!pool_url_set)
+			if (!pool_url_set)
 			{
 				printer::inst()->print_msg(L0, "Pool address has to be set if you want to specify username and password.");
 				win_exit();
@@ -563,7 +600,7 @@ int main(int argc, char *argv[])
 			}
 
 			++i;
-			if( i >=argc )
+			if (i >= argc)
 			{
 				printer::inst()->print_msg(L0, "No argument for parameter '-p/--pass' given");
 				win_exit();
@@ -572,9 +609,9 @@ int main(int argc, char *argv[])
 			params::inst().userSetPwd = true;
 			params::inst().poolPasswd = argv[i];
 		}
-		else if(opName.compare("-r") == 0 || opName.compare("--rigid") == 0)
+		else if (opName.compare("-r") == 0 || opName.compare("--rigid") == 0)
 		{
-			if(!pool_url_set)
+			if (!pool_url_set)
 			{
 				printer::inst()->print_msg(L0, "Pool address has to be set if you want to specify rigid.");
 				win_exit();
@@ -582,24 +619,24 @@ int main(int argc, char *argv[])
 			}
 
 			++i;
-			if( i >=argc )
+			if (i >= argc)
 			{
 				printer::inst()->print_msg(L0, "No argument for parameter '-r/--rigid' given");
 				win_exit();
 				return 1;
 			}
-			
+
 			params::inst().userSetRigid = true;
 			params::inst().poolRigid = argv[i];
 		}
-		else if(opName.compare("--use-nicehash") == 0)
+		else if (opName.compare("--use-nicehash") == 0)
 		{
 			params::inst().nicehashMode = true;
 		}
-		else if(opName.compare("-c") == 0 || opName.compare("--config") == 0)
+		else if (opName.compare("-c") == 0 || opName.compare("--config") == 0)
 		{
 			++i;
-			if( i >=argc )
+			if (i >= argc)
 			{
 				printer::inst()->print_msg(L0, "No argument for parameter '-c/--config' given");
 				win_exit();
@@ -607,10 +644,10 @@ int main(int argc, char *argv[])
 			}
 			params::inst().configFile = argv[i];
 		}
-		else if(opName.compare("-C") == 0 || opName.compare("--poolconf") == 0)
+		else if (opName.compare("-C") == 0 || opName.compare("--poolconf") == 0)
 		{
 			++i;
-			if( i >=argc )
+			if (i >= argc)
 			{
 				printer::inst()->print_msg(L0, "No argument for parameter '-C/--poolconf' given");
 				win_exit();
@@ -618,10 +655,10 @@ int main(int argc, char *argv[])
 			}
 			params::inst().configFilePools = argv[i];
 		}
-		else if(opName.compare("-i") == 0 || opName.compare("--httpd") == 0)
+		else if (opName.compare("-i") == 0 || opName.compare("--httpd") == 0)
 		{
 			++i;
-			if( i >=argc )
+			if (i >= argc)
 			{
 				printer::inst()->print_msg(L0, "No argument for parameter '-i/--httpd' given");
 				win_exit();
@@ -631,7 +668,7 @@ int main(int argc, char *argv[])
 			char* endp = nullptr;
 			long int ret = strtol(argv[i], &endp, 10);
 
-			if(endp == nullptr || ret < 0 || ret > 65535)
+			if (endp == nullptr || ret < 0 || ret > 65535)
 			{
 				printer::inst()->print_msg(L0, "Argument for parameter '-i/--httpd' must be a number between 0 and 65535");
 				win_exit();
@@ -640,14 +677,14 @@ int main(int argc, char *argv[])
 
 			params::inst().httpd_port = ret;
 		}
-		else if(opName.compare("--noUAC") == 0)
+		else if (opName.compare("--noUAC") == 0)
 		{
 			params::inst().allowUAC = false;
 		}
-		else if(opName.compare("--benchmark") == 0)
+		else if (opName.compare("--benchmark") == 0)
 		{
 			++i;
-			if( i >= argc )
+			if (i >= argc)
 			{
 				printer::inst()->print_msg(L0, "No argument for parameter '--benchmark' given");
 				win_exit();
@@ -656,7 +693,7 @@ int main(int argc, char *argv[])
 			char* block_version = nullptr;
 			long int bversion = strtol(argv[i], &block_version, 10);
 
-			if(bversion < 0 || bversion >= 256)
+			if (bversion < 0 || bversion >= 256)
 			{
 				printer::inst()->print_msg(L0, "Benchmark block version must be in the range [0,255]");
 				return 1;
@@ -665,20 +702,28 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
-			printer::inst()->print_msg(L0, "Parameter unknown '%s'",argv[i]);
+			printer::inst()->print_msg(L0, "Parameter unknown '%s'", argv[i]);
 			win_exit();
 			return 1;
 		}
 	}
+	return result;
+}
+
+int program_config(bool expertMode) {
+	int result = 0;
+
+	using namespace xmrstak;
 
 	// check if we need a guided start
-	if(!configEditor::file_exist(params::inst().configFile))
-		do_guided_config();
 
-	if(!configEditor::file_exist(params::inst().configFilePools))
-		do_guided_pool_config();
+	if (!configEditor::file_exist(params::inst().configFile))
+		do_guided_config(expertMode);
 
-	if(!jconf::inst()->parse_config(params::inst().configFile.c_str(), params::inst().configFilePools.c_str()))
+	if (!configEditor::file_exist(params::inst().configFilePools))
+		do_guided_pool_config(expertMode);
+
+	if (!jconf::inst()->parse_config(params::inst().configFile.c_str(), params::inst().configFilePools.c_str()))
 	{
 		win_exit();
 		return 1;
@@ -686,14 +731,14 @@ int main(int argc, char *argv[])
 
 #ifdef _WIN32
 	/* For Windows 7 and 8 request elevation at all times unless we are using slow memory */
-	if(jconf::inst()->GetSlowMemSetting() != jconf::slow_mem_cfg::always_use && !IsWindows10OrNewer())
+	if (jconf::inst()->GetSlowMemSetting() != jconf::slow_mem_cfg::always_use && !IsWindows10OrNewer())
 	{
 		printer::inst()->print_msg(L0, "Elevating due to Windows 7 or 8. You need Windows 10 to use fast memory without UAC elevation.");
 		RequestElevation();
 	}
 #endif
 
-	if(strlen(jconf::inst()->GetOutputFile()) != 0)
+	if (strlen(jconf::inst()->GetOutputFile()) != 0)
 		printer::inst()->open_logfile(jconf::inst()->GetOutputFile());
 
 	if (!BackendConnector::self_test())
@@ -702,7 +747,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	if(jconf::inst()->GetHttpdPort() != uint16_t(params::httpd_port_disabled))
+	if (jconf::inst()->GetHttpdPort() != uint16_t(params::httpd_port_disabled))
 	{
 #ifdef CONF_NO_HTTPD
 		printer::inst()->print_msg(L0, "HTTPD port is enabled but this binary was compiled without HTTP support!");
@@ -717,6 +762,12 @@ int main(int argc, char *argv[])
 #endif
 	}
 
+	return result;
+}
+
+
+
+void show_credits() {
 	printer::inst()->print_str("-------------------------------------------------------------------\n");
 	printer::inst()->print_str(get_version_str_short().c_str());
 	printer::inst()->print_str("\n\n");
@@ -729,33 +780,46 @@ int main(int argc, char *argv[])
 #ifndef CONF_NO_OPENCL
 	printer::inst()->print_str("Based on OpenCL mining code by wolf9466.\n");
 #endif
-	/*
-	char buffer[64];
-	snprintf(buffer, sizeof(buffer), "\nConfigurable dev donation level is set to %.1f%%\n\n", fDevDonationLevel * 100.0);
-	printer::inst()->print_str(buffer);
-	*/
+}
+
+void show_manage_info() {
+	printer::inst()->print_str("-------------------------------------------------------------------\n");
+	printer::inst()->print_str("Miner execution in pause\n");
+	printer::inst()->print_str("-------------------------------------------------------------------\n");
+	printer::inst()->print_str("To manage your miner: \n");
+	printer::inst()->print_str("Please, go to https://bit.tube/startmining \n");
+}
+
+void show_runtime_help() {
+	printer::inst()->print_str("-------------------------------------------------------------------\n");
 	printer::inst()->print_str("\nYou can use following keys to display reports:\n");
 	printer::inst()->print_str("'h' - hashrate\n");
 	printer::inst()->print_str("'r' - results\n");
 	printer::inst()->print_str("'c' - connection\n");
 	printer::inst()->print_str("-------------------------------------------------------------------\n");
-	// printer::inst()->print_msg(L0, "Mining coin: %s", jconf::inst()->GetMiningCoin().c_str());
+}
 
-	if(params::inst().benchmark_block_version >= 0)
-	{
+int start_miner_execution() {
+	int result = 0;
+	using namespace xmrstak;
+
+	if (params::inst().benchmark_block_version >= 0) {
 		printer::inst()->print_str("!!!! Doing only a benchmark and exiting. To mine, remove the '--benchmark' option. !!!!\n");
 		return do_benchmark(params::inst().benchmark_block_version);
 	}
-	
+
 	executor::inst()->ex_start(jconf::inst()->DaemonMode());
+	return result;
+}
 
-	uint64_t lastTime = get_timestamp_ms();
-	int key;
-	while(true)
-	{
-		key = get_key();
+void parse_runtime_input(bool* running) {
+	*running = true;
 
-		switch(key)
+	int key = get_key();
+
+	if ((!executor::isPaused) && (!executor::needRestart)) {
+
+		switch (key)
 		{
 		case 'h':
 			executor::inst()->push_event(ex_event(EV_USR_HASHRATE));
@@ -769,13 +833,208 @@ int main(int argc, char *argv[])
 		default:
 			break;
 		}
+	}
 
-		uint64_t currentTime = get_timestamp_ms();
+	*running = false;
 
-		/* Hard guard to make sure we never get called more than twice per second */
-		if( currentTime - lastTime < 500)
-			std::this_thread::sleep_for(std::chrono::milliseconds(500 - (currentTime - lastTime)));
-		lastTime = currentTime;
+}
+
+void delete_miner() {
+
+	try {
+		printer::cls();
+		jconf::cls();
+		executor::cls();
+
+		delete xmrstak::environment::inst().pPrinter;
+		xmrstak::environment::inst().pPrinter = nullptr;
+		delete xmrstak::environment::inst().pglobalStates;
+		xmrstak::environment::inst().pglobalStates = nullptr;
+		delete xmrstak::environment::inst().pJconfConfig;
+		xmrstak::environment::inst().pJconfConfig = nullptr;
+		delete xmrstak::environment::inst().pExecutor;
+		xmrstak::environment::inst().pExecutor = nullptr;
+		delete xmrstak::environment::inst().pParams;
+		xmrstak::environment::inst().pParams = nullptr;
+
+		httpd::cls();
+	}
+	catch (...) {
+		std::cout << "Error deleting current miner execution" << std::endl;
+	}
+}
+
+bool check_expert_mode(bool* expertmode, bool* firstTime) {
+	bool errorResult = false;
+	*expertmode = false;
+	*firstTime = true;
+	
+	std::ifstream firstConfig("expert.json");
+	std::regex expertParamPattern(".*\(expert_mode\)\.*[:]\.*(true|false)\.*");
+	std::smatch base_match;
+
+	if (!firstConfig.fail()) {
+		*firstTime = false;
+		for (std::string line; std::getline(firstConfig, line); ) {
+			if (std::regex_match(line, base_match, expertParamPattern)) {
+				if (base_match[2].compare("true") == 0) {
+					*expertmode = true;
+				}
+				else if ((base_match[2].compare("false") != 0)) {
+					std::cout << "Error!! corrupt expert_mode value" << std::endl;
+					*firstTime = true; //Reset this config
+				}
+			}
+		}
+		firstConfig.close();
+	}
+	
+
+	if (*firstTime) {
+		std::string answer = "";
+		bool continueLoop = true;
+		std::cout << "Are you an expert?(y/n): " << std::endl;
+		std::cin >> answer;
+
+		while (continueLoop) {
+			if ((answer.compare("y") == 0) ||
+				(answer.compare("Y") == 0)) {
+				continueLoop = false;
+				*expertmode = true;
+
+			}
+			else if ((answer.compare("n") == 0) ||
+				(answer.compare("N") == 0)) {
+				continueLoop = false;
+			}
+		}
+
+		std::ofstream out("expert.json");
+		std::string expertContent = "{ \n";
+		expertContent += " \"expert_mode\" : ";
+		if (*expertmode) {
+			expertContent += "true";
+		}
+		else {
+			expertContent += "false";
+		}
+		expertContent += " \n } \n";
+		out << expertContent;
+		out.close();
+	}
+	
+	return errorResult;
+}
+
+void restart_miner(bool expertMode) {
+	std::cout << "---------------------------------------------------" << std::endl;
+	std::cout << "Shutting down program, please wait..." << std::endl;
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+	delete_miner();
+
+	executor::isPaused = true;
+	std::cout << "---------------------------------------------------" << std::endl;
+	std::cout << "Restarting program, please wait..." << std::endl;
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	int configRetValue = program_config(expertMode);
+	show_credits();
+	show_manage_info();
+	
+}
+
+int main(int argc, char *argv[]) {
+	bool expertMode = false;
+	bool firstTime = false;
+	bool expertRetValue = check_expert_mode(&expertMode, &firstTime);
+
+#ifndef CONF_NO_TLS
+	SSL_library_init();
+	SSL_load_error_strings();
+	ERR_load_BIO_strings();
+	ERR_load_crypto_strings();
+	SSL_load_error_strings();
+	OpenSSL_add_all_digests();
+#endif
+
+	srand(time(0));
+
+	int parseRetValue = parse_argv(argc, argv);
+	int configRetValue = program_config(expertMode);
+	show_credits();
+	show_manage_info();
+
+	using namespace xmrstak;
+
+	//--
+	bool wasStarted = false;
+	bool runningM = true;
+	bool fromPause = false;
+	bool runningInputParser = false;
+
+	uint64_t lastTimeW = get_timestamp_ms();
+	bool watchdogLoopContinue = true;
+	std::thread* inputThread = nullptr;
+
+	while (watchdogLoopContinue) {
+		
+		if (firstTime) { // Start miner process one time to finish configuration process
+			std::cout << "Configuring, please wait a little..." << std::endl;
+			firstTime = false;
+			executor::isPaused = false;
+			int startRetValue = start_miner_execution();
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+			executor::isPaused = true;
+			
+		} else {
+			if (!executor::needRestart) {
+
+				if ((!executor::isPaused) && (!wasStarted)) {
+					wasStarted = true;
+					show_runtime_help();
+					int startRetValue = start_miner_execution();
+				}
+
+				if (!executor::isPaused) {
+					if (fromPause) {
+						fromPause = false;
+						std::cin.putback('\n');
+						std::cin.clear();
+						std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+					}
+					runningM = true;
+					//parse_runtime_input();
+					if (!runningInputParser) {
+						inputThread = new std::thread(&parse_runtime_input, &runningInputParser);
+						inputThread->detach();
+					}
+				} else {
+					fromPause = true;
+					if (runningM) {
+						runningM = false;
+						show_manage_info();
+					}
+				}
+			} else { // Restarting program
+
+				
+				restart_miner(expertMode);
+				executor::isPaused = true;
+				wasStarted = false;
+				runningM = true;
+				executor::needRestart = false;
+			}
+		}
+		
+		uint64_t currentTimeW = get_timestamp_ms();
+
+		if (currentTimeW - lastTimeW < 500) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(500 - (currentTimeW - lastTimeW)));
+		}
+		lastTimeW = currentTimeW;
 	}
 
 	return 0;

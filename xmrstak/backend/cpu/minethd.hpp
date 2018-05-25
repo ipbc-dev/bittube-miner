@@ -57,10 +57,10 @@ private:
 	std::promise<void> order_fix;
 	std::mutex thd_aff_set;
 
-	std::thread oWorkThd;
+	//std::thread oWorkThd;
 	int64_t affinity;
 
-	bool bQuit;
+	//bool bQuit;
 	bool bNoPrefetch;
 };
 

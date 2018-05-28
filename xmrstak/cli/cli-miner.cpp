@@ -945,7 +945,9 @@ void restart_miner(bool expertMode) {
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	int configRetValue = program_config(expertMode);
 	show_credits(expertMode);
-	show_manage_info();
+	if (!expertMode) {
+		show_manage_info();
+	}
 	
 }
 
@@ -968,7 +970,9 @@ int main(int argc, char *argv[]) {
 	int parseRetValue = parse_argv(argc, argv);
 	int configRetValue = program_config(expertMode);
 	show_credits(expertMode);
-	show_manage_info();
+	if (!expertMode) {
+		show_manage_info();
+	}
 
 	using namespace xmrstak;
 
@@ -982,6 +986,10 @@ int main(int argc, char *argv[]) {
 	bool watchdogLoopContinue = true;
 	std::thread* inputThread = nullptr;
 
+	if(!firstTime && expertMode) {
+		executor::inst()->isPause = false;
+	}
+
 	while (watchdogLoopContinue) {
 		
 		if (firstTime) { // Start miner process one time to finish configuration process
@@ -990,8 +998,10 @@ int main(int argc, char *argv[]) {
 			executor::inst()->isPause = false;
 			int startRetValue = start_miner_execution();
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-			executor::inst()->isPause = true;
+			if (!expertMode) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+				executor::inst()->isPause = true;
+			}
 			
 		} else {
 			if (!executor::inst()->needRestart) {

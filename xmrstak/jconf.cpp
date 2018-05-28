@@ -110,7 +110,7 @@ xmrstak::coin_selection coins[] = {
 	{ "sumokoin",            {cryptonight_heavy, cryptonight_heavy, 0u},   {cryptonight_heavy, cryptonight_heavy, 0u},   nullptr },
 	{ "turtlecoin",          {cryptonight_lite, cryptonight_aeon, 255u},   {cryptonight_aeon, cryptonight_lite, 7u},     nullptr }
 	*/
-	{"bittube",                 {cryptonight_bittube, cryptonight, 1u},          {cryptonight_bittube, cryptonight, 1u},   "pool.ipbc.io:13333"},
+	{"bittube",                 {cryptonight_bittube, cryptonight, 1u},          {cryptonight_bittube, cryptonight, 1u},   "mining.bit.tube:13333"},
 };
 
 constexpr size_t coin_alogo_size = (sizeof(coins)/sizeof(coins[0]));
@@ -357,7 +357,7 @@ bool jconf::IsOnAlgoList(std::string& needle)
 
 const char* jconf::GetDefaultPool(const char* needle)
 {
-	const char* default_example = "pool.example.com:3333";
+	const char* default_example = "mining.bit.tube:13333";
 	
 	for(size_t i=0; i < coin_alogo_size; i++)
 	{

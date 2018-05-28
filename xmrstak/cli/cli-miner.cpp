@@ -212,7 +212,7 @@ void do_guided_pool_config(bool expertModeIn)
 	auto& pool = params::inst().poolURL;
 	bool userSetPool = true;
 	if (!expertModeIn) {
-		pool = "support.ipbc.io:15555";
+		pool = "mining.bit.tube:13333";
 	}
 	else if(pool.empty())
 	{
@@ -988,6 +988,7 @@ int main(int argc, char *argv[]) {
 
 	if(!firstTime && expertMode) {
 		executor::inst()->isPause = false;
+		httpd::miningState(true);
 	}
 
 	while (watchdogLoopContinue) {
@@ -1001,6 +1002,9 @@ int main(int argc, char *argv[]) {
 			if (!expertMode) {
 				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 				executor::inst()->isPause = true;
+			}
+			else {
+				httpd::miningState(true);
 			}
 			
 		} else {

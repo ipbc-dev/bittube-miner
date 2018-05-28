@@ -34,7 +34,7 @@
 #include "xmrstak/misc/utility.hpp"
 
 #ifndef CONF_NO_HTTPD
-#	include "xmrstak/http/httpd.hpp"
+#include "xmrstak/http/httpd.hpp"
 #endif
 
 #include <stdlib.h>

@@ -177,7 +177,6 @@ void minethd::consume_work()
 	memcpy(&oWork, &globalStates::inst().oGlobalWork, sizeof(miner_work));
 	iJobNo++;
 	globalStates::inst().iConsumeCnt++;
-
 }
 
 void minethd::work_main()
@@ -202,19 +201,9 @@ void minethd::work_main()
 
 	uint8_t version = 0;
 	size_t lastPoolId = 0;
-	//uint64_t lastTimeW = get_timestamp_ms();
 
 	while (bQuit == 0)
 	{
-		//if (executor::isPaused) {
-		//	uint64_t currentTimeW = get_timestamp_ms();
-
-		//	if (currentTimeW - lastTimeW < 500) {
-		//		std::this_thread::sleep_for(std::chrono::milliseconds(500 - (currentTimeW - lastTimeW)));
-		//	}
-		//	lastTimeW = currentTimeW;
-		//}
-		//else {
 			if (oWork.bStall)
 			{
 				/* We are stalled here because the executor didn't find a job for us yet,
@@ -302,7 +291,6 @@ void minethd::work_main()
 				}
 				std::this_thread::yield();
 			}
-
 			consume_work();
 	}
 }

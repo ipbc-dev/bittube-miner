@@ -8,8 +8,6 @@
 
 struct MHD_Daemon;
 struct MHD_Connection;
-//enum MHD_ValueKind: int;
-//enum MHD_RequestTerminationCode: int;
 
 struct config_data {
 	bool isNeedUpdate = false;

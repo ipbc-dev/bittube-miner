@@ -50,8 +50,6 @@
 #define strncasecmp _strnicmp
 #endif // _WIN32
 
-//bool executor::isPaused = true;
-//bool executor::needRestart = false;
 
 void executor::static_delete() {
 	if (telem != nullptr) {
@@ -64,7 +62,6 @@ void executor::static_delete() {
 		for (int i = 0; i < pvThreads->size(); ++i) {
 			if (pvThreads->at(i) != nullptr) {
 				pvThreads->at(i)->static_quit();
-				//TODO: wait for finishing threads
 				delete pvThreads->at(i);
 			}
 		}
@@ -79,12 +76,12 @@ void executor::static_delete() {
 	}
 
 	if (pools.size() > 0) {
-		for (auto & i : pools) {
-			if (i.get_thread() != nullptr) 
-			if(i.get_thread()->joinable()){
+		//for (auto & i : pools) {
+			//if (i.get_thread() != nullptr) 
+			//if(i.get_thread()->joinable()){
 				//i.get_thread()->join();
-			}
-		}
+			//}
+		//}
 		pools.clear();
 	}
 }

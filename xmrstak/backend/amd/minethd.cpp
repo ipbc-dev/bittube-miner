@@ -293,7 +293,7 @@ void minethd::work_main()
 				uint64_t iStamp = get_timestamp_ms();
 				iHashCount.store(iCount, std::memory_order_relaxed);
 				iTimestamp.store(iStamp, std::memory_order_relaxed);
-				while (executor::isPaused) {
+				while (executor::inst()->isPause) {
 					std::this_thread::sleep_for(std::chrono::milliseconds(50));
 					std::this_thread::yield();
 					if (bQuit != 0) {

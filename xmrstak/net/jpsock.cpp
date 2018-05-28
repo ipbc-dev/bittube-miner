@@ -248,11 +248,11 @@ bool jpsock::jpsock_thd_main()
 
 	while (true)
 	{
-		if (executor::needRestart) {
+		if (executor::inst()->needRestart) {
 			break;
 		}
 
-		if (executor::isPaused) {
+		if (executor::inst()->isPause) {
 			uint64_t currentTimeW = get_timestamp_ms();
 
 			if (currentTimeW - lastTimeW < 100) {
@@ -278,7 +278,7 @@ bool jpsock::jpsock_thd_main()
 			char* lnstart = buf;
 			while ((lnend = (char*)memchr(lnstart, '\n', datalen)) != nullptr)
 			{
-				if (executor::needRestart) {
+				if (executor::inst()->needRestart) {
 					//sck->close(false);
 					//return false;
 					break;
@@ -287,7 +287,7 @@ bool jpsock::jpsock_thd_main()
 				lnend++;
 				int lnlen = lnend - lnstart;
 
-				if (!executor::isPaused)
+				if (!executor::inst()->isPause)
 				if (!process_line(lnstart, lnlen))
 				{
 					sck->close(false);

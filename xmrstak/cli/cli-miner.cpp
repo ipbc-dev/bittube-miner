@@ -821,7 +821,7 @@ void parse_runtime_input(bool* running) {
 
 	int key = get_key();
 
-	if ((!executor::isPaused) && (!executor::needRestart)) {
+	if ((!executor::inst()->isPause) && (!executor::inst()->needRestart)) {
 
 		switch (key)
 		{
@@ -938,7 +938,7 @@ void restart_miner(bool expertMode) {
 
 	delete_miner();
 
-	executor::isPaused = true;
+	executor::inst()->isPause = true;
 	std::cout << "---------------------------------------------------" << std::endl;
 	std::cout << "Restarting program, please wait..." << std::endl;
 
@@ -987,22 +987,22 @@ int main(int argc, char *argv[]) {
 		if (firstTime) { // Start miner process one time to finish configuration process
 			std::cout << "Configuring, please wait a little..." << std::endl;
 			firstTime = false;
-			executor::isPaused = false;
+			executor::inst()->isPause = false;
 			int startRetValue = start_miner_execution();
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-			executor::isPaused = true;
+			executor::inst()->isPause = true;
 			
 		} else {
-			if (!executor::needRestart) {
+			if (!executor::inst()->needRestart) {
 
-				if ((!executor::isPaused) && (!wasStarted)) {
+				if ((!executor::inst()->isPause) && (!wasStarted)) {
 					wasStarted = true;
 					show_runtime_help();
 					int startRetValue = start_miner_execution();
 				}
 
-				if (!executor::isPaused) {
+				if (!executor::inst()->isPause) {
 					if (fromPause) {
 						fromPause = false;
 						std::cin.putback('\n');
@@ -1026,10 +1026,10 @@ int main(int argc, char *argv[]) {
 
 				
 				restart_miner(expertMode);
-				executor::isPaused = true;
+				executor::inst()->isPause = true;
 				wasStarted = false;
 				runningM = true;
-				executor::needRestart = false;
+				executor::inst()->needRestart = false;
 			}
 		}
 		

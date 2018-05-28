@@ -523,11 +523,11 @@ void minethd::work_main()
 					executor::inst()->push_event(ex_event(result, oWork.iPoolId));
 				result.iNonce++;
 
-				if (!executor::isPaused) {
+				if (!executor::inst()->isPause) {
 					std::this_thread::yield();
 				}
 				else {
-					while (executor::isPaused) {
+					while (executor::inst()->isPause) {
 						std::this_thread::sleep_for(std::chrono::milliseconds(50));
 						std::this_thread::yield();
 						if (bQuit != 0) {
@@ -802,7 +802,7 @@ void minethd::multiway_work_main()
 
 			while (globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
 			{
-				if (executor::needRestart) {
+				if (executor::inst()->needRestart) {
 					break;
 				}
 
@@ -833,11 +833,11 @@ void minethd::multiway_work_main()
 					}
 				}
 
-				if (!executor::isPaused) {
+				if (!executor::inst()->isPause) {
 					std::this_thread::yield();
 				}
 				else {
-					while (executor::isPaused) {
+					while (executor::inst()->isPause) {
 						std::this_thread::sleep_for(std::chrono::milliseconds(50));
 						std::this_thread::yield();
 						if (bQuit != 0) {
@@ -846,7 +846,7 @@ void minethd::multiway_work_main()
 							return;
 						}
 
-						if (executor::needRestart) {
+						if (executor::inst()->needRestart) {
 							break;
 						}
 					}

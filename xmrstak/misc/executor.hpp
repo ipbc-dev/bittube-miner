@@ -46,8 +46,10 @@ public:
 
 	void static_delete();
 
-	static bool isPaused;
-	static bool needRestart;
+	//static bool isPaused;
+	//static bool needRestart;
+	bool isPause = true;
+	bool needRestart = false;
 
 	void ex_start(bool daemon) { daemon ? ex_main() : std::thread(&executor::ex_main, this).detach(); }
 

@@ -973,14 +973,14 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 void httpd::updateConfigFiles () {
 	if ((httpd::miner_config != nullptr) && (httpd::miner_config->isNeedUpdate)) {
 		httpd::miner_config->isNeedUpdate = false;
-		executor::isPaused = true;
+		executor::inst()->isPause = true;
 		updateCPUFile();
 		updateGPUNvidiaFile();
 		updateGPUAMD();
 		updateConfigFile();
 		updatePoolFile();
 		
-		executor::needRestart = true;
+		executor::inst()->needRestart = true;
 		
 	}
 }
@@ -1219,7 +1219,7 @@ int httpd::req_handler(void * cls,
 		}
 	}
 	else if (strcasecmp(url, "/start") == 0) {
-		executor::isPaused = false;
+		executor::inst()->isPause = false;
 		str = "{\"status\": \"ok\"}";
 
 		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
@@ -1231,7 +1231,7 @@ int httpd::req_handler(void * cls,
 		}
 	}
 	else if (strcasecmp(url, "/stop") == 0) {
-		executor::isPaused = true;
+		executor::inst()->isPause = true;
 		str = "{\"status\": \"ok\"}";
 
 		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);

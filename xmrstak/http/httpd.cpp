@@ -73,7 +73,7 @@ const std::string CPU_FILE = "./cpu.txt";
 const std::string NVIDIA_FILE = "./nvidia.txt";
 const std::string AMD_FILE = "./amd.txt";
 
-const std::string CORS_ORIGIN = "https://bit.tube";
+const std::string CORS_ORIGIN = "*";
 
 const int POSTBUFFERSIZE = 512;
 const int MAXNAMESIZE = 124;
@@ -479,8 +479,8 @@ bool httpd::updateGPUNvidiaFile() {
 	std::string nvidiaConfigContent = "";
 	std::string amdConfigContent = "";
 	std::regex gpuSectionPattern("[^*]*\(gpu_threads_conf\)\.*");
-	//std::regex gpuSectionEndPattern("\.*\(gpu_info\)\.*");
-	std::regex gpuSectionEndPattern("\.*\(\\]\,\)\.*");
+	std::regex gpuSectionEndPattern("\.*\(gpu_info\)\.*");
+	//std::regex gpuSectionEndPattern("\.*\(\\]\,\)\.*");
 	
 	bool isGpuSection = false;
 
@@ -507,7 +507,7 @@ bool httpd::updateGPUNvidiaFile() {
 			std::ifstream nvidiaBCKFile("./nvidia-bck.txt");
 
 			if (nvidiaBCKFile.fail()) {
-				std::cout << "not nvidia.txt found" << std::endl;
+				std::cout << "not nvidia-bck.txt found" << std::endl;
 			} else {
 				if (remove(NVIDIA_FILE.c_str()) != 0) {
 					std::cout << "Error deleting file [nvidia.txt]" << std::endl;
@@ -886,6 +886,7 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 		if ((valueIN.compare("true") == 0) ||
 			(valueIN.compare("True") == 0) ||
 			(valueIN.compare("TRUE") == 0) ||
+			(valueIN.compare("on") == 0) ||
 			(valueIN.compare("1") == 0)) {
 			resultTmp = true;
 		}
@@ -1047,7 +1048,7 @@ int httpd::starting_process_post (MHD_Connection* connection,
 												size_t* upload_data_size,
 												void ** ptr) {
 
-	std::cout << "[httpd::starting_process_post(...)]Receiving a post msg... " << std::endl;
+	//std::cout << "[httpd::starting_process_post(...)]Receiving a post msg... " << std::endl;
 
 	if(NULL == *ptr) {
 		struct connection_info_struct *con_info;
@@ -1103,7 +1104,7 @@ int httpd::req_handler(void * cls,
 
 	struct MHD_Response * rsp;
 	//std::cout << "Receiving a http request..."  << std::endl;
-	std::cout << "Http request info: " << url << std::endl;
+	//std::cout << "Http request info: " << url << std::endl;
 
 	int retValue;
 

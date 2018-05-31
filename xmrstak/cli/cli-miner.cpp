@@ -861,7 +861,7 @@ void delete_miner() {
 		delete xmrstak::environment::inst().pParams;
 		xmrstak::environment::inst().pParams = nullptr;
 
-		httpd::cls();
+		
 	}
 	catch (...) {
 		std::cout << "Error deleting current miner execution" << std::endl;
@@ -930,13 +930,17 @@ bool check_expert_mode(bool* expertmode, bool* firstTime) {
 	return errorResult;
 }
 
-void restart_miner(bool expertMode) {
+void restart_miner(bool expertMode, bool deleteMiner) {
 	std::cout << "---------------------------------------------------" << std::endl;
 	std::cout << "Shutting down program, please wait..." << std::endl;
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-	delete_miner();
+	httpd::cls();
+
+	if (deleteMiner) {
+		delete_miner();
+	}
 
 	executor::inst()->isPause = true;
 	std::cout << "---------------------------------------------------" << std::endl;
@@ -981,6 +985,7 @@ int main(int argc, char *argv[]) {
 	bool runningM = true;
 	bool fromPause = false;
 	bool runningInputParser = false;
+	bool needDeleteMiner = false;
 
 	uint64_t lastTimeW = get_timestamp_ms();
 	bool watchdogLoopContinue = true;
@@ -998,6 +1003,7 @@ int main(int argc, char *argv[]) {
 			firstTime = false;
 			executor::inst()->isPause = false;
 			int startRetValue = start_miner_execution();
+			needDeleteMiner = true;
 
 			if (!expertMode) {
 				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -1014,6 +1020,7 @@ int main(int argc, char *argv[]) {
 					wasStarted = true;
 					show_runtime_help();
 					int startRetValue = start_miner_execution();
+					needDeleteMiner = true;
 				}
 
 				if (!executor::inst()->isPause) {
@@ -1039,7 +1046,7 @@ int main(int argc, char *argv[]) {
 			} else { // Restarting program
 
 				
-				restart_miner(expertMode);
+				restart_miner(expertMode, needDeleteMiner);
 				executor::inst()->isPause = true;
 				wasStarted = false;
 				runningM = true;

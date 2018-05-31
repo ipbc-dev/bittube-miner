@@ -46,8 +46,6 @@ public:
 
 	void static_delete();
 
-	//static bool isPaused;
-	//static bool needRestart;
 	bool isPause = true;
 	bool needRestart = false;
 
@@ -108,7 +106,6 @@ private:
 	void ex_main();
 
 	void ex_clock_thd();
-	void pool_connect(jpsock* pool);
 
 	constexpr static size_t motd_max_length = 512;
 	bool motd_filter_console(std::string& motd);
@@ -205,7 +202,6 @@ private:
 	void on_sock_error(size_t pool_id, std::string&& sError, bool silent);
 	void on_pool_have_job(size_t pool_id, pool_job& oPoolJob);
 	void on_miner_result(size_t pool_id, job_result& oResult);
-	void connect_to_pools(std::list<jpsock*>& eval_pools);
 	bool get_live_pools(std::vector<jpsock*>& eval_pools, bool is_dev);
 	void eval_pool_choice();
 

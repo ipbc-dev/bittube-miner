@@ -37,3 +37,5 @@ Using new http features (microhttpd)
 		  "wallet_address" : "someWalletHashAddress..."  
 		}  
       ``` 
+
+  - To get json stats info from app, send a get request to http://localhost:1600/api.json  

@@ -73,6 +73,8 @@ const std::string CPU_FILE = "./cpu.txt";
 const std::string NVIDIA_FILE = "./nvidia.txt";
 const std::string AMD_FILE = "./amd.txt";
 
+const std::string CORS_ORIGIN = "https://bit.tube";
+
 const int POSTBUFFERSIZE = 512;
 const int MAXNAMESIZE = 124;
 const int MAXANSWERSIZE = 1024;
@@ -980,7 +982,7 @@ int httpd::send_page (struct MHD_Connection *connection, const char *page) {
 	response = MHD_create_response_from_buffer (strlen (page), 
 												(void *) page,
 												MHD_RESPMEM_PERSISTENT);
-	MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
+	MHD_add_response_header(response, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 
   if (!response) {
     return MHD_NO;
@@ -1101,6 +1103,7 @@ int httpd::req_handler(void * cls,
 
 	struct MHD_Response * rsp;
 	//std::cout << "Receiving a http request..."  << std::endl;
+	std::cout << "Http request info: " << url << std::endl;
 
 	int retValue;
 
@@ -1161,7 +1164,7 @@ int httpd::req_handler(void * cls,
 
 		rsp = MHD_create_response_from_buffer(responsetxt.size(), (void*)responsetxt.c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
-		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", "*");
+		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 
 	}
 	else if (strcasecmp(url, "/ping") == 0) {
@@ -1170,7 +1173,7 @@ int httpd::req_handler(void * cls,
 
 		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
-		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", "*");
+		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 
 	}
 	else if (strcasecmp(url, "/api.json") == 0)
@@ -1181,14 +1184,14 @@ int httpd::req_handler(void * cls,
 
 				rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
 				MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
-				MHD_add_response_header(rsp, "Access-Control-Allow-Origin", "*");
+				MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 			}
 			else {
 				str = "{\"status\": \"error\", \"description\": \"need to start mining\"}";
 
 				rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
 				MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
-				MHD_add_response_header(rsp, "Access-Control-Allow-Origin", "*");
+				MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 			}
 			
 		}
@@ -1197,7 +1200,7 @@ int httpd::req_handler(void * cls,
 
 			rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
 			MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
-			MHD_add_response_header(rsp, "Access-Control-Allow-Origin", "*");
+			MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 		}
 	}
 	else if (strcasecmp(url, "/start") == 0) {
@@ -1206,7 +1209,7 @@ int httpd::req_handler(void * cls,
 
 		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
-		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", "*");
+		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 
 		if (httpd::miner_config != nullptr) {
 			httpd::miner_config->isMining = true;
@@ -1218,7 +1221,7 @@ int httpd::req_handler(void * cls,
 
 		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
-		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", "*");
+		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 
 		if (httpd::miner_config != nullptr) {
 			httpd::miner_config->isMining = false;
@@ -1230,13 +1233,13 @@ int httpd::req_handler(void * cls,
 
 		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
-		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", "*");
+		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 	} else {
 		//send_page(connection, errorpage);
 		std::string responseT(errorpage);
 		rsp = MHD_create_response_from_buffer(responseT.size(), (void*)responseT.c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
-		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", "*");
+		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 
 		//Do a 302 redirect to /h
 		/*char loc_path[256];

@@ -222,6 +222,17 @@ std::string httpd::parseGPUNvidiaFile() {
 			}
 		}
 	}
+
+	if (httpd::miner_config != nullptr) {
+		result += "\"nvidia_current\" : ";
+		if (httpd::miner_config->current_use_nvidia) {
+			result += "true, \n";
+		}
+		else {
+			result += "false, \n";
+		}
+	}
+
 	return result;
 }
 
@@ -268,6 +279,17 @@ std::string httpd::parseGPUAMD() {
 			}
 		}
 	}
+
+	if (httpd::miner_config != nullptr) {
+		result += "\"amd_current\" : ";
+		if (httpd::miner_config->current_use_amd) {
+			result += "true, \n";
+		}
+		else {
+			result += "false, \n";
+		}
+	}
+
 	return result;
 }
 

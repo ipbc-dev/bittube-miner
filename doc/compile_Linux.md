@@ -17,7 +17,7 @@
 ### GNU Compiler
 ```
     # Ubuntu / Debian
-    sudo apt install libmicrohttpd-dev libssl-dev cmake build-essential libhwloc-dev
+    sudo apt install libmicrohttpd-dev libssl-dev cmake build-essential libhwloc-dev ocl-icd-opencl-devFix
     git clone https://github.com/ipbc-dev/bittube-miner.git
     mkdir bittube-miner/build
     cd bittube-miner/build

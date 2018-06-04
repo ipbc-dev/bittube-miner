@@ -21,7 +21,6 @@
   *
   */
 
-
 #include "xmrstak/misc/executor.hpp"
 #include "xmrstak/backend/miner_work.hpp"
 #include "xmrstak/backend/globalStates.hpp"
@@ -35,10 +34,8 @@
 #include "xmrstak/misc/utility.hpp"
 
 #ifndef CONF_NO_HTTPD
-#	include "xmrstak/http/httpd.hpp"
+#include "xmrstak/http/httpd.hpp"
 #endif
-
-
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -46,9 +43,6 @@
 #include <iostream>
 #include <time.h>
 #include <iostream>
-
-#include <fstream>
-#include <sstream>
 
 #ifndef CONF_NO_TLS
 #include <openssl/ssl.h>
@@ -63,18 +57,6 @@
 
 #include "xmrstak/net/jpsock.hpp"
 //#include "../libwebsockets/ws_server.h"
-
-
-
-//Qt5 gui
-#include <QApplication>
-#include <QWidget>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QTextEdit>
-#include <QPushButton>
-
-#include "xmrstak\gui\mainwindow.h"
 
 int do_benchmark(int block_version);
 
@@ -224,13 +206,13 @@ void do_guided_pool_config(bool expertModeIn)
 	auto& currency = params::inst().currency;
 	if(currency.empty() || !jconf::IsOnAlgoList(currency))
 	{
-		currency = "ipbc";
+		currency = "bittube";
 	}
 
 	auto& pool = params::inst().poolURL;
 	bool userSetPool = true;
 	if (!expertModeIn) {
-		pool = "support.ipbc.io:15555";
+		pool = "mining.bit.tube:13333";
 	}
 	else if(pool.empty())
 	{
@@ -748,7 +730,7 @@ int program_config(bool expertMode) {
 	}
 
 #ifdef _WIN32
-	// For Windows 7 and 8 request elevation at all times unless we are using slow memory 
+	/* For Windows 7 and 8 request elevation at all times unless we are using slow memory */
 	if (jconf::inst()->GetSlowMemSetting() != jconf::slow_mem_cfg::always_use && !IsWindows10OrNewer())
 	{
 		printer::inst()->print_msg(L0, "Elevating due to Windows 7 or 8. You need Windows 10 to use fast memory without UAC elevation.");
@@ -785,11 +767,15 @@ int program_config(bool expertMode) {
 
 
 
-void show_credits() {
+void show_credits(bool expertMode) {
+	if (!expertMode) {
+		printer::inst()->print_str("-------------------------------------------------------------------\n");
+		printer::inst()->print_str("Automatic configuration for non experts is in beta. \n");
+	}
 	printer::inst()->print_str("-------------------------------------------------------------------\n");
 	printer::inst()->print_str(get_version_str_short().c_str());
 	printer::inst()->print_str("\n\n");
-	printer::inst()->print_str("Brought to you by IPBC.\n");
+	printer::inst()->print_str("Brought to you by BitTube.\n");
 	printer::inst()->print_str("Based on XMR-Stak by fireice_uk and psychocrypt.\n");
 	printer::inst()->print_str("Based on CPU mining code by wolf9466 (heavily optimized by fireice_uk).\n");
 #ifndef CONF_NO_CUDA
@@ -805,7 +791,7 @@ void show_manage_info() {
 	printer::inst()->print_str("Miner execution in pause\n");
 	printer::inst()->print_str("-------------------------------------------------------------------\n");
 	printer::inst()->print_str("To manage your miner: \n");
-	printer::inst()->print_str("Please, go to https://bit.tube/mining \n");
+	printer::inst()->print_str("Please, go to https://bit.tube/startmining \n");
 }
 
 void show_runtime_help() {
@@ -835,7 +821,7 @@ void parse_runtime_input(bool* running) {
 
 	int key = get_key();
 
-	if ((!executor::isPaused) && (!executor::needRestart)) {
+	if ((!executor::inst()->isPause) && (!executor::inst()->needRestart)) {
 
 		switch (key)
 		{
@@ -875,7 +861,7 @@ void delete_miner() {
 		delete xmrstak::environment::inst().pParams;
 		xmrstak::environment::inst().pParams = nullptr;
 
-		httpd::cls();
+		
 	}
 	catch (...) {
 		std::cout << "Error deleting current miner execution" << std::endl;
@@ -944,85 +930,35 @@ bool check_expert_mode(bool* expertmode, bool* firstTime) {
 	return errorResult;
 }
 
-void restart_miner(bool expertMode) {
+void restart_miner(bool expertMode, bool deleteMiner) {
 	std::cout << "---------------------------------------------------" << std::endl;
 	std::cout << "Shutting down program, please wait..." << std::endl;
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-	delete_miner();
+	httpd::cls();
 
-	executor::isPaused = true;
+	if (deleteMiner) {
+		delete_miner();
+	}
+
+	executor::inst()->isPause = true;
 	std::cout << "---------------------------------------------------" << std::endl;
 	std::cout << "Restarting program, please wait..." << std::endl;
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	int configRetValue = program_config(expertMode);
-	show_credits();
-	show_manage_info();
-	
-}
-
-/*
- * Description:
- */
-void checkGeneralStates() {
-	//std::stringstream ss;
-	//std::streambuf * strm_buffer = std::cout.rdbuf(ss.rdbuf());
-	//std::string outputLine = ss.str();
-
-	//if (!outputLine.empty()) {
-	//	MainWindow::inst()->showLine(outputLine);
-	//}
-
-
-
-	if (httpd::miner_states != nullptr) {
-		if (httpd::miner_states->gui_logQueque.size() > 0) {
-
-			std::string line = httpd::miner_states->gui_logQueque.front();
-			httpd::miner_states->gui_logQueque.erase(httpd::miner_states->gui_logQueque.begin());
-			MainWindow::inst()->showLine(line);
-
-		}
-	}
-	else {
-		//TODO: error handling
-	}
-
-}
-
-std::stringstream* ss = nullptr;
-std::streambuf * strm_buffer = nullptr;
-
-/*
- * Description: ...
- */
-void checkGuiOuput() {
-	std::string outputLine = "";
-
-	if (ss == nullptr) {
-		ss = new std::stringstream();
-	}
-
-	if (strm_buffer == nullptr) {
-		strm_buffer = std::cout.rdbuf(ss->rdbuf());
+	show_credits(expertMode);
+	if (!expertMode) {
+		show_manage_info();
 	}
 	
-	if (ss->rdbuf()->in_avail() > 0) {
-		outputLine = ss->str();
-		if (!outputLine.empty()) {
-			MainWindow::inst()->showLine(outputLine);
-		}
-	}
 }
 
-int minerMain(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
 	bool expertMode = false;
 	bool firstTime = false;
 	bool expertRetValue = check_expert_mode(&expertMode, &firstTime);
-
-
 
 #ifndef CONF_NO_TLS
 	SSL_library_init();
@@ -1037,8 +973,10 @@ int minerMain(int argc, char *argv[]) {
 
 	int parseRetValue = parse_argv(argc, argv);
 	int configRetValue = program_config(expertMode);
-	show_credits();
-	show_manage_info();
+	show_credits(expertMode);
+	if (!expertMode) {
+		show_manage_info();
+	}
 
 	using namespace xmrstak;
 
@@ -1047,35 +985,45 @@ int minerMain(int argc, char *argv[]) {
 	bool runningM = true;
 	bool fromPause = false;
 	bool runningInputParser = false;
+	bool needDeleteMiner = false;
 
 	uint64_t lastTimeW = get_timestamp_ms();
 	bool watchdogLoopContinue = true;
 	std::thread* inputThread = nullptr;
-	std::thread* guiOutputThread = nullptr;
-	
+
+	if(!firstTime && expertMode) {
+		executor::inst()->isPause = false;
+		httpd::miningState(true);
+	}
 
 	while (watchdogLoopContinue) {
-
+		
 		if (firstTime) { // Start miner process one time to finish configuration process
 			std::cout << "Configuring, please wait a little..." << std::endl;
 			firstTime = false;
-			executor::isPaused = false;
+			executor::inst()->isPause = false;
 			int startRetValue = start_miner_execution();
+			needDeleteMiner = true;
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-			executor::isPaused = true;
+			if (!expertMode) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+				executor::inst()->isPause = true;
+			}
+			else {
+				httpd::miningState(true);
+			}
+			
+		} else {
+			if (!executor::inst()->needRestart) {
 
-		}
-		else {
-			if (!executor::needRestart) {
-
-				if ((!executor::isPaused) && (!wasStarted)) {
+				if ((!executor::inst()->isPause) && (!wasStarted)) {
 					wasStarted = true;
 					show_runtime_help();
 					int startRetValue = start_miner_execution();
+					needDeleteMiner = true;
 				}
 
-				if (!executor::isPaused) {
+				if (!executor::inst()->isPause) {
 					if (fromPause) {
 						fromPause = false;
 						std::cin.putback('\n');
@@ -1088,40 +1036,34 @@ int minerMain(int argc, char *argv[]) {
 						inputThread = new std::thread(&parse_runtime_input, &runningInputParser);
 						inputThread->detach();
 					}
-				}
-				else {
+				} else {
 					fromPause = true;
 					if (runningM) {
 						runningM = false;
 						show_manage_info();
 					}
 				}
-			}
-			else { // Restarting program
+			} else { // Restarting program
 
-
-				restart_miner(expertMode);
-				executor::isPaused = true;
+				
+				restart_miner(expertMode, needDeleteMiner);
+				executor::inst()->isPause = true;
 				wasStarted = false;
 				runningM = true;
-				executor::needRestart = false;
+				executor::inst()->needRestart = false;
 			}
 		}
-
+		
 		uint64_t currentTimeW = get_timestamp_ms();
 
 		if (currentTimeW - lastTimeW < 500) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(500 - (currentTimeW - lastTimeW)));
 		}
 		lastTimeW = currentTimeW;
-
-		checkGeneralStates();
-		guiOutputThread = new std::thread(&checkGuiOuput);
 	}
 
 	return 0;
 }
-
 
 int do_benchmark(int block_version)
 {
@@ -1142,9 +1084,9 @@ int do_benchmark(int block_version)
 	printer::inst()->print_msg(L0, "Wait 30 sec until all backends are initialized");
 	std::this_thread::sleep_for(std::chrono::seconds(30));
 
-	// AMD and NVIDIA is currently only supporting work sizes up to 84byte
-	 // \todo fix this issue
-	 //
+	/* AMD and NVIDIA is currently only supporting work sizes up to 84byte
+	 * \todo fix this issue
+	 */
 	xmrstak::miner_work benchWork = xmrstak::miner_work("", work, 84, 0, false, 0);
 	printer::inst()->print_msg(L0, "Start a 60 second benchmark...");
 	xmrstak::globalStates::inst().switch_work(benchWork, dat);
@@ -1167,35 +1109,5 @@ int do_benchmark(int block_version)
 	}
 
 	printer::inst()->print_msg(L0, "Benchmark Total: %.1f H/S", fTotalHps);
-	return 0;
-}
-
-
-
-/*
- * Description: Create Qt5 gui
- */
-int start_gui(int argc, char *argv[]) {
-	QApplication app(argc, argv);
-
-	MainWindow mainQT_GUI(NULL);
-
-	mainQT_GUI.show();
-
-	return app.exec();
-}
-
-int main(int argc, char *argv[]) {
-	// Test section---
-	
-	//std::cout.rdbuf();
-
-
-	// ---
-	std::thread* mainThread = new std::thread(&minerMain, argc, argv);
-	std::thread* guiThread = new std::thread(&start_gui, argc, argv);
-
-	guiThread->join();
-
 	return 0;
 }

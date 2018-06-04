@@ -25,7 +25,7 @@
 
 #include "xmrstak/misc/console.hpp"
 #include "xmrstak/backend/iBackend.hpp"
-#include "xmrstak/backend//globalStates.hpp"
+#include "xmrstak/backend/globalStates.hpp"
 #include "xmrstak/misc/configEditor.hpp"
 #include "xmrstak/params.hpp"
 #include "jconf.hpp"
@@ -483,7 +483,7 @@ void minethd::work_main()
 				result.iNonce = *piNonce;
 
 			uint8_t new_version = oWork.getVersion();
-			if (::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgo() == cryptonight_ipbc) new_version = oWork.bWorkBlob[1];
+			if (::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgo() == cryptonight_bittube) new_version = oWork.bWorkBlob[1];
 			if (new_version != version || oWork.iPoolId != lastPoolId)
 			{
 				coinDescription coinDesc = ::jconf::inst()->GetCurrentCoinSelection().GetDescription(oWork.iPoolId);
@@ -523,19 +523,22 @@ void minethd::work_main()
 					executor::inst()->push_event(ex_event(result, oWork.iPoolId));
 				result.iNonce++;
 
-				if (!executor::isPaused) {
+				if (!executor::inst()->isPause) {
 					std::this_thread::yield();
 				}
 				else {
-					while (executor::isPaused) {
+					while (executor::inst()->isPause) {
 						std::this_thread::sleep_for(std::chrono::milliseconds(50));
 						std::this_thread::yield();
+						if (bQuit != 0) {
+							cryptonight_free_ctx(ctx);
+							return;
+						}
 					}
 				}
 			}
 
 			consume_work();
-		//}
 	}
 
 	cryptonight_free_ctx(ctx);
@@ -779,7 +782,7 @@ void minethd::multiway_work_main()
 				iNonce = *piNonce[0];
 
 			uint8_t new_version = oWork.getVersion();
-			if (::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgo() == cryptonight_ipbc) new_version = oWork.bWorkBlob[1];
+			if (::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgo() == cryptonight_bittube) new_version = oWork.bWorkBlob[1];
 			if (new_version != version || oWork.iPoolId != lastPoolId)
 			{
 				coinDescription coinDesc = ::jconf::inst()->GetCurrentCoinSelection().GetDescription(oWork.iPoolId);
@@ -799,7 +802,7 @@ void minethd::multiway_work_main()
 
 			while (globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
 			{
-				if (executor::needRestart) {
+				if (executor::inst()->needRestart) {
 					break;
 				}
 
@@ -830,14 +833,20 @@ void minethd::multiway_work_main()
 					}
 				}
 
-				if (!executor::isPaused) {
+				if (!executor::inst()->isPause) {
 					std::this_thread::yield();
 				}
 				else {
-					while (executor::isPaused) {
+					while (executor::inst()->isPause) {
 						std::this_thread::sleep_for(std::chrono::milliseconds(50));
 						std::this_thread::yield();
-						if (executor::needRestart) {
+						if (bQuit != 0) {
+							for (int i = 0; i < N; i++)
+								cryptonight_free_ctx(ctx[i]);
+							return;
+						}
+
+						if (executor::inst()->needRestart) {
 							break;
 						}
 					}

@@ -17,8 +17,8 @@
 #define BACKEND_TYPE unknown
 #endif
 
-#define XMR_STAK_NAME "ipbc-miner"
-#define XMR_STAK_VERSION "1.1.4"
+#define XMR_STAK_NAME "bittube-miner"
+#define XMR_STAK_VERSION "1.1.7"
 
 #if defined(_WIN32)
 #define OS_TYPE "win"
@@ -32,7 +32,7 @@
 #define OS_TYPE "unk"
 #endif
 
-#define COIN_TYPE "ipbc"
+#define COIN_TYPE "bittube"
 
 #define XMRSTAK_PP_TOSTRING1(str) #str
 #define XMRSTAK_PP_TOSTRING(str) XMRSTAK_PP_TOSTRING1(str)

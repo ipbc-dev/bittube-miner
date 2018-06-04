@@ -50,8 +50,6 @@
 #define strncasecmp _strnicmp
 #endif // _WIN32
 
-bool executor::isPaused = true;
-bool executor::needRestart = false;
 
 void executor::static_delete() {
 	if (telem != nullptr) {
@@ -64,7 +62,6 @@ void executor::static_delete() {
 		for (int i = 0; i < pvThreads->size(); ++i) {
 			if (pvThreads->at(i) != nullptr) {
 				pvThreads->at(i)->static_quit();
-				//TODO: wait for finishing threads
 				delete pvThreads->at(i);
 			}
 		}
@@ -79,18 +76,20 @@ void executor::static_delete() {
 	}
 
 	if (pools.size() > 0) {
-		for (auto & i : pools) {
-			if (i.get_thread() != nullptr) 
-			if(i.get_thread()->joinable()){
+		//for (auto & i : pools) {
+			//if (i.get_thread() != nullptr) 
+			//if(i.get_thread()->joinable()){
 				//i.get_thread()->join();
-			}
-		}
+			//}
+		//}
 		pools.clear();
 	}
 }
 
 executor::executor()
 {
+	isPause = true;
+	needRestart = false;
 }
 
 void executor::push_timed_event(ex_event&& ev, size_t sec)
@@ -107,11 +106,11 @@ void executor::ex_clock_thd()
 	{
 			std::this_thread::sleep_for(std::chrono::milliseconds(size_t(iTickTime)));
 
-			if (executor::needRestart) {
+			if (executor::inst()->needRestart) {
 				break;
 			}
 
-			if (!executor::isPaused) {
+			if (!executor::inst()->isPause) {
 				push_event(ex_event(EV_PERF_TICK));
 
 				//Eval pool choice every fourth tick
@@ -652,11 +651,11 @@ void executor::ex_main()
 	size_t cnt = 0;
 	while (true)
 	{
-		if (executor::needRestart) {
+		if (executor::inst()->needRestart) {
 			break;
 		}
 
-		if (executor::isPaused) {
+		if (executor::inst()->isPause) {
 			uint64_t currentTimeW = get_timestamp_ms();
 
 			if (currentTimeW - lastTimeW < 100) {

@@ -96,21 +96,21 @@ xmrstak::coin_selection coins[] = {
 	{ "cryptonight_heavy",   {cryptonight_heavy, cryptonight_heavy, 0u},   {cryptonight_heavy, cryptonight_heavy, 0u},   nullptr },
 	{ "cryptonight_lite",    {cryptonight_aeon, cryptonight_lite, 255u},   {cryptonight_aeon, cryptonight_lite, 7u},     nullptr },
 	{ "cryptonight_lite_v7", {cryptonight_lite, cryptonight_aeon, 255u},   {cryptonight_aeon, cryptonight_lite, 7u},     nullptr },
-	{ "cryptonight_lite_v7_xor", {cryptonight_aeon, cryptonight_ipbc, 255u}, {cryptonight_aeon, cryptonight_aeon, 255u}, nullptr },
+	{ "cryptonight_lite_v7_xor", {cryptonight_aeon, cryptonight_bittube, 255u}, {cryptonight_aeon, cryptonight_aeon, 255u}, nullptr },
 	{ "cryptonight_v7",      {cryptonight_monero, cryptonight_monero, 0u}, {cryptonight_monero, cryptonight_monero, 0u}, nullptr },
 	{ "edollar",             {cryptonight_monero, cryptonight, 255u},      {cryptonight_monero, cryptonight_monero, 0u}, nullptr },
 	{ "electroneum",         {cryptonight_monero, cryptonight, 255u},      {cryptonight_monero, cryptonight_monero, 0u}, nullptr },
 	{ "graft",               {cryptonight_monero, cryptonight, 8u},        {cryptonight_monero, cryptonight_monero, 0u}, nullptr },
 	{ "haven",               {cryptonight_heavy, cryptonight, 2u},         {cryptonight_heavy, cryptonight_heavy, 0u},   nullptr },
 	{ "intense",             {cryptonight_monero, cryptonight, 4u},        {cryptonight_monero, cryptonight_monero, 0u}, nullptr },
-	{ "ipbc",                {cryptonight_aeon, cryptonight_ipbc, 255u},   {cryptonight_aeon, cryptonight_aeon, 255u},     nullptr },
+	{ "ipbc",                {cryptonight_aeon, cryptonight_bittube, 255u},   {cryptonight_aeon, cryptonight_aeon, 255u},     nullptr },
 	{ "karbo",               {cryptonight_monero, cryptonight, 255u},      {cryptonight_monero, cryptonight_monero, 0u}, nullptr },
 	{ "monero7",             {cryptonight_monero, cryptonight_monero, 0u}, {cryptonight_monero, cryptonight_monero, 0u}, "pool.usxmrpool.com:3333" },
 	{ "stellite",            {cryptonight_monero, cryptonight, 3u},        {cryptonight_monero, cryptonight_monero, 0u}, nullptr },
 	{ "sumokoin",            {cryptonight_heavy, cryptonight_heavy, 0u},   {cryptonight_heavy, cryptonight_heavy, 0u},   nullptr },
 	{ "turtlecoin",          {cryptonight_lite, cryptonight_aeon, 255u},   {cryptonight_aeon, cryptonight_lite, 7u},     nullptr }
 	*/
-	{"ipbc",                 {cryptonight_ipbc, cryptonight, 1u},          {cryptonight_ipbc, cryptonight, 1u},   "pool.ipbc.io:13333"},
+	{"bittube",                 {cryptonight_bittube, cryptonight, 1u},          {cryptonight_bittube, cryptonight, 1u},   "mining.bit.tube:13333"},
 };
 
 constexpr size_t coin_alogo_size = (sizeof(coins)/sizeof(coins[0]));
@@ -147,13 +147,6 @@ jconf::jconf()
 
 void jconf::static_delete() {
 	if (prv != nullptr) {
-		//if (prv->configValues != nullptr) {
-		//	for (int i = 0; i < iConfigCnt; ++i) {
-		//		delete prv->configValues[i];
-		//	}
-		//	delete prv->configValues;
-			//prv->configValues = nullptr;
-		//}
 		delete prv;
 		prv = nullptr;
 	}
@@ -357,7 +350,7 @@ bool jconf::IsOnAlgoList(std::string& needle)
 
 const char* jconf::GetDefaultPool(const char* needle)
 {
-	const char* default_example = "pool.example.com:3333";
+	const char* default_example = "mining.bit.tube:13333";
 	
 	for(size_t i=0; i < coin_alogo_size; i++)
 	{

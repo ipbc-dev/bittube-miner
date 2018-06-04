@@ -6,6 +6,8 @@ config-debug.txt
 doc/temp/
 build/
 linux-build/
+.vs/
+.vscode/
 
 # netbeans project files
 /nbproject/

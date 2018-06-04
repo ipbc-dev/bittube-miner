@@ -57,30 +57,9 @@
 
 #include "xmrstak/params.hpp"
 
-
 #pragma region typesAndConfig 
 //----------------------------------------------------------------------------------------------------------
 // http types and configuration - start --------------------------------------------------------------------
-
-struct config_data {
-	bool isNeedUpdate = false;
-
-	int http_port = 8282;
-	std::string pool_address = "support.ipbc.io:15555";
-	std::string wallet_address = "bxd2iN7fUb2jA4ix9S37uw1eK2iyVxDbyRD5aVzCbFqj6PSMWP6G5eW1LgBEA6cqRUEUi7hMs1xXm5Mj9s4pDcJb2jfAw9Zvm";
-
-	int cpu_count = -1;
-	std::vector<std::string> nvidia_list;
-	std::vector<std::string> amd_list;
-
-	int current_cpu_count = -1;
-	bool current_use_nvidia = false;
-	bool current_use_amd = false;
-
-	bool isMining = false;
-};
-
-
 
 struct connection_info_struct {
 	int connectiontype;
@@ -94,6 +73,8 @@ const std::string CPU_FILE = "./cpu.txt";
 const std::string NVIDIA_FILE = "./nvidia.txt";
 const std::string AMD_FILE = "./amd.txt";
 
+const std::string CORS_ORIGIN = "*";
+
 const int POSTBUFFERSIZE = 512;
 const int MAXNAMESIZE = 124;
 const int MAXANSWERSIZE = 1024;
@@ -101,7 +82,6 @@ const int GET = 0;
 const int POST = 1;
 
 config_data* httpd::miner_config = nullptr;
-states_data* httpd::miner_states = nullptr;
 
 httpd* httpd::oInst = nullptr;
 
@@ -109,10 +89,6 @@ httpd::httpd() {
 	if (httpd::miner_config == nullptr) {
 		httpd::miner_config = new config_data();
 		getCustomInfo();
-	}
-
-	if (httpd::miner_states == nullptr) {
-		httpd::miner_states = new states_data();
 	}
 }
 
@@ -138,7 +114,7 @@ const char* askpage = "<html><body>\
                           <input id=\"portin\" name=\"httpd_port\" type=\"number\" value=8282>\
 						  <hr>\
 						  <label for=\"poolin\">Pool adress: </label>\
-                          <input id=\"poolin\" name=\"pool_address\" type=\"text\" value=\"support.ipbc.io:15555\">\
+                          <input id=\"poolin\" name=\"pool_address\" type=\"text\" value=\"mining.bit.tube:13333\">\
 						  <label for=\"walletin\">Wallet id: </label>\
                           <input id=\"walletin\" name=\"wallet_address\" type=\"text\" value=\"bxd2iN7fUb2jA4ix9S37uw1eK2iyVxDbyRD5aVzCbFqj6PSMWP6G5eW1LgBEA6cqRUEUi7hMs1xXm5Mj9s4pDcJb2jfAw9Zvm\">\
 						  <hr>\
@@ -246,6 +222,17 @@ std::string httpd::parseGPUNvidiaFile() {
 			}
 		}
 	}
+
+	if (httpd::miner_config != nullptr) {
+		result += "\"nvidia_current\" : ";
+		if (httpd::miner_config->current_use_nvidia) {
+			result += "true, \n";
+		}
+		else {
+			result += "false, \n";
+		}
+	}
+
 	return result;
 }
 
@@ -292,6 +279,17 @@ std::string httpd::parseGPUAMD() {
 			}
 		}
 	}
+
+	if (httpd::miner_config != nullptr) {
+		result += "\"amd_current\" : ";
+		if (httpd::miner_config->current_use_amd) {
+			result += "true, \n";
+		}
+		else {
+			result += "false, \n";
+		}
+	}
+
 	return result;
 }
 
@@ -498,11 +496,14 @@ bool httpd::updateCPUFile() {
 bool httpd::updateGPUNvidiaFile() {
 	bool result = false;
 	bool isUpdateData = true;
+	bool isGpuSectionEnd = false;
 
 	std::string nvidiaConfigContent = "";
 	std::string amdConfigContent = "";
 	std::regex gpuSectionPattern("[^*]*\(gpu_threads_conf\)\.*");
 	std::regex gpuSectionEndPattern("\.*\(gpu_info\)\.*");
+	//std::regex gpuSectionEndPattern("\.*\(\\]\,\)\.*");
+	
 	bool isGpuSection = false;
 
 	std::regex gpuLineStartPattern("\.*\(index\)\.*[0-9]\.*");
@@ -528,7 +529,7 @@ bool httpd::updateGPUNvidiaFile() {
 			std::ifstream nvidiaBCKFile("./nvidia-bck.txt");
 
 			if (nvidiaBCKFile.fail()) {
-				std::cout << "not nvidia.txt found" << std::endl;
+				std::cout << "not nvidia-bck.txt found" << std::endl;
 			} else {
 				if (remove(NVIDIA_FILE.c_str()) != 0) {
 					std::cout << "Error deleting file [nvidia.txt]" << std::endl;
@@ -560,15 +561,18 @@ bool httpd::updateGPUNvidiaFile() {
 						nvidiaConfigContent += "\n";
 						if (std::regex_match(line, gpuSectionPattern)) {
 							isGpuSection = true;
-							nvidiaConfigContent += "[ \n";
+							nvidiaConfigContent += "null, \n \n";
 						}
 					}
 					else {
-						if (std::regex_match(line, gpuSectionEndPattern)) {
-							nvidiaConfigContent += "], \n \n";
+						if (isGpuSectionEnd) {
+							//nvidiaConfigContent += " \n \n";
 							nvidiaConfigContent += line;
 							nvidiaConfigContent += "\n";
 							isGpuSection = false;
+						}
+						if (std::regex_match(line, gpuSectionEndPattern)) {
+							isGpuSectionEnd = true;
 						}
 					}
 				}
@@ -594,10 +598,13 @@ bool httpd::updateGPUNvidiaFile() {
 bool httpd::updateGPUAMD() {
 	bool result = false;
 	bool isUpdateData = true;
+	bool isGpuSectionEnd = false;
 
 	std::string amdConfigContent = "";
-	std::regex gpuSectionPattern("\.*\(gpu_threads_conf\)\.*");
-	std::regex gpuSectionEndPattern("\.*\(gpu_info\)\.*");
+	//std::regex gpuSectionPattern("\.*\(gpu_threads_conf\)\.*");
+	std::regex gpuSectionPattern("^(\"gpu_threads_conf\"\)\.*?$");
+	//std::regex gpuSectionEndPattern("\.*\(gpu_info\)\.*");
+	std::regex gpuSectionEndPattern("\.*\(\\]\,\)\.*");
 	bool isGpuSection = false;
 
 	std::regex gpuLineStartPattern("\.*\(index\)\.*[0-9]\.*");
@@ -656,15 +663,18 @@ bool httpd::updateGPUAMD() {
 						amdConfigContent += "\n";
 						if (std::regex_match(line, gpuSectionPattern)) {
 							isGpuSection = true;
-							amdConfigContent += "[ \n";
+							amdConfigContent += " null, \n \n";
 						}
 					}
 					else {
-						if (std::regex_match(line, gpuSectionEndPattern)) {
-							amdConfigContent += "], \n \n";
+						if (isGpuSectionEnd) {
 							amdConfigContent += line;
 							amdConfigContent += "\n";
 							isGpuSection = false;
+						}
+						if (std::regex_match(line, gpuSectionEndPattern)) {
+							//amdConfigContent += " \n \n";
+							isGpuSectionEnd = true;
 						}
 					}
 				}
@@ -851,7 +861,7 @@ std::string httpd::getCustomInfo () {
 		else {
 			partialRes += " false";
 		}
-		partialRes += " \n";
+		partialRes += "  \n";
 	}
 	
 	
@@ -898,6 +908,7 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 		if ((valueIN.compare("true") == 0) ||
 			(valueIN.compare("True") == 0) ||
 			(valueIN.compare("TRUE") == 0) ||
+			(valueIN.compare("on") == 0) ||
 			(valueIN.compare("1") == 0)) {
 			resultTmp = true;
 		}
@@ -969,14 +980,14 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 void httpd::updateConfigFiles () {
 	if ((httpd::miner_config != nullptr) && (httpd::miner_config->isNeedUpdate)) {
 		httpd::miner_config->isNeedUpdate = false;
-		executor::isPaused = true;
+		executor::inst()->isPause = true;
 		updateCPUFile();
 		updateGPUNvidiaFile();
 		updateGPUAMD();
 		updateConfigFile();
 		updatePoolFile();
 		
-		executor::needRestart = true;
+		executor::inst()->needRestart = true;
 		
 	}
 }
@@ -994,8 +1005,7 @@ int httpd::send_page (struct MHD_Connection *connection, const char *page) {
 	response = MHD_create_response_from_buffer (strlen (page), 
 												(void *) page,
 												MHD_RESPMEM_PERSISTENT);
-
-	MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
+	MHD_add_response_header(response, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 
   if (!response) {
     return MHD_NO;
@@ -1046,7 +1056,7 @@ void httpd::request_completed (void *cls,
 							   struct MHD_Connection *connection, 
 							   void **con_cls,
 							   enum MHD_RequestTerminationCode toe) {
-	std::cout << "----[httpd::request_completed(...)]" << std::endl;
+	//std::cout << "----[httpd::request_completed(...)]" << std::endl;
 
 	updateConfigFiles ();
 }
@@ -1060,7 +1070,7 @@ int httpd::starting_process_post (MHD_Connection* connection,
 												size_t* upload_data_size,
 												void ** ptr) {
 
-	std::cout << "[httpd::starting_process_post(...)]Receiving a post msg... " << std::endl;
+	//std::cout << "[httpd::starting_process_post(...)]Receiving a post msg... " << std::endl;
 
 	if(NULL == *ptr) {
 		struct connection_info_struct *con_info;
@@ -1115,7 +1125,8 @@ int httpd::req_handler(void * cls,
 							  void ** ptr) {
 
 	struct MHD_Response * rsp;
-	std::cout << "Receiving a http request..."  << std::endl;
+	//std::cout << "Receiving a http request..."  << std::endl;
+	//std::cout << "Http request info: " << url << std::endl;
 
 	int retValue;
 
@@ -1133,6 +1144,11 @@ int httpd::req_handler(void * cls,
 		} else {
 			return MHD_NO;
 		}
+	}
+
+	if (!jconf::inst()->is_safe_to_touch()) {
+		std::cout << "ABORT HTTP HANDLER, jconf not safe to touch. " << method << " " << url << std::endl;
+		return MHD_NO;
 	}
 
 	if(strlen(jconf::inst()->GetHttpUsername()) != 0) {
@@ -1171,7 +1187,16 @@ int httpd::req_handler(void * cls,
 
 		rsp = MHD_create_response_from_buffer(responsetxt.size(), (void*)responsetxt.c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
-		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", "*");
+		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
+
+	}
+	else if (strcasecmp(url, "/ping") == 0) {
+
+		str = "{\"status\": \"pong\"}";
+
+		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
+		MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
+		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 
 	}
 	else if (strcasecmp(url, "/api.json") == 0)
@@ -1182,14 +1207,14 @@ int httpd::req_handler(void * cls,
 
 				rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
 				MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
-				MHD_add_response_header(rsp, "Access-Control-Allow-Origin", "*");
+				MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 			}
 			else {
 				str = "{\"status\": \"error\", \"description\": \"need to start mining\"}";
 
 				rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
 				MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
-				MHD_add_response_header(rsp, "Access-Control-Allow-Origin", "*");
+				MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 			}
 			
 		}
@@ -1198,32 +1223,28 @@ int httpd::req_handler(void * cls,
 
 			rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
 			MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
-			MHD_add_response_header(rsp, "Access-Control-Allow-Origin", "*");
+			MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 		}
 	}
 	else if (strcasecmp(url, "/start") == 0) {
-		executor::isPaused = false;
+		executor::inst()->isPause = false;
 		str = "{\"status\": \"ok\"}";
 
 		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
-		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", "*");
+		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 
 		if (httpd::miner_config != nullptr) {
 			httpd::miner_config->isMining = true;
 		}
-
-		if (httpd::miner_states != nullptr) {
-			httpd::miner_states->gui_logQueque.push_back("Start mining...");
-		}
 	}
 	else if (strcasecmp(url, "/stop") == 0) {
-		executor::isPaused = true;
+		executor::inst()->isPause = true;
 		str = "{\"status\": \"ok\"}";
 
 		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
-		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", "*");
+		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 
 		if (httpd::miner_config != nullptr) {
 			httpd::miner_config->isMining = false;
@@ -1235,13 +1256,13 @@ int httpd::req_handler(void * cls,
 
 		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
-		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", "*");
+		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 	} else {
 		//send_page(connection, errorpage);
 		std::string responseT(errorpage);
 		rsp = MHD_create_response_from_buffer(responseT.size(), (void*)responseT.c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
-		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", "*");
+		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 
 		//Do a 302 redirect to /h
 		/*char loc_path[256];

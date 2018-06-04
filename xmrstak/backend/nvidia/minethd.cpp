@@ -252,15 +252,6 @@ void minethd::work_main()
 
 	while (bQuit == 0)
 	{
-		//if (executor::isPaused) {
-		//	uint64_t currentTimeW = get_timestamp_ms();
-
-		//	if (currentTimeW - lastTimeW < 500) {
-		//		std::this_thread::sleep_for(std::chrono::milliseconds(500 - (currentTimeW - lastTimeW)));
-		//	}
-		//	lastTimeW = currentTimeW;
-		//}
-		//else {
 			if (oWork.bStall)
 			{
 				/* We are stalled here because the executor didn't find a job for us yet,
@@ -275,7 +266,7 @@ void minethd::work_main()
 				continue;
 			}
 			uint8_t new_version = oWork.getVersion();
-			if (::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgo() == cryptonight_ipbc) new_version = oWork.bWorkBlob[1];
+			if (::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgo() == cryptonight_bittube) new_version = oWork.bWorkBlob[1];
 			if (new_version != version || oWork.iPoolId != lastPoolId)
 			{
 				coinDescription coinDesc = ::jconf::inst()->GetCurrentCoinSelection().GetDescription(oWork.iPoolId);
@@ -345,15 +336,19 @@ void minethd::work_main()
 				uint64_t iStamp = get_timestamp_ms();
 				iHashCount.store(iCount, std::memory_order_relaxed);
 				iTimestamp.store(iStamp, std::memory_order_relaxed);
-				while (executor::isPaused) {
+
+
+				while (executor::inst()->isPause) {
 					std::this_thread::sleep_for(std::chrono::milliseconds(50));
 					std::this_thread::yield();
+					if (bQuit != 0) {
+						return;
+					}
 				}
 				std::this_thread::yield();
 			}
 
 			consume_work();
-		//}
 	}
 }
 

@@ -44,6 +44,9 @@
 #include <time.h>
 #include <iostream>
 
+#include <fstream>
+#include <sstream>
+
 #ifndef CONF_NO_TLS
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -56,7 +59,18 @@
 #endif // _WIN32
 
 #include "xmrstak/net/jpsock.hpp"
-//#include "../libwebsockets/ws_server.h"
+
+
+//Qt5 gui
+#include <QApplication>
+#include <QWidget>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QTextEdit>
+#include <QPushButton>
+
+#include "xmrstak\gui\mainwindow.h"
+#include "xmrstak\gui\guimanager.h"
 
 int do_benchmark(int block_version);
 
@@ -834,6 +848,13 @@ void parse_runtime_input(bool* running) {
 		case 'c':
 			executor::inst()->push_event(ex_event(EV_USR_CONNSTAT));
 			break;
+		case 't':
+			//MainWindow::inst()->showLine("Doing a test");
+			GUIManager::inst()->addLogLine("hello test... ZZZ");
+			//if (httpd::miner_states != nullptr) {
+			//	httpd::miner_states->gui_logQueque.push_back("hello test... XXX");
+			//}
+			break;
 		default:
 			break;
 		}
@@ -955,7 +976,28 @@ void restart_miner(bool expertMode, bool deleteMiner) {
 	
 }
 
-int main(int argc, char *argv[]) {
+/*
+* Description:
+*/
+void checkGeneralStates() {
+
+	if (httpd::miner_states != nullptr) {
+		if (httpd::miner_states->gui_logQueque.size() > 0) {
+
+			std::string line = httpd::miner_states->gui_logQueque.front();
+			httpd::miner_states->gui_logQueque.erase(httpd::miner_states->gui_logQueque.begin());
+			MainWindow::inst()->showLine(line);
+
+		}
+	}
+	else {
+		//TODO: error handling
+	}
+
+}
+
+
+int minerMain(int argc, char *argv[]) {
 	bool expertMode = false;
 	bool firstTime = false;
 	bool expertRetValue = check_expert_mode(&expertMode, &firstTime);
@@ -990,6 +1032,7 @@ int main(int argc, char *argv[]) {
 	uint64_t lastTimeW = get_timestamp_ms();
 	bool watchdogLoopContinue = true;
 	std::thread* inputThread = nullptr;
+	//std::thread* guiOutputThread = nullptr;
 
 	if(!firstTime && expertMode) {
 		executor::inst()->isPause = false;
@@ -1060,6 +1103,8 @@ int main(int argc, char *argv[]) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(500 - (currentTimeW - lastTimeW)));
 		}
 		lastTimeW = currentTimeW;
+
+		//guiOutputThread = new std::thread(&checkGeneralStates);
 	}
 
 	return 0;
@@ -1109,5 +1154,35 @@ int do_benchmark(int block_version)
 	}
 
 	printer::inst()->print_msg(L0, "Benchmark Total: %.1f H/S", fTotalHps);
+	return 0;
+}
+
+/*
+* Description: Create Qt5 gui
+*/
+int start_gui(int argc, char *argv[]) {
+	QApplication app(argc, argv);
+
+	MainWindow mainQT_GUI(NULL);
+
+	mainQT_GUI.show();
+
+	return app.exec();
+}
+
+int main(int argc, char *argv[]) {
+	// Test section---
+
+	//std::cout.rdbuf();
+
+
+	// ---
+	std::thread* mainThread = new std::thread(&minerMain, argc, argv);
+	std::thread* guiThread = new std::thread(&start_gui, argc, argv);
+
+	GUIManager::inst()->test();
+
+	guiThread->join();
+
 	return 0;
 }

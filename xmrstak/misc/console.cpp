@@ -29,6 +29,8 @@
 #include <stdarg.h>
 #include <cstdlib>
 
+#include "xmrstak\gui\guimanager.h"
+
 #ifdef _WIN32
 #include <windows.h>
 
@@ -204,6 +206,8 @@ void printer::print_msg(verbosity verbose, const char* fmt, ...)
 		fputs(buf, logfile);
 		fflush(logfile);
 	}
+
+	GUIManager::inst()->addLogLine(std::string(buf));
 }
 
 void printer::print_str(const char* str)
@@ -221,6 +225,8 @@ void printer::print_str(const char* str)
 		fputs(str, logfile);
 		fflush(logfile);
 	}
+
+	GUIManager::inst()->addLogLine(std::string(str));
 }
 
 //Do a press any key for the windows folk. *insert any key joke here*

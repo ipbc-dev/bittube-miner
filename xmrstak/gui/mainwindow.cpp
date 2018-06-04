@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "guimanager.h"
 
 #include <QString>
 
@@ -140,6 +141,7 @@ void MainWindow::showLine(std::string textIN) {
 	if (finalLength > GUI_CONFIG::OUTPUT_MAX_SIZE) {
 		diff = finalLength - GUI_CONFIG::OUTPUT_MAX_SIZE;
 		outputContent = outputContent.substr(diff, finalLength - diff);
+		outputContent += textIN;
 
 		QString lineIN = QString::fromStdString(outputContent);
 
@@ -154,9 +156,21 @@ void MainWindow::showLine(std::string textIN) {
 	
 }
 
+// Public slot section
+void MainWindow::slot_updateGUIOutput() {
+
+}
+
+
 // Private slot section
 void MainWindow::slot_statsButtonClick() {
-	//TODO: ...
+	bool withError = false;
+
+	std::string tmp = GUIManager::inst()->getLogHead(&withError);
+
+	if (!withError && tmp.size() > 0) {
+		showLine(tmp);
+	}
 }
 
 void MainWindow::slot_startButtonClick() {

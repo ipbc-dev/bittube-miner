@@ -11,7 +11,7 @@ enum xmrstak_algo
 	cryptonight_monero = 3,
 	cryptonight_heavy = 4,
 	cryptonight_aeon = 5,
-	cryptonight_ipbc = 6 // equal to cryptonight_aeon with a small tweak in the miner code
+	cryptonight_bittube = 6 // equal to cryptonight_aeon with a small tweak in the miner code
 };
 
 // define aeon settings
@@ -46,7 +46,7 @@ template<>
 inline constexpr size_t cn_select_memory<cryptonight_aeon>() { return CRYPTONIGHT_LITE_MEMORY; }
 
 template<>
-inline constexpr size_t cn_select_memory<cryptonight_ipbc>() { return CRYPTONIGHT_LITE_MEMORY; }
+inline constexpr size_t cn_select_memory<cryptonight_bittube>() { return CRYPTONIGHT_LITE_MEMORY; }
 
 
 inline size_t cn_select_memory(xmrstak_algo algo)
@@ -56,7 +56,7 @@ inline size_t cn_select_memory(xmrstak_algo algo)
 	case cryptonight_monero:
 	case cryptonight:
 		return CRYPTONIGHT_MEMORY;
-	case cryptonight_ipbc:
+	case cryptonight_bittube:
 	case cryptonight_aeon:
 	case cryptonight_lite:
 		return CRYPTONIGHT_LITE_MEMORY;
@@ -86,7 +86,7 @@ template<>
 inline constexpr uint32_t cn_select_mask<cryptonight_aeon>() { return CRYPTONIGHT_LITE_MASK; }
 
 template<>
-inline constexpr uint32_t cn_select_mask<cryptonight_ipbc>() { return CRYPTONIGHT_LITE_MASK; }
+inline constexpr uint32_t cn_select_mask<cryptonight_bittube>() { return CRYPTONIGHT_LITE_MASK; }
 
 inline size_t cn_select_mask(xmrstak_algo algo)
 {
@@ -95,7 +95,7 @@ inline size_t cn_select_mask(xmrstak_algo algo)
 	case cryptonight_monero:
 	case cryptonight:
 		return CRYPTONIGHT_MASK;
-	case cryptonight_ipbc:
+	case cryptonight_bittube:
 	case cryptonight_aeon:
 	case cryptonight_lite:
 		return CRYPTONIGHT_LITE_MASK;
@@ -125,7 +125,7 @@ template<>
 inline constexpr uint32_t cn_select_iter<cryptonight_aeon>() { return CRYPTONIGHT_LITE_ITER; }
 
 template<>
-inline constexpr uint32_t cn_select_iter<cryptonight_ipbc>() { return CRYPTONIGHT_LITE_ITER; }
+inline constexpr uint32_t cn_select_iter<cryptonight_bittube>() { return CRYPTONIGHT_LITE_ITER; }
 
 inline size_t cn_select_iter(xmrstak_algo algo)
 {
@@ -134,7 +134,7 @@ inline size_t cn_select_iter(xmrstak_algo algo)
 	case cryptonight_monero:
 	case cryptonight:
 		return CRYPTONIGHT_ITER;
-	case cryptonight_ipbc:
+	case cryptonight_bittube:
 	case cryptonight_aeon:
 	case cryptonight_lite:
 		return CRYPTONIGHT_LITE_ITER;

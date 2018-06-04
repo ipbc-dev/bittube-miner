@@ -18,12 +18,16 @@ namespace GUI_CONFIG {
 	const int OUTPUT_MAX_SIZE = 10000;
 }
 
+class QTLog : public QObject {
+	Q_OBJECT
+};
+
 class MainWindow : public QMainWindow {
 	Q_OBJECT
 
 	public:
 		static MainWindow* inst() {
-			//if (oInst == nullptr) oInst = new httpd;
+		
 			return oInst;
 		};
 
@@ -31,6 +35,9 @@ class MainWindow : public QMainWindow {
 		virtual ~MainWindow();
 
 		void showLine(std::string textIN);
+	
+	public slots:
+		void slot_updateGUIOutput();
 
 	private slots:
 		void slot_statsButtonClick();

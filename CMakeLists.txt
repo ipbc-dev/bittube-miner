@@ -487,17 +487,17 @@ file(GLOB BACKEND_CPP
     "xmrstak/backend/cpu/crypto/*.cpp"
     "xmrstak/http/*.cpp"
     "xmrstak/misc/*.cpp"
-    "xmrstak/net/*.cpp")
-    #"xmrstak/gui/*.cpp")
+    "xmrstak/net/*.cpp"
+    "xmrstak/gui/*.cpp")
 
 add_library(ipbc-miner-backend
     STATIC
     ${BACKEND_CPP}
 )
 target_link_libraries(ipbc-miner-backend ipbc-miner-c ${CMAKE_DL_LIBS})
-#target_link_libraries(ipbc-miner-backend Qt5::Core)
-#target_link_libraries(ipbc-miner-backend Qt5::Gui)
-#target_link_libraries(ipbc-miner-backend Qt5::Widgets)
+target_link_libraries(ipbc-miner-backend Qt5::Core)
+target_link_libraries(ipbc-miner-backend Qt5::Gui)
+target_link_libraries(ipbc-miner-backend Qt5::Widgets)
 
 # compile CUDA backend
 if(CUDA_FOUND)

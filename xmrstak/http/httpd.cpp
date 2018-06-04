@@ -21,13 +21,6 @@
   *
   */
 
-/*
- * TODO:
- *  - finish error handling
- *  - for getting data from files, not parsing these files every time we need data if we parsed before
- *  
- */
-
 #ifndef CONF_NO_HTTPD
 
 
@@ -57,6 +50,8 @@
 
 #include "xmrstak/params.hpp"
 
+#include "xmrstak\gui\guimanager.h"
+
 #pragma region typesAndConfig 
 //----------------------------------------------------------------------------------------------------------
 // http types and configuration - start --------------------------------------------------------------------
@@ -82,6 +77,7 @@ const int GET = 0;
 const int POST = 1;
 
 config_data* httpd::miner_config = nullptr;
+states_data* httpd::miner_states = nullptr;
 
 httpd* httpd::oInst = nullptr;
 
@@ -89,6 +85,10 @@ httpd::httpd() {
 	if (httpd::miner_config == nullptr) {
 		httpd::miner_config = new config_data();
 		getCustomInfo();
+	}
+
+	if (httpd::miner_states == nullptr) {
+		httpd::miner_states = new states_data();
 	}
 }
 
@@ -1237,6 +1237,7 @@ int httpd::req_handler(void * cls,
 		if (httpd::miner_config != nullptr) {
 			httpd::miner_config->isMining = true;
 		}
+		GUIManager::inst()->addLogLine("starting mining...");
 	}
 	else if (strcasecmp(url, "/stop") == 0) {
 		executor::inst()->isPause = true;
@@ -1249,6 +1250,7 @@ int httpd::req_handler(void * cls,
 		if (httpd::miner_config != nullptr) {
 			httpd::miner_config->isMining = false;
 		}
+		GUIManager::inst()->addLogLine("stoping mining...");
 	}
 	else if (strcasecmp(url, "/info") == 0)
 	{

@@ -3,6 +3,7 @@
 class printer;
 class jconf;
 class executor;
+class GUIManager;
 
 namespace xmrstak
 {
@@ -36,6 +37,8 @@ struct environment
 	jconf* pJconfConfig = nullptr;
 	executor* pExecutor = nullptr;
 	params* pParams = nullptr;
+
+	GUIManager* pGUIManager = nullptr;
 };
 
 } // namespace xmrstak

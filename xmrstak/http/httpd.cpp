@@ -1238,6 +1238,7 @@ int httpd::req_handler(void * cls,
 			httpd::miner_config->isMining = true;
 		}
 		GUIManager::inst()->addLogLine("starting mining...");
+		GUIManager::inst()->setIsMinig(true);
 	}
 	else if (strcasecmp(url, "/stop") == 0) {
 		executor::inst()->isPause = true;
@@ -1251,6 +1252,7 @@ int httpd::req_handler(void * cls,
 			httpd::miner_config->isMining = false;
 		}
 		GUIManager::inst()->addLogLine("stoping mining...");
+		GUIManager::inst()->setIsMinig(false);
 	}
 	else if (strcasecmp(url, "/info") == 0)
 	{

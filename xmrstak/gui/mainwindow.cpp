@@ -3,8 +3,145 @@
 
 #include <QString>
 
+
+#include "xmrstak/misc/executor.hpp"
+#include "xmrstak/http/httpd.hpp"
+
+#include <iostream>
+
 MainWindow* MainWindow::oInst = nullptr;
 
+#pragma region CLASS QT_GUILoop 
+/*
+ * Description: ...
+ */
+QT_GUILoop::~QT_GUILoop() {
+	if (_startTime != nullptr) {
+		delete _startTime;
+		_startTime = nullptr;
+	}
+
+	if (_startResultsTime != nullptr) {
+		delete _startResultsTime;
+		_startResultsTime = nullptr;
+	}
+
+	if (_currentTime != nullptr) {
+		delete _currentTime;
+		_currentTime = nullptr;
+	}
+
+	if (_mainTimer != nullptr) {
+		if (_mainTimer->isActive()) {
+			_mainTimer->stop();
+		}
+		delete _mainTimer;
+		_mainTimer = nullptr;
+	}
+
+	if (_mainThread != nullptr) {
+		if (_mainThread->isRunning()) {
+			_mainThread->terminate();
+			_mainThread->wait();
+		}
+	}
+}
+
+/*
+ * Description: ...
+ */
+void QT_GUILoop::init(QObject* parent) {
+	if (_mainTimer == nullptr) {
+		_mainTimer = new QTimer(parent);
+	}
+
+	if (_mainThread == nullptr) {
+		_mainThread = new QThread(parent);
+	}
+	 
+	if (_startTime == nullptr) {
+		_startTime = new QTime();
+	}
+
+	if (_startResultsTime == nullptr) {
+		_startResultsTime = new QTime();
+	}
+
+	if (_currentTime == nullptr) {
+		_currentTime = new QTime();
+	}
+
+
+}
+
+/*
+ * Description: ...
+ */
+void QT_GUILoop::slot_start() {
+	//TODO: ...
+}
+
+/*
+ * Description: ...
+ */
+void QT_GUILoop::slot_update() {
+	int diff = -1;
+	int diffResult = -1;
+	bool parseGeneralStats = false;
+
+	if (_currentTime != nullptr) {
+		_currentTime->start();
+	}
+
+	if ((_startTime != nullptr) && (_currentTime != nullptr)) {
+		diff = _startTime->msecsTo(*_currentTime);
+	}
+
+	if ((_startResultsTime != nullptr) && (_currentTime != nullptr)) {
+		diffResult = _startResultsTime->msecsTo(*_currentTime);
+	}
+
+	if ((diff > -1) && (diff >= GUI_CONFIG::QT_LOOP_MINING_STATS_FPS)) {
+		GUIManager::inst()->setForceParsingStats(true);
+		parseGeneralStats = true;
+	}
+
+	if ((diffResult > -1) && (diffResult >= GUI_CONFIG::QT_LOOP_MINING_RESULTS_FPS)) {
+		GUIManager::inst()->setForceParsingResults(true);
+		parseGeneralStats = true;
+	}
+
+	emit signal_updateGUIOutput();
+
+	if (parseGeneralStats)  {
+		if (GUIManager::inst()->isMinig()) {
+			std::string statsResult;
+			executor::inst()->get_http_report(EV_HTML_JSON, statsResult);
+			GUIManager::inst()->parseStats(QString::fromUtf8(statsResult.c_str()));
+		}
+	}
+
+	if ((diff > -1) && (diff >= GUI_CONFIG::QT_LOOP_MINING_STATS_FPS)) {
+		_startTime->start();
+	}
+
+	if ((diffResult > -1) && (diffResult >= GUI_CONFIG::QT_LOOP_MINING_RESULTS_FPS)) {
+		_startResultsTime->start();
+	}
+}
+
+/*
+ * Description: ...
+ */
+void QT_GUILoop::slot_end() {
+	//TODO: ...
+}
+#pragma endregion
+
+#pragma region CLASS MainWindow
+/*
+ * Description: ...
+ */
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	if (oInst == nullptr) {
 		oInst = this;
@@ -61,8 +198,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
 	_window->setLayout(_mainLayout);
 	setCentralWidget(_window);
+
+	startGUILoop();
+
+	connect(_worker, SIGNAL(signal_updateGUIOutput()), this, SLOT(slot_updateGUIOutput()));
 }
 
+/*
+ * Description: ...
+ */
 MainWindow::~MainWindow() {
 	// Main section
 	if (_outputText != nullptr) {
@@ -127,10 +271,17 @@ MainWindow::~MainWindow() {
 	}
 
 	oInst = nullptr;
+	if (_worker != nullptr) {
+		delete _worker;
+		_worker = nullptr;
+	}
 }
 
 // Public section
 
+/*
+ * Description: ...
+ */
 void MainWindow::showLine(std::string textIN) {
 	
 
@@ -156,14 +307,34 @@ void MainWindow::showLine(std::string textIN) {
 	
 }
 
-// Public slot section
-void MainWindow::slot_updateGUIOutput() {
-
+/*
+ * Description: ...
+ */
+void MainWindow::startGUILoop() {
+	_worker = new QT_GUILoop();
+	_worker->init(this);
+	_worker->moveToThread(_worker->getMAinThread());
+	connect(_worker->getMainTimer(), SIGNAL(timeout()), _worker, SLOT(slot_update()));
+	connect(_worker->getMAinThread(), SIGNAL(finished()), _worker, SLOT(deleteLater()));
+	_worker->getMAinThread()->start();
+	_worker->getMainTimer()->start((1000 / GUI_CONFIG::QT_LOOP_OUPUT_FPS));
+	_worker->getStartTime()->start();
+	_worker->getStartResultsTime()->start();
 }
 
+/*
+ * Description: ...
+ */
+void stopGUILoop() {
+	//TODO: ...
+}
 
-// Private slot section
-void MainWindow::slot_statsButtonClick() {
+// Public slot section
+
+/*
+ * Description: ...
+ */
+void MainWindow::slot_updateGUIOutput() {
 	bool withError = false;
 
 	std::string tmp = GUIManager::inst()->getLogHead(&withError);
@@ -173,27 +344,104 @@ void MainWindow::slot_statsButtonClick() {
 	}
 }
 
+/*
+ * Description: ...
+ */
+void MainWindow::slot_updateMinerStats() {
+	QJsonObject* jsonStats = GUIManager::inst()->getMiningStats();
+
+	if (jsonStats != nullptr) {
+		//TODO: show data on GUI
+	} else {
+		//TODO: jsonStats == nullptr error handling
+	}
+}
+
+/*
+ * Description: ...
+ */
+void MainWindow::slot_updateMinerResults() {
+	QJsonObject* jsonResults = GUIManager::inst()->getMiningResults();
+
+	if (jsonResults != nullptr) {
+		//TODO: show data on GUI
+	}
+	else {
+		//TODO: jsonStats == nullptr error handling
+	}
+}
+
+/*
+ * Description: ...
+ */
+void MainWindow::slot_updateMinerConfig() {
+	QJsonObject* jsonConfig = GUIManager::inst()->getConnectionData();
+
+	if (jsonConfig != nullptr) {
+		//TODO: show data on GUI
+	}
+	else {
+		//TODO: jsonStats == nullptr error handling
+	}
+}
+
+
+// Private slot section
+
+/*
+ * Description: ...
+ */
+void MainWindow::slot_statsButtonClick() {
+	//bool withError = false;
+
+	//std::string tmp = GUIManager::inst()->getLogHead(&withError);
+
+	//if (!withError && tmp.size() > 0) {
+	//	showLine(tmp);
+	//}
+}
+
+/*
+ * Description: ...
+ */
 void MainWindow::slot_startButtonClick() {
 	//TODO: ...
 }
 
 // Private section
+
+/*
+ * Description: ...
+ */
 void MainWindow::clearOutputMSG() {
 	//TODO: ...
 }
 
+/*
+ * Description: ...
+ */
 void MainWindow::showInitMSG() {
 	//TODO: ...
 }
 
+/*
+ * Description: ...
+ */
 void MainWindow::showPauseMSG() {
 	//TODO: ...
 }
 
+/*
+ * Description: ...
+ */
 void MainWindow::showRunningMSG() {
 	//TODO: ...
 }
 
+/*
+ * Description: ...
+ */
 void MainWindow::showStatsMSG() {
 	//TODO: ...
 }
+#pragma endregion

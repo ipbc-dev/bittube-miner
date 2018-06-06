@@ -1,6 +1,15 @@
 #pragma once
 
+#include "controlpanel.h"
+#include "consolepanel.h"
+#include "statspanel.h"
+#include "configpanel.h"
+
+
 #include <QMainWindow>
+
+#include <QGroupBox>
+
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QTextEdit>
@@ -16,7 +25,7 @@ namespace Ui {
 
 namespace GUI_CONFIG {
 	const int WINDOW_W = 750;
-	const int WINDOW_H = 350;
+	const int WINDOW_H = 900;
 	const std::string WINDOW_TITLE = "Miner";
 
 	const int OUTPUT_MAX_SIZE = 10000;
@@ -113,7 +122,7 @@ class MainWindow : public QMainWindow {
 	private:
 		static MainWindow* oInst;
 
-		bool isConsolePanelOpen = false;//TODO: continue here <<<<<----------------
+		bool isConsolePanelOpen = false;
 		bool isStatsPanelOpen = false;
 		bool isResultPanelOpen = false;
 		bool isConnectionPanelOpen = false;
@@ -131,6 +140,23 @@ class MainWindow : public QMainWindow {
 
 		void startMining();//TODO:
 		void stopMining();//TODO:
+
+		QWidget*   _mainWindow = nullptr;
+		QVBoxLayout* _mainVLayout = nullptr;
+
+		QGroupBox* _main_T_Group = nullptr;
+		QVBoxLayout* _main_TGroup_Layout = nullptr;
+		QGroupBox* _main_C_Group = nullptr;
+		QHBoxLayout* _main_CGroup_Layout = nullptr;
+		QGroupBox* _main_B_Group = nullptr;
+		QVBoxLayout* _main_BGroup_Layout = nullptr;
+
+		ConsolePanel* _consolePanel = nullptr;
+		ControlPanel* _controlPanel = nullptr;
+		StatsPanel* _statsPanel = nullptr;
+		ConfigPanel* _configPanel = nullptr;
+
+		//-------------------------------------------------------------
 
 		QWidget* _window = nullptr;
 		QVBoxLayout* _mainLayout = nullptr;

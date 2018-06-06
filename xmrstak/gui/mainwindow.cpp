@@ -161,6 +161,39 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	_mainBackgroundPalette->setBrush(this->backgroundRole(), QBrush(QPixmap::fromImage(*_mainBackgroundImg)));
 	setPalette(*_mainBackgroundPalette);
 	
+	// - New GUI-------------------------------------------------------------
+	//_mainWindow = new QWidget(this);
+
+	_mainVLayout = new QVBoxLayout(this);
+
+	_main_T_Group = new QGroupBox(this);
+	_main_T_Group->setGeometry(0,0,500,400);
+	_consolePanel = new ConsolePanel(this);
+	_main_TGroup_Layout = new QVBoxLayout(_main_T_Group);
+	_main_TGroup_Layout->addWidget(_consolePanel);
+	_main_T_Group->setLayout(_main_TGroup_Layout);
+	_mainVLayout->addWidget(_main_T_Group);
+
+	_main_C_Group = new QGroupBox(this);
+	_main_C_Group->setGeometry(0, 400, 500, 100);
+	_controlPanel = new ControlPanel(this);
+	_main_CGroup_Layout = new QHBoxLayout(_main_C_Group);
+	_main_CGroup_Layout->addWidget(_controlPanel);
+	_main_C_Group->setLayout(_main_CGroup_Layout);
+	_mainVLayout->addWidget(_main_C_Group);
+	
+	_main_B_Group = new QGroupBox(this);
+	_main_B_Group->setGeometry(0, 500, 500, 400);
+	_statsPanel = new StatsPanel(this);
+	_main_BGroup_Layout = new QVBoxLayout(_main_B_Group);
+	_main_BGroup_Layout->addWidget(_statsPanel);
+	_main_B_Group->setLayout(_main_BGroup_Layout);
+	_mainVLayout->addWidget(_main_B_Group);
+
+	//_mainWindow->setLayout(_mainVLayout);
+
+
+	// - Old GUI-------------------------------------------------------------
 	_window = new QWidget(this);
 
 	_mainLayout = new QVBoxLayout(this);
@@ -200,8 +233,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	connect(_startButton, SIGNAL(released()), this, SLOT(slot_startButtonClick()));
 	_innerFooterLayout->addWidget(_startButton);
 
+	//FIXME: test ---
+	_mainLayout->addLayout(_mainVLayout);
+	//---------------
+
 	_window->setLayout(_mainLayout);
 	setCentralWidget(_window);
+	// -   -------------------------------------------------------------
 
 	startGUILoop();
 

@@ -1,0 +1,1 @@
+#include "configpanel.h"

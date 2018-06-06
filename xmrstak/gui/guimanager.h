@@ -21,18 +21,21 @@ namespace enviroment {
 		std::vector<std::string> gui_backupQueque;
 
 		std::recursive_mutex statMutex;
-		QJsonObject* gui_statObject = nullptr;//TODO: safe thread, add mutex to read and write
+		QJsonObject* gui_statObject = nullptr;
 		std::string gui_backupStat;
 
-		bool needParseMinerStats = true;
+		bool updateRequestStats = false; // External flag to force the stats update 
+		bool needParseMinerStats = true; // Internal flag to parse stats if it is necessary
 		std::recursive_mutex minerStatsMutex;
 		QJsonObject* gui_minerStatsObject = nullptr;
 
-		bool needParseResults = true;
+		bool updateRequestResults = false; // External flag to force the results update 
+		bool needParseResults = true; // Internal flag to parse results if it is necessary
 		std::recursive_mutex minerResultsMutex;
 		QJsonObject* gui_minerResultsObject = nullptr;
 
-		bool needParseConnectionData = true;
+		bool updateRequestConnection = false; // External flag to force the connection data update 
+		bool needParseConnectionData = true; // Internal flag to parse connection data if it is necessary
 		std::recursive_mutex connectionMutex;
 		QJsonObject* gui_connectionObject = nullptr;
 
@@ -83,6 +86,48 @@ class GUIManager {
 		void setForceParsingConnectionData(bool value) {
 			if (_guiLog != nullptr) {
 				_guiLog->needParseConnectionData = value;
+			}
+		}
+
+		bool isUpdateReqStats() {
+			bool result = false;
+			if (_guiLog != nullptr) {
+				result = _guiLog->updateRequestStats;
+			}
+			return result;
+		};
+
+		void setUpdateReqStats(bool value) {
+			if (_guiLog != nullptr) {
+				_guiLog->updateRequestStats = value;
+			}
+		}
+
+		bool isUpdateReqResults() {
+			bool result = false;
+			if (_guiLog != nullptr) {
+				result = _guiLog->updateRequestResults;
+			}
+			return result;
+		};
+
+		void setUpdateReqResults(bool value) {
+			if (_guiLog != nullptr) {
+				_guiLog->updateRequestResults = value;
+			}
+		}
+
+		bool isUpdateReqConnection() {
+			bool result = false;
+			if (_guiLog != nullptr) {
+				result = _guiLog->updateRequestConnection;
+			}
+			return result;
+		};
+
+		void setUpdateReqConnection(bool value) {
+			if (_guiLog != nullptr) {
+				_guiLog->updateRequestConnection = value;
 			}
 		}
 

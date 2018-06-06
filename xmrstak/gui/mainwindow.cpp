@@ -92,22 +92,26 @@ void QT_GUILoop::slot_update() {
 	if (_currentTime != nullptr) {
 		_currentTime->start();
 	}
-
 	if ((_startTime != nullptr) && (_currentTime != nullptr)) {
 		diff = _startTime->msecsTo(*_currentTime);
 	}
-
 	if ((_startResultsTime != nullptr) && (_currentTime != nullptr)) {
 		diffResult = _startResultsTime->msecsTo(*_currentTime);
 	}
 
-	if ((diff > -1) && (diff >= GUI_CONFIG::QT_LOOP_MINING_STATS_FPS)) {
+	if (MainWindow::inst()->isStatsPOpen())
+	if ((GUIManager::inst()->isUpdateReqStats()) || ((diff > -1) && (diff >= GUI_CONFIG::QT_LOOP_MINING_STATS_FPS))) {
 		GUIManager::inst()->setForceParsingStats(true);
 		parseGeneralStats = true;
 	}
-
-	if ((diffResult > -1) && (diffResult >= GUI_CONFIG::QT_LOOP_MINING_RESULTS_FPS)) {
+	if (MainWindow::inst()->isResultPOpen())
+	if ((GUIManager::inst()->isUpdateReqResults()) || ((diffResult > -1) && (diffResult >= GUI_CONFIG::QT_LOOP_MINING_RESULTS_FPS))) {
 		GUIManager::inst()->setForceParsingResults(true);
+		parseGeneralStats = true;
+	}
+	if(MainWindow::inst()->isConnectionPOpen())
+	if (GUIManager::inst()->isUpdateReqConnection()) {
+		GUIManager::inst()->setForceParsingConnectionData(true);
 		parseGeneralStats = true;
 	}
 
@@ -119,14 +123,14 @@ void QT_GUILoop::slot_update() {
 			executor::inst()->get_http_report(EV_HTML_JSON, statsResult);
 			GUIManager::inst()->parseStats(QString::fromUtf8(statsResult.c_str()));
 		}
-	}
 
-	if ((diff > -1) && (diff >= GUI_CONFIG::QT_LOOP_MINING_STATS_FPS)) {
-		_startTime->start();
-	}
+		if ((diff > -1) && (diff >= GUI_CONFIG::QT_LOOP_MINING_STATS_FPS)) {
+			_startTime->start();
+		}
 
-	if ((diffResult > -1) && (diffResult >= GUI_CONFIG::QT_LOOP_MINING_RESULTS_FPS)) {
-		_startResultsTime->start();
+		if ((diffResult > -1) && (diffResult >= GUI_CONFIG::QT_LOOP_MINING_RESULTS_FPS)) {
+			_startResultsTime->start();
+		}
 	}
 }
 

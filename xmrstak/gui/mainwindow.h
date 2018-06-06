@@ -80,6 +80,22 @@ class MainWindow : public QMainWindow {
 		void showLine(std::string textIN);
 		void startGUILoop();
 		void stopGUILoop();
+
+		bool isConsolePOpen() {
+			return isConsolePanelOpen;
+		};
+
+		bool isStatsPOpen() {
+			return isStatsPanelOpen;
+		};
+
+		bool isResultPOpen() {
+			return isResultPanelOpen;
+		};
+
+		bool isConnectionPOpen() {
+			return isConnectionPanelOpen;
+		};
 	
 	public slots:
 		void slot_updateGUIOutput();

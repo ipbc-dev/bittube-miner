@@ -159,18 +159,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	setAttribute(Qt::WA_NoSystemBackground, true);
 	setAttribute(Qt::WA_TranslucentBackground, true);
 
-	//_mainBackgroundImg = new QImage(100, 100, QImage::Format_RGB888);
-	//_mainBackgroundImg->fill(QColor(Qt::red).rgb());
-
-	//_mainBackgroundPalette = new QPalette();
-	//_mainBackgroundPalette->setBrush(this->backgroundRole(), QBrush(QPixmap::fromImage(*_mainBackgroundImg)));
-	//setPalette(*_mainBackgroundPalette);
-	
-	// - New GUI-------------------------------------------------------------
-	//    - tercera: usando qframes ---------------------
-
-	//_mainVLayout = new QVBoxLayout(this);
-
+	//---
 	_mainFrame = new QFrame(this);
 	_mainFrame->setGeometry(0, 0, 500, 700);
 	_mainFrame->setFrameShape(QFrame::StyledPanel);
@@ -179,7 +168,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	//_mainFrame->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
 	_sec_T_Frame = new QFrame(_mainFrame);
-	_sec_T_Frame->setGeometry(0, 0, 500, 300);
+	_sec_T_Frame->setGeometry(0, 50, 500, 400);
 	_sec_T_Frame->setFrameShape(QFrame::StyledPanel);
 	_sec_T_Frame->setFrameShadow(QFrame::Raised);
 	_sec_T_Frame->setStyleSheet("background-color:rgba(0,0,0,0)");
@@ -196,102 +185,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	_controlPanel = new ControlPanel(_sec_C_Frame);
 
 	_sec_B_Frame = new QFrame(_mainFrame);
-	_sec_B_Frame->setGeometry(0, 400, 500, 300);
+	_sec_B_Frame->stackUnder(_sec_C_Frame);
+	_sec_B_Frame->setGeometry(0, 365, 500, 400);
 	_sec_B_Frame->setFrameShape(QFrame::StyledPanel);
 	_sec_B_Frame->setFrameShadow(QFrame::Raised);
 	_sec_B_Frame->setStyleSheet("background-color:rgba(0,0,0,0)");
 	//_sec_B_Frame->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	_statsPanel = new StatsPanel(_sec_B_Frame);
 
-	//_sec_T_Frame->show();
-	//_sec_C_Frame->show();
-	//_sec_B_Frame->show();
-	//_mainFrame->show();
-
-	//_mainVLayout->addWidget(_mainFrame);
-
-
-	//    - tercera: usando qframes ---------------------
-
-	//_mainWindow = new QWidget(this);
-
-	/*_mainVLayout = new QVBoxLayout(this);
-
-	_main_T_Group = new QGroupBox(this);
-	_main_T_Group->setGeometry(0,0,500,400);
-	_consolePanel = new ConsolePanel(this);
-	_main_TGroup_Layout = new QVBoxLayout(_main_T_Group);
-	_main_TGroup_Layout->addWidget(_consolePanel);
-	_main_T_Group->setLayout(_main_TGroup_Layout);
-	_mainVLayout->addWidget(_main_T_Group);
-
-	_main_C_Group = new QGroupBox(this);
-	_main_C_Group->setGeometry(0, 400, 500, 100);
-	_controlPanel = new ControlPanel(this);
-	_main_CGroup_Layout = new QHBoxLayout(_main_C_Group);
-	_main_CGroup_Layout->addWidget(_controlPanel);
-	_main_C_Group->setLayout(_main_CGroup_Layout);
-	_mainVLayout->addWidget(_main_C_Group);
-	
-	_main_B_Group = new QGroupBox(this);
-	_main_B_Group->setGeometry(0, 500, 500, 400);
-	_statsPanel = new StatsPanel(this);
-	_main_BGroup_Layout = new QVBoxLayout(_main_B_Group);
-	_main_BGroup_Layout->addWidget(_statsPanel);
-	_main_B_Group->setLayout(_main_BGroup_Layout);
-	_mainVLayout->addWidget(_main_B_Group);*/
-
-	//_mainWindow->setLayout(_mainVLayout);
-
-
-	// - Old GUI-------------------------------------------------------------
-	
-	/*_window = new QWidget(this);
-
-	_mainLayout = new QVBoxLayout(this);
-	
-
-	_contentLayout = new QHBoxLayout();
-	_mainLayout->addLayout(_contentLayout);
-	_contentWidget = new QWidget();
-	_contentWidget->setStyleSheet("background-color: green");
-	_contentLayout->addWidget(_contentWidget);
-
-	_innerContentLayout = new QHBoxLayout();
-	_contentWidget->setLayout(_innerContentLayout);
-
-	_outputText = new QTextEdit();
-	_outputText->setText("Hello im testing it");
-	_innerContentLayout->addWidget(_outputText);
-
-	//---
-
-	_footerLayout = new QHBoxLayout();
-	_mainLayout->addLayout(_footerLayout);
-	_footerWidget = new QWidget();
-	_footerWidget->setStyleSheet("background-color: white");
-	_footerLayout->addWidget(_footerWidget);
-
-	_innerFooterLayout = new QHBoxLayout();
-	_footerWidget->setLayout(_innerFooterLayout);
-
-	_statsButton = new QPushButton();
-	_statsButton->setText("Stats");
-	connect(_statsButton, SIGNAL(released()), this, SLOT(slot_statsButtonClick()));
-	_innerFooterLayout->addWidget(_statsButton);
-
-	_startButton = new QPushButton();
-	_startButton->setText("Start");
-	connect(_startButton, SIGNAL(released()), this, SLOT(slot_startButtonClick()));
-	_innerFooterLayout->addWidget(_startButton);
-
-	//FIXME: test ---
-	_mainLayout->addLayout(_mainVLayout);
-	//---------------
-
-	_window->setLayout(_mainLayout);
-	setCentralWidget(_window);*/
-	// -   -------------------------------------------------------------
 
 	startGUILoop();
 
@@ -302,68 +203,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
  * Description: ...
  */
 MainWindow::~MainWindow() {
-	// Main section
-	if (_outputText != nullptr) {
-		delete _outputText;
-		_outputText = nullptr;
-	}
-	if (_innerContentLayout != nullptr) {
-		delete _innerContentLayout;
-		_innerContentLayout = nullptr;
-	}
-	if (_contentWidget != nullptr) {
-		delete _contentWidget;
-		_contentWidget = nullptr;
-	}
-	if (_contentLayout != nullptr) {
-		delete _contentLayout;
-		_contentLayout = nullptr;
-	}
-	//---
-
-	// Footer section
-	if (_statsButton != nullptr) {
-		delete _statsButton;
-		_statsButton = nullptr;
-	}
-	if (_startButton != nullptr) {
-		delete _startButton;
-		_startButton = nullptr;
-	}
-	if (_innerFooterLayout != nullptr) {
-		delete _innerFooterLayout;
-		_innerFooterLayout = nullptr;
-	}
-	if (_footerWidget != nullptr) {
-		delete _footerWidget;
-		_footerWidget = nullptr;
-	}
-	if (_footerLayout != nullptr) {
-		delete _footerLayout;
-		_footerLayout = nullptr;
-	}
-	//---
-
-	if (_mainBackgroundImg != nullptr) {
-		delete _mainBackgroundImg;
-		_mainBackgroundImg = nullptr;
-	}
-
-	if(_mainBackgroundPalette != nullptr) {
-		delete _mainBackgroundPalette;
-		_mainBackgroundPalette = nullptr;
-	}
-
-	if (_mainLayout != nullptr) {
-		delete _mainLayout;
-		_mainLayout = nullptr;
-	}
-
-	if (_window != nullptr) {
-		delete _window;
-		_window = nullptr;
-	}
-
 	oInst = nullptr;
 	if (_worker != nullptr) {
 		delete _worker;
@@ -378,10 +217,17 @@ MainWindow::~MainWindow() {
  */
 void MainWindow::showLine(std::string textIN) {
 	
+	//FIXME: use correct _outputText
+	//---std::string outputContent = _outputText->toPlainText().toStdString();
+	std::string outputContent = ""; // Delete this
+	//---
 
-	std::string outputContent = _outputText->toPlainText().toStdString();
 	int diff = 0;
-	int finalLength = outputContent.size() + textIN.size();
+	//FIXME: use correct _outputText
+	//---int finalLength = outputContent.size() + textIN.size();
+	int finalLength = 0; //Delete this
+	//---
+
 
 	if (finalLength > GUI_CONFIG::OUTPUT_MAX_SIZE) {
 		diff = finalLength - GUI_CONFIG::OUTPUT_MAX_SIZE;
@@ -390,12 +236,15 @@ void MainWindow::showLine(std::string textIN) {
 
 		QString lineIN = QString::fromStdString(outputContent);
 
-		_outputText->setText(lineIN);
+		//FIXME: use correct _outputText
+		//_outputText->setText(lineIN);
 
 	}
 	else {
 		QString lineIN = QString::fromStdString(textIN);
-		_outputText->append(lineIN);
+
+		//FIXME: use correct _outputText
+		//_outputText->append(lineIN);
 	}
 
 	
@@ -504,38 +353,4 @@ void MainWindow::slot_startButtonClick() {
 
 // Private section
 
-/*
- * Description: ...
- */
-void MainWindow::clearOutputMSG() {
-	//TODO: ...
-}
-
-/*
- * Description: ...
- */
-void MainWindow::showInitMSG() {
-	//TODO: ...
-}
-
-/*
- * Description: ...
- */
-void MainWindow::showPauseMSG() {
-	//TODO: ...
-}
-
-/*
- * Description: ...
- */
-void MainWindow::showRunningMSG() {
-	//TODO: ...
-}
-
-/*
- * Description: ...
- */
-void MainWindow::showStatsMSG() {
-	//TODO: ...
-}
 #pragma endregion

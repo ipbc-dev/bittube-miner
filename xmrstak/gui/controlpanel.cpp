@@ -6,6 +6,23 @@ ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent) {
 	//setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	setMinimumSize(500, 100);
 
+	//---
+	_big_button_shadow = new QGraphicsDropShadowEffect();
+	_big_button_shadow->setBlurRadius(9.0);
+	_big_button_shadow->setColor(QColor(0, 0, 0, 160));
+	_big_button_shadow->setOffset(4.0);
+
+	_medium_button_shadow = new QGraphicsDropShadowEffect();
+	_medium_button_shadow->setBlurRadius(6.0);
+	_medium_button_shadow->setColor(QColor(0, 0, 0, 160));
+	_medium_button_shadow->setOffset(2.0);
+	
+	_small_button_shadow = new QGraphicsDropShadowEffect();
+	_small_button_shadow->setBlurRadius(4.0);
+	_small_button_shadow->setColor(QColor(0, 0, 0, 160));
+	_small_button_shadow->setOffset(1.0);
+	//---
+
 	// Left button panel
 	_main_L_Frame = new QFrame(this);
 	_main_L_Frame->setGeometry(0, 0, 200, 100);
@@ -34,10 +51,15 @@ ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent) {
 									 max-height:42px; \
 									 min-width:42px; \
 									 min-height:42px; }");
+	_console_shadow = new QGraphicsDropShadowEffect();
+	_console_shadow->setBlurRadius(6.0);
+	_console_shadow->setColor(QColor(0, 0, 0, 160));
+	_console_shadow->setOffset(2.0);
+	_console_button->setGraphicsEffect(_console_shadow);
 
 	_config_button = new QPushButton(_sec_C_LFrame);
 	_config_button->setAccessibleName("configuration_button");
-	_config_button->setText("Configuration");
+	_config_button->setText("Conf");
 	_config_button->setToolTip("Show/Hide configuration panel");
 	_config_button->setToolTipDuration(2000);
 	_config_button->setGeometry(104, 8, 34, 34);
@@ -50,6 +72,11 @@ ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent) {
 								    max-height:30px; \
 								    min-width:30px; \
 								    min-height:30px; }");
+	_config_shadow = new QGraphicsDropShadowEffect();
+	_config_shadow->setBlurRadius(9.0);
+	_config_shadow->setColor(QColor(0, 0, 0, 160));
+	_config_shadow->setOffset(4.0);
+	_config_button->setGraphicsEffect(_config_shadow);
 
 	_sec_B_LFrame = new QFrame(_main_L_Frame);
 	_sec_B_LFrame->setGeometry(0,75, 200, 25);
@@ -88,6 +115,11 @@ ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent) {
 								  max-height:90px; \
 								  min-width:90px; \
 								  min-height:90px; }");
+	_play_shadow = new QGraphicsDropShadowEffect();
+	_play_shadow->setBlurRadius(4.0);
+	_play_shadow->setColor(QColor(0, 0, 0, 160));
+	_play_shadow->setOffset(1.0);
+	_play_button->setGraphicsEffect(_play_shadow);
 	//---
 
 	// Right button panel
@@ -118,10 +150,15 @@ ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent) {
 								   max-height:42px; \
 								   min-width:42px; \
 								   min-height:42px; }");
+	_stats_shadow = new QGraphicsDropShadowEffect();
+	_stats_shadow->setBlurRadius(6.0);
+	_stats_shadow->setColor(QColor(0, 0, 0, 160));
+	_stats_shadow->setOffset(2.0);
+	_stats_button->setGraphicsEffect(_stats_shadow);
 
 	_result_button = new QPushButton(_sec_C_RFrame);
 	_result_button->setAccessibleName("result_button");
-	_result_button->setText("Results");
+	_result_button->setText("Res");
 	_result_button->setToolTip("Show/Hide results panel");
 	_result_button->setToolTipDuration(2000);
 	_result_button->setGeometry(64, 8, 34, 34);
@@ -134,6 +171,11 @@ ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent) {
 								    max-height:30px; \
 								    min-width:30px; \
 								    min-height:30px; }");
+	_result_shadow = new QGraphicsDropShadowEffect();
+	_result_shadow->setBlurRadius(9.0);
+	_result_shadow->setColor(QColor(0, 0, 0, 160));
+	_result_shadow->setOffset(4.0);
+	_result_button->setGraphicsEffect(_result_shadow);
 
 	_sec_B_RFrame = new QFrame(_main_R_Frame);
 	_sec_B_RFrame->setGeometry(0, 75, 200, 25);
@@ -145,12 +187,12 @@ ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent) {
 	//_sec_T_CFrame->stackUnder(_win_L_CFrame);
 	_win_L_CFrame->stackUnder(_play_button);
 	_win_L_CFrame->setGeometry(50, 5, 50, 20);
-	_win_L_CFrame->setStyleSheet("background-color: white");
+	_win_L_CFrame->setStyleSheet("background-color:rgba(200, 200, 200, 1)");
 
 	_win_R_RFrame = new QFrame(_main_R_Frame);
 	_win_R_RFrame->setAccessibleName("winr_frame");
 	_win_R_RFrame->setGeometry(0, 5, 80, 20);
-	_win_R_RFrame->setStyleSheet("[accessibleName=\"winr_frame\"] { background-color: white; \
+	_win_R_RFrame->setStyleSheet("[accessibleName=\"winr_frame\"] { background-color:rgba(200, 200, 200, 1); \
 								  border-top-right-radius:5px; }");
 
 	_win_minimize_button = new QPushButton(_win_R_RFrame);

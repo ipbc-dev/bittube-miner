@@ -132,17 +132,6 @@ class MainWindow : public QMainWindow {
 
 		QT_GUILoop* _worker = nullptr; //TODO: liberar memoria 
 
-		void clearOutputMSG();//TODO:
-
-		void showInitMSG();//TODO:
-		void showPauseMSG();//TODO:
-		void showRunningMSG();//TODO:
-		void showStatsMSG();//TODO:
-
-
-		void startMining();//TODO:
-		void stopMining();//TODO:
-
 		QFrame* _mainFrame = nullptr;
 		QFrame* _sec_T_Frame = nullptr;
 		QFrame* _sec_C_Frame = nullptr;
@@ -150,44 +139,10 @@ class MainWindow : public QMainWindow {
 
 		//-------------------------------------------------------------
 
-
-		QWidget*   _mainWindow = nullptr;
-		QVBoxLayout* _mainVLayout = nullptr;
-
-		QGroupBox* _main_T_Group = nullptr;
-		QVBoxLayout* _main_TGroup_Layout = nullptr;
-		QGroupBox* _main_C_Group = nullptr;
-		QHBoxLayout* _main_CGroup_Layout = nullptr;
-		QGroupBox* _main_B_Group = nullptr;
-		QVBoxLayout* _main_BGroup_Layout = nullptr;
-
 		ConsolePanel* _consolePanel = nullptr;
 		ControlPanel* _controlPanel = nullptr;
 		StatsPanel* _statsPanel = nullptr;
 		ConfigPanel* _configPanel = nullptr;
 
-		//-------------------------------------------------------------
-
-		QWidget* _window = nullptr;
-		QVBoxLayout* _mainLayout = nullptr;
-		QImage* _mainBackgroundImg = nullptr;
-		QPalette* _mainBackgroundPalette = nullptr;
-	
-		// Main section
-		QHBoxLayout* _contentLayout = nullptr;
-		QWidget* _contentWidget = nullptr;
-		QHBoxLayout* _innerContentLayout = nullptr;
-
-		QTextEdit* _outputText = nullptr;
-		//---
-
-		// Footer section
-		QHBoxLayout* _footerLayout = nullptr;
-		QWidget* _footerWidget = nullptr;
-		QHBoxLayout* _innerFooterLayout = nullptr;
-
-		QPushButton* _statsButton = nullptr;
-		QPushButton* _startButton = nullptr;
-		//---
 };
 #pragma endregion

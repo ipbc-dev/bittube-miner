@@ -1,6 +1,9 @@
 #pragma once
 
+#include <QFrame>
 #include <QWidget>
+
+
 #include <QVBoxLayout>
 #include <QGroupBox>
 #include <QTextEdit>
@@ -13,11 +16,9 @@ class StatsPanel : public QWidget {
 		virtual ~StatsPanel();
 
 	private:
-		QPalette * _backgroundColor = nullptr;
+		QFrame * _main_T_Frame = nullptr;
+		QFrame* _main_B_Frame = nullptr;
 
-		QVBoxLayout* _mainlayout = nullptr;
-		QGroupBox* _main_C_Group = nullptr;
 		QTextEdit* _outputText = nullptr;
-
 
 };

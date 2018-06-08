@@ -1,6 +1,9 @@
 #pragma once
 
+#include <QFrame>
 #include <QWidget>
+
+
 #include <QVBoxLayout>
 #include <QGroupBox>
 #include <QTextEdit>
@@ -14,9 +17,9 @@ class ConsolePanel : public QWidget {
 		virtual ~ConsolePanel();
 
 	private:
-		QPalette * _backgroundColor = nullptr;
-		
-		QVBoxLayout* _mainlayout = nullptr;
-		QGroupBox* _main_C_Group = nullptr;
+		QFrame* _main_T_Frame = nullptr;
+		QFrame* _main_B_Frame = nullptr;
+
 		QTextEdit* _outputText = nullptr;
+	
 };

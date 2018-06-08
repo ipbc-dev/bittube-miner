@@ -2,9 +2,9 @@
 
 #include <QFrame>
 #include <QWidget>
-//#include <QHBoxLayout>
-#include <QGroupBox>
 #include <QPushButton>
+#include <QGraphicsDropShadowEffect>
+
 
 class ControlPanel : public QWidget {
 	Q_OBJECT
@@ -16,6 +16,10 @@ class ControlPanel : public QWidget {
 	private:
 		QPalette* _backgroundColor = nullptr;
 
+		QGraphicsDropShadowEffect* _big_button_shadow = nullptr;
+		QGraphicsDropShadowEffect* _medium_button_shadow = nullptr;
+		QGraphicsDropShadowEffect* _small_button_shadow = nullptr;
+
 		// Left button panel
 		QFrame* _main_L_Frame = nullptr;
 		QFrame* _sec_T_LFrame = nullptr;
@@ -24,6 +28,9 @@ class ControlPanel : public QWidget {
 
 		QPushButton* _console_button = nullptr;
 		QPushButton* _config_button = nullptr;
+
+		QGraphicsDropShadowEffect* _console_shadow = nullptr;
+		QGraphicsDropShadowEffect* _config_shadow = nullptr;
 		//---
 
 		// Center button panel
@@ -33,6 +40,7 @@ class ControlPanel : public QWidget {
 		QFrame* _sec_B_CFrame = nullptr;
 
 		QPushButton* _play_button = nullptr;
+		QGraphicsDropShadowEffect* _play_shadow = nullptr;
 		//---
 
 		// Right button panel
@@ -43,6 +51,8 @@ class ControlPanel : public QWidget {
 
 		QPushButton* _stats_button = nullptr;
 		QPushButton* _result_button = nullptr;
+		QGraphicsDropShadowEffect* _stats_shadow = nullptr;
+		QGraphicsDropShadowEffect* _result_shadow = nullptr;
 		//---
 
 		// windows system buttons panel
@@ -53,25 +63,4 @@ class ControlPanel : public QWidget {
 		QPushButton* _win_maximize_button = nullptr;
 		QPushButton* _win_close_button = nullptr;
 		//---
-
-		//FIXME: delete 
-		QGroupBox* _main_L_Group = nullptr;
-		QGroupBox* _main_C_Group = nullptr;
-		QGroupBox* _main_R_Group = nullptr;
-
-		QGroupBox* _sec_T_LGroup = nullptr;
-		QGroupBox* _sec_C_LGroup = nullptr;
-		QGroupBox* _sec_B_LGroup = nullptr;
-
-		QGroupBox* _sec_T_RGroup = nullptr;
-		QGroupBox* _sec_C_RGroup = nullptr;
-		QGroupBox* _sec_B_RGroup = nullptr;
-
-		QPushButton* _play_CGroupButton = nullptr;
-
-		QPushButton* _console_LGroupButton = nullptr;
-
-		QPushButton* _stat_RGroupButton = nullptr;
-		QPushButton* _conf_RGroupButton = nullptr;
-
 };

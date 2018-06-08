@@ -24,7 +24,6 @@ class ControlPanel : public QWidget {
 
 		QPushButton* _console_button = nullptr;
 		QPushButton* _config_button = nullptr;
-
 		//---
 
 		// Center button panel
@@ -34,7 +33,6 @@ class ControlPanel : public QWidget {
 		QFrame* _sec_B_CFrame = nullptr;
 
 		QPushButton* _play_button = nullptr;
-
 		//---
 
 		// Right button panel
@@ -45,12 +43,18 @@ class ControlPanel : public QWidget {
 
 		QPushButton* _stats_button = nullptr;
 		QPushButton* _result_button = nullptr;
-		
-
 		//---
 
+		// windows system buttons panel
+		QFrame* _win_L_CFrame = nullptr;
+		QFrame* _win_R_RFrame = nullptr;
 
+		QPushButton* _win_minimize_button = nullptr;
+		QPushButton* _win_maximize_button = nullptr;
+		QPushButton* _win_close_button = nullptr;
+		//---
 
+		//FIXME: delete 
 		QGroupBox* _main_L_Group = nullptr;
 		QGroupBox* _main_C_Group = nullptr;
 		QGroupBox* _main_R_Group = nullptr;

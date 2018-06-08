@@ -154,6 +154,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	resize(GUI_CONFIG::WINDOW_W, GUI_CONFIG::WINDOW_H);
 	setWindowTitle(tr(GUI_CONFIG::WINDOW_TITLE.c_str()));
 
+	setWindowFlags(Qt::Widget | Qt::FramelessWindowHint);
+	setParent(0); // Create TopLevel-Widget
+	setAttribute(Qt::WA_NoSystemBackground, true);
+	setAttribute(Qt::WA_TranslucentBackground, true);
+
 	//_mainBackgroundImg = new QImage(100, 100, QImage::Format_RGB888);
 	//_mainBackgroundImg->fill(QColor(Qt::red).rgb());
 
@@ -170,14 +175,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	_mainFrame->setGeometry(0, 0, 500, 700);
 	_mainFrame->setFrameShape(QFrame::StyledPanel);
 	_mainFrame->setFrameShadow(QFrame::Raised);
-	_mainFrame->setStyleSheet("background-color: yellow");
+	_mainFrame->setStyleSheet("background-color:rgba(0,0,0,0)");
 	//_mainFrame->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
 	_sec_T_Frame = new QFrame(_mainFrame);
 	_sec_T_Frame->setGeometry(0, 0, 500, 300);
 	_sec_T_Frame->setFrameShape(QFrame::StyledPanel);
 	_sec_T_Frame->setFrameShadow(QFrame::Raised);
-	_sec_T_Frame->setStyleSheet("background-color: green");
+	_sec_T_Frame->setStyleSheet("background-color:rgba(0,0,0,0)");
 	//_sec_T_Frame->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	_consolePanel = new ConsolePanel(_sec_T_Frame);
 	
@@ -186,7 +191,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	_sec_C_Frame->setGeometry(0, 300, 500, 100);
 	_sec_C_Frame->setFrameShape(QFrame::StyledPanel);
 	_sec_C_Frame->setFrameShadow(QFrame::Raised);
-	_sec_C_Frame->setStyleSheet("background-color: red");
+	_sec_C_Frame->setStyleSheet("background-color:rgba(0,0,0,0)");
 	//_sec_C_Frame->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	_controlPanel = new ControlPanel(_sec_C_Frame);
 
@@ -194,7 +199,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	_sec_B_Frame->setGeometry(0, 400, 500, 300);
 	_sec_B_Frame->setFrameShape(QFrame::StyledPanel);
 	_sec_B_Frame->setFrameShadow(QFrame::Raised);
-	_sec_B_Frame->setStyleSheet("background-color: green");
+	_sec_B_Frame->setStyleSheet("background-color:rgba(0,0,0,0)");
 	//_sec_B_Frame->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	_statsPanel = new StatsPanel(_sec_B_Frame);
 

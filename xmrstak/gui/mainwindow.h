@@ -19,13 +19,15 @@
 #include <QThread>
 #include <QTime>
 
+#include <QFrame>
+
 namespace Ui {
 	class MainWindow;
 }
 
 namespace GUI_CONFIG {
-	const int WINDOW_W = 750;
-	const int WINDOW_H = 900;
+	const int WINDOW_W = 500;
+	const int WINDOW_H = 700;
 	const std::string WINDOW_TITLE = "Miner";
 
 	const int OUTPUT_MAX_SIZE = 10000;
@@ -140,6 +142,14 @@ class MainWindow : public QMainWindow {
 
 		void startMining();//TODO:
 		void stopMining();//TODO:
+
+		QFrame* _mainFrame = nullptr;
+		QFrame* _sec_T_Frame = nullptr;
+		QFrame* _sec_C_Frame = nullptr;
+		QFrame* _sec_B_Frame = nullptr;
+
+		//-------------------------------------------------------------
+
 
 		QWidget*   _mainWindow = nullptr;
 		QVBoxLayout* _mainVLayout = nullptr;

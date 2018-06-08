@@ -2,7 +2,7 @@
 #include "guimanager.h"
 
 #include <QString>
-
+#include <QSizePolicy>
 
 #include "xmrstak/misc/executor.hpp"
 #include "xmrstak/http/httpd.hpp"
@@ -154,17 +154,63 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	resize(GUI_CONFIG::WINDOW_W, GUI_CONFIG::WINDOW_H);
 	setWindowTitle(tr(GUI_CONFIG::WINDOW_TITLE.c_str()));
 
-	_mainBackgroundImg = new QImage(100, 100, QImage::Format_RGB888);
-	_mainBackgroundImg->fill(QColor(Qt::red).rgb());
+	//_mainBackgroundImg = new QImage(100, 100, QImage::Format_RGB888);
+	//_mainBackgroundImg->fill(QColor(Qt::red).rgb());
 
-	_mainBackgroundPalette = new QPalette();
-	_mainBackgroundPalette->setBrush(this->backgroundRole(), QBrush(QPixmap::fromImage(*_mainBackgroundImg)));
-	setPalette(*_mainBackgroundPalette);
+	//_mainBackgroundPalette = new QPalette();
+	//_mainBackgroundPalette->setBrush(this->backgroundRole(), QBrush(QPixmap::fromImage(*_mainBackgroundImg)));
+	//setPalette(*_mainBackgroundPalette);
 	
 	// - New GUI-------------------------------------------------------------
+	//    - tercera: usando qframes ---------------------
+
+	//_mainVLayout = new QVBoxLayout(this);
+
+	_mainFrame = new QFrame(this);
+	_mainFrame->setGeometry(0, 0, 500, 700);
+	_mainFrame->setFrameShape(QFrame::StyledPanel);
+	_mainFrame->setFrameShadow(QFrame::Raised);
+	_mainFrame->setStyleSheet("background-color: yellow");
+	//_mainFrame->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+	_sec_T_Frame = new QFrame(_mainFrame);
+	_sec_T_Frame->setGeometry(0, 0, 500, 300);
+	_sec_T_Frame->setFrameShape(QFrame::StyledPanel);
+	_sec_T_Frame->setFrameShadow(QFrame::Raised);
+	_sec_T_Frame->setStyleSheet("background-color: green");
+	//_sec_T_Frame->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+	_consolePanel = new ConsolePanel(_sec_T_Frame);
+	
+
+	_sec_C_Frame = new QFrame(_mainFrame);
+	_sec_C_Frame->setGeometry(0, 300, 500, 100);
+	_sec_C_Frame->setFrameShape(QFrame::StyledPanel);
+	_sec_C_Frame->setFrameShadow(QFrame::Raised);
+	_sec_C_Frame->setStyleSheet("background-color: red");
+	//_sec_C_Frame->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+	_controlPanel = new ControlPanel(_sec_C_Frame);
+
+	_sec_B_Frame = new QFrame(_mainFrame);
+	_sec_B_Frame->setGeometry(0, 400, 500, 300);
+	_sec_B_Frame->setFrameShape(QFrame::StyledPanel);
+	_sec_B_Frame->setFrameShadow(QFrame::Raised);
+	_sec_B_Frame->setStyleSheet("background-color: green");
+	//_sec_B_Frame->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+	_statsPanel = new StatsPanel(_sec_B_Frame);
+
+	//_sec_T_Frame->show();
+	//_sec_C_Frame->show();
+	//_sec_B_Frame->show();
+	//_mainFrame->show();
+
+	//_mainVLayout->addWidget(_mainFrame);
+
+
+	//    - tercera: usando qframes ---------------------
+
 	//_mainWindow = new QWidget(this);
 
-	_mainVLayout = new QVBoxLayout(this);
+	/*_mainVLayout = new QVBoxLayout(this);
 
 	_main_T_Group = new QGroupBox(this);
 	_main_T_Group->setGeometry(0,0,500,400);
@@ -188,13 +234,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	_main_BGroup_Layout = new QVBoxLayout(_main_B_Group);
 	_main_BGroup_Layout->addWidget(_statsPanel);
 	_main_B_Group->setLayout(_main_BGroup_Layout);
-	_mainVLayout->addWidget(_main_B_Group);
+	_mainVLayout->addWidget(_main_B_Group);*/
 
 	//_mainWindow->setLayout(_mainVLayout);
 
 
 	// - Old GUI-------------------------------------------------------------
-	_window = new QWidget(this);
+	
+	/*_window = new QWidget(this);
 
 	_mainLayout = new QVBoxLayout(this);
 	
@@ -238,7 +285,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	//---------------
 
 	_window->setLayout(_mainLayout);
-	setCentralWidget(_window);
+	setCentralWidget(_window);*/
 	// -   -------------------------------------------------------------
 
 	startGUILoop();
@@ -382,7 +429,7 @@ void MainWindow::slot_updateGUIOutput() {
 	std::string tmp = GUIManager::inst()->getLogHead(&withError);
 
 	if (!withError && tmp.size() > 0) {
-		showLine(tmp);
+		//showLine(tmp);
 	}
 }
 

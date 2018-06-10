@@ -520,7 +520,7 @@ __kernel void JOIN(cn0,ALGO)(__global ulong *input, __global uint4 *Scratchpad, 
 	 */
 	size_t idex1 = get_local_id(1);
 	size_t idex2 = get_local_id(0);
-	size_t idex3 = (idex1 + 1) & 8 ;
+	size_t idex3 = (idex1 + 1) % 8 ;
 	uint4 tmptext;
 	#pragma unroll 16
 	for(int i = 0; i < 16; i++)
@@ -758,7 +758,7 @@ __kernel void JOIN(cn2,ALGO) (__global uint4 *Scratchpad, __global ulong *states
 #if (ALGO == 4)
 		size_t idex1 = get_local_id(1);
 		size_t idex2 = get_local_id(0);
-		size_t idex3 = (idex1 + 1) & 8 ;
+		size_t idex3 = (idex1 + 1) % 8 ;
 		uint4 tmptext;
 		#pragma unroll 2
 		for(int i = 0; i < (MEMORY >> 7); ++i)
@@ -819,7 +819,7 @@ __kernel void JOIN(cn2,ALGO) (__global uint4 *Scratchpad, __global ulong *states
 	 */
 	size_t idex1 = get_local_id(1);
 	size_t idex2 = get_local_id(0);
-	size_t idex3 = (idex1 + 1) & 8 ;
+	size_t idex3 = (idex1 + 1) % 8 ;
 	uint4 tmptext;
 	#pragma unroll 16
 	for(int i = 0; i < 16; i++)

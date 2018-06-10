@@ -433,6 +433,8 @@ inline ulong getIdx()
 #endif
 }
 
+//#define mix_and_propagate(xin) (xin)[(get_local_id(1)) % 8][get_local_id(0)] ^ (xin)[(get_local_id(1) + 1) % 8][get_local_id(0)]
+
 #define JOIN_DO(x,y) x##y
 #define JOIN(x,y) JOIN_DO(x,y)
 
@@ -518,21 +520,21 @@ __kernel void JOIN(cn0,ALGO)(__global ulong *input, __global uint4 *Scratchpad, 
 	/* Also left over threads perform this loop.
 	 * The left over thread results will be ignored
 	 */
-	size_t idex1 = get_local_id(1);
-	size_t idex2 = get_local_id(0);
-	size_t idex3 = (idex1 + 1) % 8 ;
-	uint4 tmptext;
+	unsigned char idex1 = get_local_id(1);
+	unsigned char idex2 = get_local_id(0);
+	unsigned char idex3 = (idex1 + 1) & 7 ;
+	unsigned char tmpchar[16];
 	#pragma unroll 16
 	for(int i = 0; i < 16; i++)
 	{
 		#pragma unroll 10
 		for(int j = 0; j < 40 ; j += 4)
 		{
-			tmptext.s0 = ExpandedKey1[j]   ^ AES0[BYTE(text.s0, 0)] ^ AES2[BYTE(text.s2, 2)] ^ AES1[BYTE(text.s1, 1)] ^ AES3[BYTE(text.s3, 3)];
-			tmptext.s1 = ExpandedKey1[j+1] ^ AES0[BYTE(text.s1, 0)] ^ AES2[BYTE(text.s3, 2)] ^ AES1[BYTE(text.s2, 1)] ^ AES3[BYTE(text.s0, 3)];
-			tmptext.s2 = ExpandedKey1[j+2] ^ AES0[BYTE(text.s2, 0)] ^ AES2[BYTE(text.s0, 2)] ^ AES1[BYTE(text.s3, 1)] ^ AES3[BYTE(text.s1, 3)];
-			tmptext.s3 = ExpandedKey1[j+3] ^ AES0[BYTE(text.s3, 0)] ^ AES2[BYTE(text.s1, 2)] ^ AES1[BYTE(text.s0, 1)] ^ AES3[BYTE(text.s2, 3)];
-			text = tmptext;			
+			((uint4*)tmpchar)[0] = text;
+			text.s0 = ExpandedKey1[j]   ^ AES0[tmpchar[0]] ^ AES2[tmpchar[10]] ^ AES1[tmpchar[5]] ^ AES3[tmpchar[15]];
+			text.s1 = ExpandedKey1[j+1] ^ AES0[tmpchar[4]] ^ AES2[tmpchar[14]] ^ AES1[tmpchar[9]] ^ AES3[tmpchar[3]];
+			text.s2 = ExpandedKey1[j+2] ^ AES0[tmpchar[8]] ^ AES2[tmpchar[2]] ^ AES1[tmpchar[13]] ^ AES3[tmpchar[7]];
+			text.s3 = ExpandedKey1[j+3] ^ AES0[tmpchar[12]] ^ AES2[tmpchar[6]] ^ AES1[tmpchar[1]] ^ AES3[tmpchar[11]];
 		}
 		xin[idex1][idex2] = text;
 		barrier(CLK_LOCAL_MEM_FENCE);
@@ -625,15 +627,21 @@ __kernel void JOIN(cn1,ALGO) (__global uint4 *Scratchpad, __global ulong *states
 #endif
 	{
 		ulong idx0 = a[0];
-		ulong idx1;
-
+		ulong c[2];
+		unsigned char tmpchar[16];
+		uint4 tmptext;
 		#pragma unroll 8
 		for(int i = 0; i < ITERATIONS; ++i)
 		{
-			ulong c[2];
-
-			((uint4 *)c)[0] = Scratchpad[IDX((idx0 & MASK) >> 4)];
-			((uint4 *)c)[0] = AES_Round(AES0, AES1, AES2, AES3, ((uint4 *)c)[0], ((uint4 *)a)[0]);
+			
+			((uint4*)tmpchar)[0] = Scratchpad[IDX((idx0 & MASK) >> 4)];
+			tmptext = ((uint4 *)a)[0];
+			tmptext.s0 ^= AES0[tmpchar[0]] ^ AES2[tmpchar[10]] ^ AES1[tmpchar[5]] ^ AES3[tmpchar[15]];
+			tmptext.s1 ^= AES0[tmpchar[4]] ^ AES2[tmpchar[14]] ^ AES1[tmpchar[9]] ^ AES3[tmpchar[3]];
+			tmptext.s2 ^= AES0[tmpchar[8]] ^ AES2[tmpchar[2]] ^ AES1[tmpchar[13]] ^ AES3[tmpchar[7]];
+			tmptext.s3 ^= AES0[tmpchar[12]] ^ AES2[tmpchar[6]] ^ AES1[tmpchar[1]] ^ AES3[tmpchar[11]];
+			((uint4 *)c)[0] = tmptext;
+			
 
 			b_x ^= ((uint4 *)c)[0];
 // cryptonight_monero || cryptonight_aeon || cryptonight_bittube || cryptonight_stellite
@@ -756,23 +764,24 @@ __kernel void JOIN(cn2,ALGO) (__global uint4 *Scratchpad, __global ulong *states
 	{
 // cryptonight_heavy
 #if (ALGO == 4)
-		size_t idex1 = get_local_id(1);
-		size_t idex2 = get_local_id(0);
-		size_t idex3 = (idex1 + 1) % 8 ;
-		uint4 tmptext;
+		unsigned char idex1 = get_local_id(1);
+		unsigned char idex2 = get_local_id(0);
+		unsigned char idex3 = (idex1 + 1) & 7 ;
+		size_t ctr = (MEMORY >> 4) ;
+		unsigned char tmpchar[16];
 		#pragma unroll 2
-		for(int i = 0; i < (MEMORY >> 7); ++i)
+		for(size_t i = 0; i < ctr ; i+=8)
 		{
-			text ^= Scratchpad[IDX((i << 3) + idex1)];
+			text ^= Scratchpad[IDX((i) + idex1)];
 		
 			#pragma unroll 10
 			for(int j = 0; j < 40 ; j += 4)
 			{
-				tmptext.s0 = ExpandedKey2[j]   ^ AES0[BYTE(text.s0, 0)] ^ AES2[BYTE(text.s2, 2)] ^ AES1[BYTE(text.s1, 1)] ^ AES3[BYTE(text.s3, 3)];
-				tmptext.s1 = ExpandedKey2[j+1] ^ AES0[BYTE(text.s1, 0)] ^ AES2[BYTE(text.s3, 2)] ^ AES1[BYTE(text.s2, 1)] ^ AES3[BYTE(text.s0, 3)];
-				tmptext.s2 = ExpandedKey2[j+2] ^ AES0[BYTE(text.s2, 0)] ^ AES2[BYTE(text.s0, 2)] ^ AES1[BYTE(text.s3, 1)] ^ AES3[BYTE(text.s1, 3)];
-				tmptext.s3 = ExpandedKey2[j+3] ^ AES0[BYTE(text.s3, 0)] ^ AES2[BYTE(text.s1, 2)] ^ AES1[BYTE(text.s0, 1)] ^ AES3[BYTE(text.s2, 3)];
-				text = tmptext;
+				((uint4*)tmpchar)[0] = text;
+				text.s0 = ExpandedKey2[j]   ^ AES0[tmpchar[0]] ^ AES2[tmpchar[10]] ^ AES1[tmpchar[5]] ^ AES3[tmpchar[15]];
+				text.s1 = ExpandedKey2[j+1] ^ AES0[tmpchar[4]] ^ AES2[tmpchar[14]] ^ AES1[tmpchar[9]] ^ AES3[tmpchar[3]];
+				text.s2 = ExpandedKey2[j+2] ^ AES0[tmpchar[8]] ^ AES2[tmpchar[2]] ^ AES1[tmpchar[13]] ^ AES3[tmpchar[7]];
+				text.s3 = ExpandedKey2[j+3] ^ AES0[tmpchar[12]] ^ AES2[tmpchar[6]] ^ AES1[tmpchar[1]] ^ AES3[tmpchar[11]];
 			}
 		
 
@@ -781,17 +790,18 @@ __kernel void JOIN(cn2,ALGO) (__global uint4 *Scratchpad, __global ulong *states
 			text ^= xin[idex3][idex2];
 		}
 		#pragma unroll 2
-		for(int i = 0; i < (MEMORY >> 7); ++i)
+		for(size_t i = 0; i < ctr; i+=8)
 		{
-			text ^= Scratchpad[IDX((i << 3) + idex1)];
-				#pragma unroll 10
+			text ^= Scratchpad[IDX((i) + idex1)];
+			#pragma unroll 10
+
 			for(int j = 0; j < 40 ; j += 4)
 			{
-				tmptext.s0 = ExpandedKey2[j]   ^ AES0[BYTE(text.s0, 0)] ^ AES2[BYTE(text.s2, 2)] ^ AES1[BYTE(text.s1, 1)] ^ AES3[BYTE(text.s3, 3)];
-				tmptext.s1 = ExpandedKey2[j+1] ^ AES0[BYTE(text.s1, 0)] ^ AES2[BYTE(text.s3, 2)] ^ AES1[BYTE(text.s2, 1)] ^ AES3[BYTE(text.s0, 3)];
-				tmptext.s2 = ExpandedKey2[j+2] ^ AES0[BYTE(text.s2, 0)] ^ AES2[BYTE(text.s0, 2)] ^ AES1[BYTE(text.s3, 1)] ^ AES3[BYTE(text.s1, 3)];
-				tmptext.s3 = ExpandedKey2[j+3] ^ AES0[BYTE(text.s3, 0)] ^ AES2[BYTE(text.s1, 2)] ^ AES1[BYTE(text.s0, 1)] ^ AES3[BYTE(text.s2, 3)];
-				text = tmptext;			
+				((uint4*)tmpchar)[0] = text;
+				text.s0 = ExpandedKey2[j]   ^ AES0[tmpchar[0]] ^ AES2[tmpchar[10]] ^ AES1[tmpchar[5]] ^ AES3[tmpchar[15]];
+				text.s1 = ExpandedKey2[j+1] ^ AES0[tmpchar[4]] ^ AES2[tmpchar[14]] ^ AES1[tmpchar[9]] ^ AES3[tmpchar[3]];
+				text.s2 = ExpandedKey2[j+2] ^ AES0[tmpchar[8]] ^ AES2[tmpchar[2]] ^ AES1[tmpchar[13]] ^ AES3[tmpchar[7]];
+				text.s3 = ExpandedKey2[j+3] ^ AES0[tmpchar[12]] ^ AES2[tmpchar[6]] ^ AES1[tmpchar[1]] ^ AES3[tmpchar[11]];
 			}
 
 			//barrier(CLK_LOCAL_MEM_FENCE);
@@ -817,21 +827,21 @@ __kernel void JOIN(cn2,ALGO) (__global uint4 *Scratchpad, __global ulong *states
 	/* Also left over threads perform this loop.
 	 * The left over thread results will be ignored
 	 */
-	size_t idex1 = get_local_id(1);
-	size_t idex2 = get_local_id(0);
-	size_t idex3 = (idex1 + 1) % 8 ;
-	uint4 tmptext;
+	unsigned char idex1 = get_local_id(1);
+	unsigned char idex2 = get_local_id(0);
+	unsigned char idex3 = (idex1 + 1) & 7 ;
+	unsigned char tmpchar[16];
 	#pragma unroll 16
 	for(int i = 0; i < 16; i++)
 	{
 		#pragma unroll 10
 		for(int j = 0; j < 40 ; j += 4)
 		{
-			tmptext.s0 = ExpandedKey2[j]   ^ AES0[BYTE(text.s0, 0)] ^ AES2[BYTE(text.s2, 2)] ^ AES1[BYTE(text.s1, 1)] ^ AES3[BYTE(text.s3, 3)];
-			tmptext.s1 = ExpandedKey2[j+1] ^ AES0[BYTE(text.s1, 0)] ^ AES2[BYTE(text.s3, 2)] ^ AES1[BYTE(text.s2, 1)] ^ AES3[BYTE(text.s0, 3)];
-			tmptext.s2 = ExpandedKey2[j+2] ^ AES0[BYTE(text.s2, 0)] ^ AES2[BYTE(text.s0, 2)] ^ AES1[BYTE(text.s3, 1)] ^ AES3[BYTE(text.s1, 3)];
-			tmptext.s3 = ExpandedKey2[j+3] ^ AES0[BYTE(text.s3, 0)] ^ AES2[BYTE(text.s1, 2)] ^ AES1[BYTE(text.s0, 1)] ^ AES3[BYTE(text.s2, 3)];
-			text = tmptext;			
+			((uint4*)tmpchar)[0] = text;
+			text.s0 = ExpandedKey2[j]   ^ AES0[tmpchar[0]] ^ AES2[tmpchar[10]] ^ AES1[tmpchar[5]] ^ AES3[tmpchar[15]];
+			text.s1 = ExpandedKey2[j+1] ^ AES0[tmpchar[4]] ^ AES2[tmpchar[14]] ^ AES1[tmpchar[9]] ^ AES3[tmpchar[3]];
+			text.s2 = ExpandedKey2[j+2] ^ AES0[tmpchar[8]] ^ AES2[tmpchar[2]] ^ AES1[tmpchar[13]] ^ AES3[tmpchar[7]];
+			text.s3 = ExpandedKey2[j+3] ^ AES0[tmpchar[12]] ^ AES2[tmpchar[6]] ^ AES1[tmpchar[1]] ^ AES3[tmpchar[11]];
 		}
 		xin[idex1][idex2] = text;
 		barrier(CLK_LOCAL_MEM_FENCE);

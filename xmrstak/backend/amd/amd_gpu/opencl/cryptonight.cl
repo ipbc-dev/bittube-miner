@@ -433,8 +433,6 @@ inline ulong getIdx()
 #endif
 }
 
-//#define mix_and_propagate(xin) (xin)[(get_local_id(1)) % 8][get_local_id(0)] ^ (xin)[(get_local_id(1) + 1) % 8][get_local_id(0)]
-
 #define JOIN_DO(x,y) x##y
 #define JOIN(x,y) JOIN_DO(x,y)
 
@@ -643,7 +641,7 @@ __kernel void JOIN(cn1,ALGO) (__global uint4 *Scratchpad, __global ulong *states
 			((uint4 *)c)[0] = tmptext;
 			
 
-			b_x ^= ((uint4 *)c)[0];
+			b_x ^= tmptext;
 // cryptonight_monero || cryptonight_aeon || cryptonight_bittube || cryptonight_stellite
 #if(ALGO == 3 || ALGO == 5 || ALGO == 6 || ALGO == 7)
 			uint table = 0x75310U;
@@ -684,7 +682,7 @@ __kernel void JOIN(cn1,ALGO) (__global uint4 *Scratchpad, __global ulong *states
 			((uint4 *)a)[0] ^= tmp;
 			idx0 = a[0];
 
-			b_x = ((uint4 *)c)[0];
+			b_x = tmptext;
 // cryptonight_heavy
 #if (ALGO == 4)
 			idx0 = (IDX((idx0 & MASK) >> 4));
@@ -767,12 +765,12 @@ __kernel void JOIN(cn2,ALGO) (__global uint4 *Scratchpad, __global ulong *states
 		unsigned char idex1 = get_local_id(1);
 		unsigned char idex2 = get_local_id(0);
 		unsigned char idex3 = (idex1 + 1) & 7 ;
-		size_t ctr = (MEMORY >> 4) ;
+		size_t ctr = (MEMORY >> 7) ;
 		unsigned char tmpchar[16];
 		#pragma unroll 2
-		for(size_t i = 0; i < ctr ; i+=8)
+		for(size_t i = 0; i < ctr ; ++i)
 		{
-			text ^= Scratchpad[IDX((i) + idex1)];
+			text ^= Scratchpad[IDX((i << 3) + idex1)];
 		
 			#pragma unroll 10
 			for(int j = 0; j < 40 ; j += 4)
@@ -790,11 +788,11 @@ __kernel void JOIN(cn2,ALGO) (__global uint4 *Scratchpad, __global ulong *states
 			text ^= xin[idex3][idex2];
 		}
 		#pragma unroll 2
-		for(size_t i = 0; i < ctr; i+=8)
+		for(size_t i = 0; i < ctr ; ++i)
 		{
-			text ^= Scratchpad[IDX((i) + idex1)];
+			text ^= Scratchpad[IDX((i << 3) + idex1)];
+		
 			#pragma unroll 10
-
 			for(int j = 0; j < 40 ; j += 4)
 			{
 				((uint4*)tmpchar)[0] = text;
@@ -803,8 +801,8 @@ __kernel void JOIN(cn2,ALGO) (__global uint4 *Scratchpad, __global ulong *states
 				text.s2 = ExpandedKey2[j+2] ^ AES0[tmpchar[8]] ^ AES2[tmpchar[2]] ^ AES1[tmpchar[13]] ^ AES3[tmpchar[7]];
 				text.s3 = ExpandedKey2[j+3] ^ AES0[tmpchar[12]] ^ AES2[tmpchar[6]] ^ AES1[tmpchar[1]] ^ AES3[tmpchar[11]];
 			}
+		
 
-			//barrier(CLK_LOCAL_MEM_FENCE);
 			xin[idex1][idex2] = text;
 			barrier(CLK_LOCAL_MEM_FENCE);
 			text ^= xin[idex3][idex2];

@@ -231,3 +231,43 @@ ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent) {
 ControlPanel::~ControlPanel() {
 	// TODO: delete all pointer objects
 }
+
+void ControlPanel::slot_clickConsoleButton() {
+	if (_isConsolePanelOpen) {
+		emit signal_closeConsolePanel();
+	}
+	else {
+		emit signal_openConsolePanel();
+	}
+	_isConsolePanelOpen = !_isConsolePanelOpen;
+}
+
+void ControlPanel::slot_clickStatsButton() {
+	if (_isStatsPanelOpen) {
+		emit signal_closeStatsPanel();
+	}
+	else {
+		emit signal_openStatsPanel();
+	}
+	_isStatsPanelOpen = !_isStatsPanelOpen;
+}
+
+void ControlPanel::slot_clickConfigButton() {
+	if (_isConfigPanelOpen) {
+		emit signal_closeConfigPanel();
+	}
+	else {
+		emit signal_openConfigPanel();
+	}
+	_isConfigPanelOpen = !_isConfigPanelOpen;
+}
+
+void ControlPanel::slot_clickResultsButton() {
+	if (_isResultsPanelOpen) {
+		emit signal_closeResultsPanel();
+	}
+	else {
+		emit signal_openResultsPanel();
+	}
+	_isResultsPanelOpen = !_isResultsPanelOpen;
+}

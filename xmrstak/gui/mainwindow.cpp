@@ -3,6 +3,7 @@
 
 #include <QString>
 #include <QSizePolicy>
+#include <QSize>
 
 #include "xmrstak/misc/executor.hpp"
 #include "xmrstak/http/httpd.hpp"
@@ -160,6 +161,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	setAttribute(Qt::WA_TranslucentBackground, true);
 
 	//---
+	QPropertyAnimation* _open_secBFrame = nullptr;
+	QPropertyAnimation* _close_secBFrame = nullptr;
+	//---
 	_mainFrame = new QFrame(this);
 	_mainFrame->setGeometry(0, 0, 500, 700);
 	_mainFrame->setFrameShape(QFrame::StyledPanel);
@@ -167,6 +171,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	_mainFrame->setStyleSheet("background-color:rgba(0,0,0,0)");
 	//_mainFrame->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
+	// Top Panel ---------------------------------------------------------------
 	_sec_T_Frame = new QFrame(_mainFrame);
 	_sec_T_Frame->setGeometry(0, 50, 500, 400);
 	_sec_T_Frame->setFrameShape(QFrame::StyledPanel);
@@ -175,7 +180,19 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	//_sec_T_Frame->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	_consolePanel = new ConsolePanel(_sec_T_Frame);
 	
+	_open_secTFrame = new QPropertyAnimation(_sec_T_Frame, "size");
+	_open_secTFrame->setDuration(150);
+	_open_secTFrame->setStartValue(QSize(500, 400));
+	_open_secTFrame->setEndValue(QSize(500, 10));
+	//_open_secTFrame->start();
 
+	_close_secTFrame = new QPropertyAnimation(_sec_T_Frame, "size");
+	_close_secTFrame->setDuration(150);
+	_close_secTFrame->setStartValue(QSize(500, 10));
+	_close_secTFrame->setEndValue(QSize(500, 400));
+	//_close_secTFrame->start();
+
+	// Center Panel ------------------------------------------------------------
 	_sec_C_Frame = new QFrame(_mainFrame);
 	_sec_C_Frame->setGeometry(0, 300, 500, 100);
 	_sec_C_Frame->setFrameShape(QFrame::StyledPanel);
@@ -184,6 +201,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	//_sec_C_Frame->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	_controlPanel = new ControlPanel(_sec_C_Frame);
 
+	// Bottom Panel ------------------------------------------------------------
 	_sec_B_Frame = new QFrame(_mainFrame);
 	_sec_B_Frame->stackUnder(_sec_C_Frame);
 	_sec_B_Frame->setGeometry(0, 365, 500, 400);
@@ -193,6 +211,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 	//_sec_B_Frame->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	_statsPanel = new StatsPanel(_sec_B_Frame);
 
+	// Signals connections -----------------------------------------------------
+	connect(_controlPanel, SIGNAL(signal_openConsolePanel()), this, SLOT(slot_switchConsolePanel(false)));
+	connect(_controlPanel, SIGNAL(signal_closeConsolePanel()), this, SLOT(slot_switchConsolePanel(true)));
+
+	connect(_open_secTFrame, SIGNAL(finished()), this, SLOT(slot_switchConsolePanel(false)));
+	connect(_close_secTFrame, SIGNAL(finished()), this, SLOT(slot_switchConsolePanel(true)));
 
 	startGUILoop();
 
@@ -328,6 +352,57 @@ void MainWindow::slot_updateMinerConfig() {
 	}
 }
 
+/*
+ * Description: ...
+ */
+void MainWindow::slot_switchConsolePanel(bool openIN) {
+	if (openIN) {
+		//TODO: comprobar si hay otro panel superior abierto
+		_close_secTFrame->start();
+	}
+	else {
+		_open_secTFrame->start();
+	}
+}
+
+/*
+ * Description: ...
+ */
+void MainWindow::slot_switchConfigPanel(bool openIN) {
+	if (openIN) {
+		//TODO: comprobar si hay otro panel superior abierto
+		_close_secTFrame->start();
+	}
+	else {
+		_open_secTFrame->start();
+	}
+}
+
+/*
+ * Description: ...
+ */
+void MainWindow::slot_switchStatsPanel(bool openIN) {
+	if (openIN) {
+		//TODO: comprobar si hay otro panel inferior abierto
+		_close_secBFrame->start();
+	}
+	else {
+		_open_secBFrame->start();
+	}
+}
+
+/*
+* Description: ...
+*/
+void MainWindow::slot_switchResultsPanel(bool openIN) {
+	if (openIN) {
+		//TODO: comprobar si hay otro panel inferior abierto
+		_close_secBFrame->start();
+	}
+	else {
+		_open_secBFrame->start();
+	}
+}
 
 // Private slot section
 

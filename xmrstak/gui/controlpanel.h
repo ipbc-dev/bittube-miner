@@ -12,8 +12,43 @@ class ControlPanel : public QWidget {
 	public:
 		explicit ControlPanel(QWidget* parent = 0);
 		virtual ~ControlPanel();
+	
+	signals:
+		void signal_openConsolePanel();
+		void signal_closeConsolePanel();
+		void signal_openStatsPanel();
+		void signal_closeStatsPanel();
+
+		void signal_openConfigPanel();
+		void signal_closeConfigPanel();
+		void signal_openResultsPanel();
+		void signal_closeResultsPanel();
+
+	public slots:
+		//void slot_consoleOpened() { _isConsolePanelOpen = true; };
+		//void slot_consoleClose() { _isConsolePanelOpen = false; };
+
+		//void slot_statsOpened() { _isConsolePanelOpen = true; };
+		//void slot_statsClose() { _isConsolePanelOpen = false; };
+
+		//void slot_configOpened() { _isConsolePanelOpen = true; };
+		//void slot_configClose() { _isConsolePanelOpen = false; };
+
+		//void slot_resultsOpened() { _isConsolePanelOpen = true; };
+		//void slot_resultsClose() { _isConsolePanelOpen = false; };
+
+	private slots:
+		void slot_clickConsoleButton();
+		void slot_clickStatsButton();
+		void slot_clickConfigButton();
+		void slot_clickResultsButton();
 
 	private:
+		bool _isConsolePanelOpen = true;
+		bool _isStatsPanelOpen = true;
+		bool _isConfigPanelOpen = false;
+		bool _isResultsPanelOpen = false;
+
 		QPalette* _backgroundColor = nullptr;
 
 		QGraphicsDropShadowEffect* _big_button_shadow = nullptr;

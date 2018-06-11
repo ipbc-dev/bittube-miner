@@ -21,6 +21,8 @@
 
 #include <QFrame>
 
+#include <QPropertyAnimation>
+
 namespace Ui {
 	class MainWindow;
 }
@@ -114,11 +116,16 @@ class MainWindow : public QMainWindow {
 		void slot_updateMinerResults();
 		void slot_updateMinerConfig();
 	
-
+		void slot_switchConsolePanel(bool openIN);
+		void slot_switchConfigPanel(bool openIN);
+		void slot_switchStatsPanel(bool openIN);
+		void slot_switchResultsPanel(bool openIN);
 
 	private slots:
 		void slot_statsButtonClick();//TODO:
 		void slot_startButtonClick();//TODO:
+
+
 		
 
 	private:
@@ -137,12 +144,16 @@ class MainWindow : public QMainWindow {
 		QFrame* _sec_C_Frame = nullptr;
 		QFrame* _sec_B_Frame = nullptr;
 
-		//-------------------------------------------------------------
-
 		ConsolePanel* _consolePanel = nullptr;
 		ControlPanel* _controlPanel = nullptr;
 		StatsPanel* _statsPanel = nullptr;
 		ConfigPanel* _configPanel = nullptr;
 
+		QPropertyAnimation* _open_secTFrame = nullptr;
+		QPropertyAnimation* _close_secTFrame = nullptr;
+
+		QPropertyAnimation* _open_secBFrame = nullptr;
+		QPropertyAnimation* _close_secBFrame = nullptr;
+		//-------------------------------------------------------------
 };
 #pragma endregion

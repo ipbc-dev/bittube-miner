@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 
-#define N_COLS          4
 #define WPOLY           0x011b
 
 static __constant__ uint32_t d_t_fn[1024] =
@@ -287,15 +286,15 @@ __device__ __forceinline__ static void cn_aes_pseudo_round_mut(const uint32_t * 
 {
 	uint32_t b1[4];
 	round(sharedMemory, b1, val, expandedKey);
-	round(sharedMemory, val, b1, expandedKey + 1 * N_COLS);
-	round(sharedMemory, b1, val, expandedKey + 2 * N_COLS);
-	round(sharedMemory, val, b1, expandedKey + 3 * N_COLS);
-	round(sharedMemory, b1, val, expandedKey + 4 * N_COLS);
-	round(sharedMemory, val, b1, expandedKey + 5 * N_COLS);
-	round(sharedMemory, b1, val, expandedKey + 6 * N_COLS);
-	round(sharedMemory, val, b1, expandedKey + 7 * N_COLS);
-	round(sharedMemory, b1, val, expandedKey + 8 * N_COLS);
-	round(sharedMemory, val, b1, expandedKey + 9 * N_COLS);
+	round(sharedMemory, val, b1, expandedKey + 4);
+	round(sharedMemory, b1, val, expandedKey + 8);
+	round(sharedMemory, val, b1, expandedKey + 12);
+	round(sharedMemory, b1, val, expandedKey + 16);
+	round(sharedMemory, val, b1, expandedKey + 20);
+	round(sharedMemory, b1, val, expandedKey + 24);
+	round(sharedMemory, val, b1, expandedKey + 28);
+	round(sharedMemory, b1, val, expandedKey + 32);
+	round(sharedMemory, val, b1, expandedKey + 36);
 }
 
 __device__ __forceinline__ static void cn_aes_gpu_init(uint32_t *sharedMemory)

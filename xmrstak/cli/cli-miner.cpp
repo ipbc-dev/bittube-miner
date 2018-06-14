@@ -895,23 +895,26 @@ bool check_expert_mode(bool* expertmode, bool* firstTime) {
 	
 
 	if (*firstTime) {
-		std::string answer = "";
-		bool continueLoop = true;
-		std::cout << "Are you an expert?(y/n): " << std::endl;
-		std::cin >> answer;
+		//std::string answer = "";
+		//bool continueLoop = true;
+		
+		//std::cout << "Are you an expert?(y/n): " << std::endl;
+		//std::cin >> answer;
 
-		while (continueLoop) {
-			if ((answer.compare("y") == 0) ||
-				(answer.compare("Y") == 0)) {
-				continueLoop = false;
-				*expertmode = true;
+		//while (continueLoop) {
+		//	if ((answer.compare("y") == 0) ||
+		//		(answer.compare("Y") == 0)) {
+		//		continueLoop = false;
+		//		*expertmode = true;
+		//
+		//	}
+		//	else if ((answer.compare("n") == 0) ||
+		//		(answer.compare("N") == 0)) {
+		//		continueLoop = false;
+		//	}
+		//}
 
-			}
-			else if ((answer.compare("n") == 0) ||
-				(answer.compare("N") == 0)) {
-				continueLoop = false;
-			}
-		}
+		*expertmode = false;
 
 		std::ofstream out("expert.json");
 		std::string expertContent = "{ \n";
@@ -1032,10 +1035,10 @@ int main(int argc, char *argv[]) {
 					}
 					runningM = true;
 					//parse_runtime_input();
-					if (!runningInputParser) {
-						inputThread = new std::thread(&parse_runtime_input, &runningInputParser);
-						inputThread->detach();
-					}
+					//if (!runningInputParser) {
+					//	inputThread = new std::thread(&parse_runtime_input, &runningInputParser);
+					//	inputThread->detach();
+					//}
 				} else {
 					fromPause = true;
 					if (runningM) {

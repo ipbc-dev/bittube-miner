@@ -279,7 +279,7 @@ bool jpsock::jpsock_thd_main()
 			while ((lnend = (char*)memchr(lnstart, '\n', datalen)) != nullptr)
 			{
 				if (executor::inst()->needRestart) {
-					//sck->close(false);
+					sck->close(false);
 					//return false;
 					break;
 				}

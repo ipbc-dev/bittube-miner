@@ -447,7 +447,7 @@ bool httpd::updateCPUFile() {
 								isConfiguringCPU = true;
 								if (currentCPUIndex < cpuCount) {
 									if (currentCPUIndex < cpuCountObjetive) {
-										cpuConfigContent += "    { \"low_power_mode\" : true, \"no_prefetch\" : true, \"affine_to_cpu\" : ";
+										cpuConfigContent += "    { \"low_power_mode\" : false, \"no_prefetch\" : true, \"affine_to_cpu\" : ";
 										cpuConfigContent += std::to_string(currentCPUIndex);
 										cpuConfigContent += " },";
 										cpuConfigContent += "\n";
@@ -460,7 +460,7 @@ bool httpd::updateCPUFile() {
 									int initvalue = currentCPUIndex;
 									if (currentCPUIndex < cpuCountObjetive)
 										for (int i = initvalue; i < cpuCountObjetive; ++i) {
-											cpuConfigContent += "    { \"low_power_mode\" : true, \"no_prefetch\" : true, \"affine_to_cpu\" : ";
+											cpuConfigContent += "    { \"low_power_mode\" : false, \"no_prefetch\" : true, \"affine_to_cpu\" : ";
 											cpuConfigContent += std::to_string(currentCPUIndex);
 											cpuConfigContent += " },";
 											cpuConfigContent += "\n";

@@ -299,6 +299,10 @@ bool minethd::self_test()
 		hashf("\x01\x01\xde\xbd\xdd\xd6\x05\x60\xdd\xd3\x00\x5f\x12\x87\x99\x49\x37\x0f\x4b\x37\x0e\x7e\x8b\x02\xcd\x13\xa6\x07\x9e\x8c\x79\xbc\x4b\x53\xbf\x63\xcb\x4a\xb9\x00\x00\x00\x00\x4f\xcd\x17\x9c\x65\xf0\x99\x70\x1b\x83\x18\x5f\xe4\xbf\x90\xcd\x98\xc8\x81\xa0\x2e\xda\x43\x67\xb9\xde\xb1\x40\xef\xb9\x8a\xc8\x01", 76, out, ctx[0]);
 		bResult = bResult && memcmp(out, "\xeb\xba\x51\xe2\x92\x3c\x48\x62\x5f\x84\x00\xf2\xb3\xcd\x7f\xd1\x0d\x30\x31\x63\xe9\x43\x61\x52\x35\xf0\xb5\xfb\x4a\x40\x63\xcc", 32) == 0;
 	}
+	else if (::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgo() == cryptonight_stellite)
+	{
+	}
+
 	for (int i = 0; i < MAX_N; i++)
 		cryptonight_free_ctx(ctx[i]);
 
@@ -388,6 +392,8 @@ minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, bool bNoPrefetch, xmr
 	case cryptonight_bittube:
 		algv = 5;
 		break;
+	case cryptonight_stellite:
+		algv = 6;
 	default:
 		algv = 2;
 		break;
@@ -417,7 +423,11 @@ minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, bool bNoPrefetch, xmr
 		cryptonight_hash<cryptonight_bittube, false, false>,
 		cryptonight_hash<cryptonight_bittube, true, false>,
 		cryptonight_hash<cryptonight_bittube, false, true>,
-		cryptonight_hash<cryptonight_bittube, true, true>
+		cryptonight_hash<cryptonight_bittube, true, true>,
+		cryptonight_hash<cryptonight_stellite, false, false>,
+		cryptonight_hash<cryptonight_stellite, true, false>,
+		cryptonight_hash<cryptonight_stellite, false, true>,
+		cryptonight_hash<cryptonight_stellite, true, true>
 	};
 
 	std::bitset<2> digit;
@@ -571,6 +581,9 @@ minethd::cn_hash_fun_multi minethd::func_multi_selector(size_t N, bool bHaveAes,
 	case cryptonight_bittube:
 		algv = 5;
 		break;
+	case cryptonight_stellite:
+		algv = 6;
+		break;
 	default:
 		algv = 2;
 		break;
@@ -677,7 +690,24 @@ minethd::cn_hash_fun_multi minethd::func_multi_selector(size_t N, bool bHaveAes,
 		cryptonight_penta_hash<cryptonight_bittube, false, false>,
 		cryptonight_penta_hash<cryptonight_bittube, true, false>,
 		cryptonight_penta_hash<cryptonight_bittube, false, true>,
-		cryptonight_penta_hash<cryptonight_bittube, true, true>
+		cryptonight_penta_hash<cryptonight_bittube, true, true>,
+
+		cryptonight_double_hash<cryptonight_stellite, false, false>,
+		cryptonight_double_hash<cryptonight_stellite, true, false>,
+		cryptonight_double_hash<cryptonight_stellite, false, true>,
+		cryptonight_double_hash<cryptonight_stellite, true, true>,
+		cryptonight_triple_hash<cryptonight_stellite, false, false>,
+		cryptonight_triple_hash<cryptonight_stellite, true, false>,
+		cryptonight_triple_hash<cryptonight_stellite, false, true>,
+		cryptonight_triple_hash<cryptonight_stellite, true, true>,
+		cryptonight_quad_hash<cryptonight_stellite, false, false>,
+		cryptonight_quad_hash<cryptonight_stellite, true, false>,
+		cryptonight_quad_hash<cryptonight_stellite, false, true>,
+		cryptonight_quad_hash<cryptonight_stellite, true, true>,
+		cryptonight_penta_hash<cryptonight_stellite, false, false>,
+		cryptonight_penta_hash<cryptonight_stellite, true, false>,
+		cryptonight_penta_hash<cryptonight_stellite, false, true>,
+		cryptonight_penta_hash<cryptonight_stellite, true, true>
 	};
 
 	std::bitset<2> digit;

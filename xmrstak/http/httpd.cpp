@@ -529,7 +529,7 @@ bool httpd::updateGPUNvidiaFile() {
 			std::ifstream nvidiaBCKFile("./nvidia-bck.txt");
 
 			if (nvidiaBCKFile.fail()) {
-				std::cout << "not nvidia-bck.txt found" << std::endl;
+				std::cout << "nvidia-bck.txt not found" << std::endl;
 			} else {
 				if (remove(NVIDIA_FILE.c_str()) != 0) {
 					std::cout << "Error deleting file [nvidia.txt]" << std::endl;
@@ -550,7 +550,7 @@ bool httpd::updateGPUNvidiaFile() {
 			std::ifstream nvidiaFile(NVIDIA_FILE);
 
 			if (nvidiaFile.fail()) {
-				std::cout << "not nvidia.txt found" << std::endl;
+				std::cout << "nvidia.txt not found" << std::endl;
 
 				//TODO: error handling. Search for cpu backup file and try to get info there  
 
@@ -630,7 +630,7 @@ bool httpd::updateGPUAMD() {
 			std::ifstream amdBCKFile("./amd-bck.txt");
 
 			if (amdBCKFile.fail()) {
-				std::cout << "not amd-bck.txt found" << std::endl;
+				std::cout << "amd-bck.txt not found" << std::endl;
 			} else {
 				if (remove(AMD_FILE.c_str()) != 0) {
 					std::cout << "Error deleting file [amd.txt]" << std::endl;
@@ -651,7 +651,7 @@ bool httpd::updateGPUAMD() {
 			std::ifstream amdFile(AMD_FILE);
 
 			if (amdFile.fail()) {
-				std::cout << "not nvidia.txt found" << std::endl;
+				std::cout << "amd.txt not found" << std::endl;
 
 				//TODO: error handling. Search for cpu backup file and try to get info there  
 

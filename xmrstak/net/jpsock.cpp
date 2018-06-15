@@ -279,7 +279,7 @@ bool jpsock::jpsock_thd_main()
 			while ((lnend = (char*)memchr(lnstart, '\n', datalen)) != nullptr)
 			{
 				if (executor::inst()->needRestart) {
-					sck->close(false);
+					//sck->close(false);
 					//return false;
 					break;
 				}
@@ -682,6 +682,9 @@ bool jpsock::cmd_submit(const char* sJobId, uint32_t iNonce, const uint8_t* bRes
 			break;
 		case cryptonight_heavy:
 			algo_name = "cryptonight-heavy";
+			break;
+		case cryptonight_stellite:
+			algo_name = "cryptonight-stellite";
 			break;
 		default:
 			algo_name = "unknown";

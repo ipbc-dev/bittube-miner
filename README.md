@@ -3,6 +3,7 @@
 [BitTube](https://coin.bit.tube/)
 
 Based on XMR-Stak by fireice_uk and psychocrypt
+and Wolf AMD backend
 
 ## Overview
 * [Features](#features)

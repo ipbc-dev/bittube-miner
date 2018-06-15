@@ -561,18 +561,18 @@ bool httpd::updateGPUNvidiaFile() {
 						nvidiaConfigContent += "\n";
 						if (std::regex_match(line, gpuSectionPattern)) {
 							isGpuSection = true;
-							nvidiaConfigContent += "null, \n \n";
+							nvidiaConfigContent += "[ ], \n \n";
 						}
 					}
 					else {
+						if (std::regex_match(line, gpuSectionEndPattern)) {
+							isGpuSectionEnd = true;
+						}
 						if (isGpuSectionEnd) {
 							//nvidiaConfigContent += " \n \n";
 							nvidiaConfigContent += line;
 							nvidiaConfigContent += "\n";
 							isGpuSection = false;
-						}
-						if (std::regex_match(line, gpuSectionEndPattern)) {
-							isGpuSectionEnd = true;
 						}
 					}
 				}

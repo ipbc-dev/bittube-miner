@@ -934,12 +934,12 @@ bool check_expert_mode(bool* expertmode, bool* firstTime) {
 }
 
 void restart_miner(bool expertMode, bool deleteMiner) {
+	httpd::cls();
+
 	std::cout << "---------------------------------------------------" << std::endl;
 	std::cout << "Shutting down program, please wait..." << std::endl;
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
-	httpd::cls();
 
 	if (deleteMiner) {
 		delete_miner();
@@ -951,10 +951,10 @@ void restart_miner(bool expertMode, bool deleteMiner) {
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	int configRetValue = program_config(expertMode);
-	show_credits(expertMode);
-	if (!expertMode) {
-		show_manage_info();
-	}
+	//show_credits(expertMode);
+	//if (!expertMode) {
+	//	show_manage_info();
+	//}
 	
 }
 
@@ -976,10 +976,10 @@ int main(int argc, char *argv[]) {
 
 	int parseRetValue = parse_argv(argc, argv);
 	int configRetValue = program_config(expertMode);
-	show_credits(expertMode);
-	if (!expertMode) {
-		show_manage_info();
-	}
+	//show_credits(expertMode);
+	//if (!expertMode) {
+		//show_manage_info();
+	//}
 
 	using namespace xmrstak;
 
@@ -1029,9 +1029,9 @@ int main(int argc, char *argv[]) {
 				if (!executor::inst()->isPause) {
 					if (fromPause) {
 						fromPause = false;
-						std::cin.putback('\n');
-						std::cin.clear();
-						std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+						//std::cin.putback('\n');
+						//std::cin.clear();
+						//std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 					}
 					runningM = true;
 					//parse_runtime_input();
@@ -1043,7 +1043,7 @@ int main(int argc, char *argv[]) {
 					fromPause = true;
 					if (runningM) {
 						runningM = false;
-						show_manage_info();
+						//show_manage_info();
 					}
 				}
 			} else { // Restarting program

@@ -110,7 +110,7 @@ xmrstak::coin_selection coins[] = {
 	{ "sumokoin",            {cryptonight_heavy, cryptonight_heavy, 0u},   {cryptonight_heavy, cryptonight_heavy, 0u},   nullptr },
 	{ "turtlecoin",          {cryptonight_lite, cryptonight_aeon, 255u},   {cryptonight_aeon, cryptonight_lite, 7u},     nullptr }
 	*/
-	{"bittube",                 {cryptonight_bittube, cryptonight, 1u},          {cryptonight_bittube, cryptonight, 1u},   "mining.bit.tube:13333"},
+	{"bittube",                 {cryptonight_bittube2, cryptonight_bittube, 4u},          {cryptonight_bittube2, cryptonight_bittube, 4u},   "mining.bit.tube:13333"},
 };
 
 constexpr size_t coin_alogo_size = (sizeof(coins)/sizeof(coins[0]));

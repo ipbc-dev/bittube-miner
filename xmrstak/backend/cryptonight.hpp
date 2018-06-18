@@ -12,7 +12,8 @@ enum xmrstak_algo
 	cryptonight_heavy = 4,
 	cryptonight_aeon = 5,
 	cryptonight_bittube = 6, // equal to cryptonight_aeon with a small tweak in the miner code
-	cryptonight_stellite = 7
+	cryptonight_stellite = 7,
+	cryptonight_bittube2 = 8
 };
 
 // define aeon settings
@@ -52,6 +53,9 @@ inline constexpr size_t cn_select_memory<cryptonight_bittube>() { return CRYPTON
 template<>
 inline constexpr size_t cn_select_memory<cryptonight_stellite>() { return CRYPTONIGHT_MEMORY; }
 
+template<>
+inline constexpr size_t cn_select_memory<cryptonight_bittube2>() { return CRYPTONIGHT_HEAVY_MEMORY; }
+
 inline size_t cn_select_memory(xmrstak_algo algo)
 {
 	switch(algo)
@@ -64,6 +68,7 @@ inline size_t cn_select_memory(xmrstak_algo algo)
 	case cryptonight_aeon:
 	case cryptonight_lite:
 		return CRYPTONIGHT_LITE_MEMORY;
+	case cryptonight_bittube2:
 	case cryptonight_heavy:
 		return CRYPTONIGHT_HEAVY_MEMORY;
 	default:
@@ -95,6 +100,9 @@ inline constexpr uint32_t cn_select_mask<cryptonight_bittube>() { return CRYPTON
 template<>
 inline constexpr uint32_t cn_select_mask<cryptonight_stellite>() { return CRYPTONIGHT_MASK; }
 
+template<>
+inline constexpr uint32_t cn_select_mask<cryptonight_bittube2>() { return CRYPTONIGHT_HEAVY_MASK; }
+
 inline size_t cn_select_mask(xmrstak_algo algo)
 {
 	switch(algo)
@@ -107,6 +115,7 @@ inline size_t cn_select_mask(xmrstak_algo algo)
 	case cryptonight_aeon:
 	case cryptonight_lite:
 		return CRYPTONIGHT_LITE_MASK;
+	case cryptonight_bittube2:
 	case cryptonight_heavy:
 		return CRYPTONIGHT_HEAVY_MASK;
 	default:
@@ -138,6 +147,9 @@ inline constexpr uint32_t cn_select_iter<cryptonight_bittube>() { return CRYPTON
 template<>
 inline constexpr uint32_t cn_select_iter<cryptonight_stellite>() { return CRYPTONIGHT_ITER; }
 
+template<>
+inline constexpr uint32_t cn_select_iter<cryptonight_bittube2>() { return CRYPTONIGHT_HEAVY_ITER; }
+
 inline size_t cn_select_iter(xmrstak_algo algo)
 {
 	switch(algo)
@@ -150,6 +162,7 @@ inline size_t cn_select_iter(xmrstak_algo algo)
 	case cryptonight_aeon:
 	case cryptonight_lite:
 		return CRYPTONIGHT_LITE_ITER;
+	case cryptonight_bittube2:
 	case cryptonight_heavy:
 		return CRYPTONIGHT_HEAVY_ITER;
 	default:

@@ -422,20 +422,15 @@ void cn_implode_scratchpad(const __m128i* input, __m128i* output)
 	_mm_store_si128(output + 11, xout7);
 }
 
-#ifdef _MSC_VER
-
-#include "xmrstak/misc/double_integer.hpp"
-
-typedef double_integer<uint64_t, uint64_t> uint128_t;
 
 inline __m128i aes_round_tweak_div(__m128i& val, const __m128i& key)
 {
 	union alignas(16) {
 		uint32_t k[4];
 		uint64_t v64[2];
-		uint128_t v128;
+		// __uint128_t v128;
 	};
-	uint32_t x[4];
+	alignas(16) uint32_t x[4];
 	_mm_store_si128((__m128i*)k, key);
 	val = _mm_xor_si128(val, _mm_cmpeq_epi32(_mm_setzero_si128(), _mm_setzero_si128())); // val = ~val;
 	_mm_store_si128((__m128i*)x, val);
@@ -448,36 +443,13 @@ inline __m128i aes_round_tweak_div(__m128i& val, const __m128i& key)
 	x[2] ^= k[2];
 	k[3] ^= saes_table[0][BYTE(x[3], 0)] ^ saes_table[1][BYTE(x[0], 1)] ^ saes_table[2][BYTE(x[1], 2)] ^ saes_table[3][BYTE(x[2], 3)];
 	#undef BYTE
-	v128 ^= (v128 / uint128_t{v64[0], 0}) ^ (v128 % uint128_t{v64[1], 0});
-	v64[1] ^= ((v128 % uint128_t{v64[0], 0}) ^ (v128 % uint128_t{v64[1], 0})).lo;
 	return _mm_load_si128((__m128i*)k);
-}
-#else
-inline __m128i aes_round_tweak_div(__m128i& val, const __m128i& key)
-{
-	union alignas(16) {
-		uint32_t k[4];
-		uint64_t v64[2];
-		__uint128_t v128;
-	};
-	alignas(16) uint32_t x[4];
-	_mm_store_si128((__m128i*)k, key);
-	val = ~val;
-	_mm_store_si128((__m128i*)x, val);
-	#define BYTE(p, i) ((unsigned char*)&p)[i]
-	k[0] ^= saes_table[0][BYTE(x[0], 0)] ^ saes_table[1][BYTE(x[1], 1)] ^ saes_table[2][BYTE(x[2], 2)] ^ saes_table[3][BYTE(x[3], 3)];
-	x[0] ^= k[0];
-	k[1] ^= saes_table[0][BYTE(x[1], 0)] ^ saes_table[1][BYTE(x[2], 1)] ^ saes_table[2][BYTE(x[3], 2)] ^ saes_table[3][BYTE(x[0], 3)];
-	x[1] ^= k[1];
-	k[2] ^= saes_table[0][BYTE(x[2], 0)] ^ saes_table[1][BYTE(x[3], 1)] ^ saes_table[2][BYTE(x[0], 2)] ^ saes_table[3][BYTE(x[1], 3)];
-	x[2] ^= k[2];
-	k[3] ^= saes_table[0][BYTE(x[3], 0)] ^ saes_table[1][BYTE(x[0], 1)] ^ saes_table[2][BYTE(x[1], 2)] ^ saes_table[3][BYTE(x[2], 3)];
-	#undef BYTE
+	/*
 	v128 ^= (v128 / v64[0]) ^ (v128 % v64[1]);
 	v64[1] ^= (v128 % v64[0]) ^ (v128 % v64[1]);
 	return _mm_load_si128((__m128i*)k);
+	*/
 }
-#endif
 
 inline void cryptonight_monero_tweak(uint64_t* mem_out, __m128i tmp)
 {

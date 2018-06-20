@@ -158,27 +158,6 @@ std::vector<iBackend*>* minethd::thread_starter(uint32_t threadOffset, miner_wor
 	return pvThreads;
 }
 
-void minethd::switch_work(miner_work& pWork)
-{
-	// iConsumeCnt is a basic lock-like polling mechanism just in case we happen to push work
-	// faster than threads can consume them. This should never happen in real life.
-	// Pool cant physically send jobs faster than every 250ms or so due to net latency.
-
-	while (globalStates::inst().iConsumeCnt.load(std::memory_order_seq_cst) < globalStates::inst().iThreadCount)
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-	globalStates::inst().oGlobalWork = pWork;
-	globalStates::inst().iConsumeCnt.store(0, std::memory_order_seq_cst);
-	globalStates::inst().iGlobalJobNo++;
-}
-
-void minethd::consume_work()
-{
-	memcpy(&oWork, &globalStates::inst().oGlobalWork, sizeof(miner_work));
-	iJobNo++;
-	globalStates::inst().iConsumeCnt++;
-}
-
 void minethd::work_main()
 {
 	if(affinity >= 0) //-1 means no affinity
@@ -197,8 +176,6 @@ void minethd::work_main()
 	auto miner_algo = ::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgoRoot();
 	cn_hash_fun hash_fun = cpu::minethd::func_selector(::jconf::inst()->HaveHardwareAes(), true /*bNoPrefetch*/, miner_algo);
 
-	globalStates::inst().iConsumeCnt++;
-
 	uint8_t version = 0;
 	size_t lastPoolId = 0;
 
@@ -214,7 +191,7 @@ void minethd::work_main()
 				while (globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
 					std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-				consume_work();
+				globalStates::inst().consume_work(oWork, iJobNo);
 				continue;
 			}
 
@@ -254,6 +231,9 @@ void minethd::work_main()
 				if ((round_ctr++ & 0xF) == 0)
 				{
 					globalStates::inst().calc_start_nonce(pGpuCtx->Nonce, oWork.bNiceHash, h_per_round * 16);
+					// check if the job is still valid, there is a small possibility that the job is switched
+					if(globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) != iJobNo)
+						break;
 				}
 
 				cl_uint results[0x100];
@@ -291,7 +271,7 @@ void minethd::work_main()
 				}
 				std::this_thread::yield();
 			}
-			consume_work();
+			globalStates::inst().consume_work(oWork, iJobNo);
 	}
 }
 

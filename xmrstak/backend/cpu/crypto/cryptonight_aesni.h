@@ -28,7 +28,7 @@ static inline uint64_t _umul128(uint64_t a, uint64_t b, uint64_t* hi)
 	*hi = r >> 64;
 	return (uint64_t)r;
 }
-#define _mm256_set_m128i(v0, v1)  _mm256_insertf128_si256(_mm256_castsi128_si256(v1), (v0), 1)
+
 #else
 #include <intrin.h>
 #endif // __GNUC__
@@ -180,7 +180,7 @@ void cn_explode_scratchpad(const __m128i* input, __m128i* output)
 	xin6 = _mm_load_si128(input + 10);
 	xin7 = _mm_load_si128(input + 11);
 
-	if(ALGO == cryptonight_heavy || ALGO == cryptonight_bittube2)
+	if(ALGO == cryptonight_heavy || ALGO == cryptonight_haven || ALGO == cryptonight_bittube2)
 	{
 		for(size_t i=0; i < 16; i++)
 		{
@@ -324,11 +324,11 @@ void cn_implode_scratchpad(const __m128i* input, __m128i* output)
 			aes_round(k9, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
 		}
 
-		if(ALGO == cryptonight_heavy || ALGO == cryptonight_bittube2)
+		if(ALGO == cryptonight_heavy || ALGO == cryptonight_haven || ALGO == cryptonight_bittube2)
 			mix_and_propagate(xout0, xout1, xout2, xout3, xout4, xout5, xout6, xout7);
 	}
 
-	if(ALGO == cryptonight_heavy || ALGO == cryptonight_bittube2)
+	if(ALGO == cryptonight_heavy || ALGO == cryptonight_haven || ALGO == cryptonight_bittube2)
 	{
 		for (size_t i = 0; i < MEM / sizeof(__m128i); i += 8)
 		{
@@ -375,7 +375,7 @@ void cn_implode_scratchpad(const __m128i* input, __m128i* output)
 				aes_round(k9, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
 			}
 
-			if(ALGO == cryptonight_heavy || ALGO == cryptonight_bittube2)
+			if(ALGO == cryptonight_heavy || ALGO == cryptonight_haven || ALGO == cryptonight_bittube2)
 				mix_and_propagate(xout0, xout1, xout2, xout3, xout4, xout5, xout6, xout7);
 		}
 
@@ -451,6 +451,7 @@ inline __m128i aes_round_tweak_div(__m128i& val, const __m128i& key)
 	*/
 }
 
+template<xmrstak_algo ALGO>
 inline void cryptonight_monero_tweak(uint64_t* mem_out, __m128i tmp)
 {
 	mem_out[0] = _mm_cvtsi128_si64(tmp);
@@ -460,9 +461,16 @@ inline void cryptonight_monero_tweak(uint64_t* mem_out, __m128i tmp)
 
 	uint8_t x = static_cast<uint8_t>(vh >> 24);
 	static const uint16_t table = 0x7531;
-	const uint8_t index = (((x >> 3) & 6) | (x & 1)) << 1;
-	vh ^= ((table >> index) & 0x3) << 28;
-
+	if(ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_masari || ALGO == cryptonight_bittube2)
+	{
+		const uint8_t index = (((x >> 3) & 6) | (x & 1)) << 1;
+		vh ^= ((table >> index) & 0x3) << 28;
+	}
+	else if(ALGO == cryptonight_stellite)
+	{
+		const uint8_t index = (((x >> 4) & 6) | (x & 1)) << 1;
+		vh ^= ((table >> index) & 0x3) << 28;
+	}
 	mem_out[1] = vh;
 }
 
@@ -473,7 +481,7 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 	constexpr size_t ITERATIONS = cn_select_iter<ALGO>();
 	constexpr size_t MEM = cn_select_memory<ALGO>();
 
-	if((ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_bittube2) && len < 43)
+	if((ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_stellite || ALGO == cryptonight_masari || ALGO == cryptonight_bittube2) && len < 43)
 	{
 		memset(output, 0, 32);
 		return;
@@ -482,7 +490,7 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 	keccak((const uint8_t *)input, len, ctx0->hash_state, 200);
 
 	uint64_t monero_const;
-	if(ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_bittube2)
+	if(ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_stellite || ALGO == cryptonight_masari || ALGO == cryptonight_bittube2)
 	{
 		monero_const  =  *reinterpret_cast<const uint64_t*>(reinterpret_cast<const uint8_t*>(input) + 35);
 		monero_const ^=  *(reinterpret_cast<const uint64_t*>(ctx0->hash_state) + 24);
@@ -515,8 +523,8 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 				cx = _mm_aesenc_si128(cx, _mm_set_epi64x(ah0, al0));
 		}
 
-		if(ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_bittube2)
-			cryptonight_monero_tweak((uint64_t*)&l0[idx0 & MASK], _mm_xor_si128(bx0, cx));
+		if(ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_stellite || ALGO == cryptonight_masari || ALGO == cryptonight_bittube2)
+			cryptonight_monero_tweak<ALGO>((uint64_t*)&l0[idx0 & MASK], _mm_xor_si128(bx0, cx));
 		else
 			_mm_store_si128((__m128i *)&l0[idx0 & MASK], _mm_xor_si128(bx0, cx));
 
@@ -539,7 +547,7 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 			_mm_prefetch((const char*)&l0[al0 & MASK], _MM_HINT_T0);
 		ah0 += lo;
 
-		if (ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_bittube2) {
+		if (ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_stellite || ALGO == cryptonight_masari || ALGO == cryptonight_bittube2) {
 			if (ALGO == cryptonight_bittube || ALGO == cryptonight_bittube2)
 				((uint64_t*)&l0[idx0 & MASK])[1] = ah0 ^ monero_const ^ ((uint64_t*)&l0[idx0 & MASK])[0];
 			else
@@ -558,6 +566,15 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 
 			((int64_t*)&l0[idx0 & MASK])[0] = n ^ q;
 			idx0 = d ^ q;
+		}
+		else if(ALGO == cryptonight_haven)
+		{
+			int64_t n  = ((int64_t*)&l0[idx0 & MASK])[0];
+			int32_t d  = ((int32_t*)&l0[idx0 & MASK])[2];
+			int64_t q = n / (d | 0x5);
+
+			((int64_t*)&l0[idx0 & MASK])[0] = n ^ q;
+			idx0 = (~d) ^ q;
 		}
 	}
 
@@ -580,7 +597,7 @@ void cryptonight_double_hash(const void* input, size_t len, void* output, crypto
 	constexpr size_t ITERATIONS = cn_select_iter<ALGO>();
 	constexpr size_t MEM = cn_select_memory<ALGO>();
 
-	if((ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_bittube2) && len < 43)
+	if((ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_stellite || ALGO == cryptonight_masari || ALGO == cryptonight_bittube2) && len < 43)
 	{
 		memset(output, 0, 64);
 		return;
@@ -590,7 +607,7 @@ void cryptonight_double_hash(const void* input, size_t len, void* output, crypto
 	keccak((const uint8_t *)input+len, len, ctx[1]->hash_state, 200);
 
 	uint64_t monero_const_0, monero_const_1;
-	if(ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_bittube2)
+	if(ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_stellite || ALGO == cryptonight_masari || ALGO == cryptonight_bittube2)
 	{
 		monero_const_0  =  *reinterpret_cast<const uint64_t*>(reinterpret_cast<const uint8_t*>(input) + 35);
 		monero_const_0 ^=  *(reinterpret_cast<const uint64_t*>(ctx[0]->hash_state) + 24);
@@ -632,8 +649,8 @@ void cryptonight_double_hash(const void* input, size_t len, void* output, crypto
 				cx = _mm_aesenc_si128(cx, _mm_set_epi64x(axh0, axl0));
 		}
 
-		if(ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_bittube2)
-			cryptonight_monero_tweak((uint64_t*)&l0[idx0 & MASK], _mm_xor_si128(bx0, cx));
+		if(ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_stellite || ALGO == cryptonight_masari || ALGO == cryptonight_bittube2)
+			cryptonight_monero_tweak<ALGO>((uint64_t*)&l0[idx0 & MASK], _mm_xor_si128(bx0, cx));
 		else
 			_mm_store_si128((__m128i *)&l0[idx0 & MASK], _mm_xor_si128(bx0, cx));
 
@@ -654,8 +671,8 @@ void cryptonight_double_hash(const void* input, size_t len, void* output, crypto
 				cx = _mm_aesenc_si128(cx, _mm_set_epi64x(axh1, axl1));
 		}
 
-		if(ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_bittube2)
-			cryptonight_monero_tweak((uint64_t*)&l1[idx1 & MASK], _mm_xor_si128(bx1, cx));
+		if(ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_stellite || ALGO == cryptonight_masari || ALGO == cryptonight_bittube2)
+			cryptonight_monero_tweak<ALGO>((uint64_t*)&l1[idx1 & MASK], _mm_xor_si128(bx1, cx));
 		else
 			_mm_store_si128((__m128i *)&l1[idx1 & MASK], _mm_xor_si128(bx1, cx));
 
@@ -675,7 +692,7 @@ void cryptonight_double_hash(const void* input, size_t len, void* output, crypto
 		axh0 += lo;
 		((uint64_t*)&l0[idx0 & MASK])[0] = axl0;
 
-		if (ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_bittube2) {
+		if (ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_stellite || ALGO == cryptonight_masari || ALGO == cryptonight_bittube2) {
 			if (ALGO == cryptonight_bittube || ALGO == cryptonight_bittube2)
 				((uint64_t*)&l0[idx0 & MASK])[1] = axh0 ^ monero_const_0 ^ ((uint64_t*)&l0[idx0 & MASK])[0];
 			else
@@ -695,6 +712,15 @@ void cryptonight_double_hash(const void* input, size_t len, void* output, crypto
 
 			((int64_t*)&l0[idx0 & MASK])[0] = n ^ q;
 			idx0 = d ^ q;
+		}
+		else if(ALGO == cryptonight_haven)
+		{
+			int64_t n  = ((int64_t*)&l0[idx0 & MASK])[0];
+			int32_t d  = ((int32_t*)&l0[idx0 & MASK])[2];
+			int64_t q = n / (d | 0x5);
+
+			((int64_t*)&l0[idx0 & MASK])[0] = n ^ q;
+			idx0 = (~d) ^ q;
 		}
 
 		if(PREFETCH)
@@ -730,6 +756,15 @@ void cryptonight_double_hash(const void* input, size_t len, void* output, crypto
 			((int64_t*)&l1[idx1 & MASK])[0] = n ^ q;
 			idx1 = d ^ q;
 		}
+		else if(ALGO == cryptonight_haven)
+		{
+			int64_t n  = ((int64_t*)&l1[idx1 & MASK])[0];
+			int32_t d  = ((int32_t*)&l1[idx1 & MASK])[2];
+			int64_t q = n / (d | 0x5);
+
+			((int64_t*)&l1[idx1 & MASK])[0] = n ^ q;
+			idx1 = (~d) ^ q;
+		}
 
 		if(PREFETCH)
 			_mm_prefetch((const char*)&l1[idx1 & MASK], _MM_HINT_T0);
@@ -763,8 +798,8 @@ void cryptonight_double_hash(const void* input, size_t len, void* output, crypto
 			c = _mm_aesenc_si128(c, a);		\
 	} 										\
 	b = _mm_xor_si128(b, c);				\
-	if(ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_bittube2) \
-		cryptonight_monero_tweak((uint64_t*)ptr, b); \
+	if(ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_stellite || ALGO == cryptonight_masari || ALGO == cryptonight_bittube2) \
+		cryptonight_monero_tweak<ALGO>((uint64_t*)ptr, b); \
 	else \
 		_mm_store_si128(ptr, b);\
 
@@ -778,7 +813,7 @@ void cryptonight_double_hash(const void* input, size_t len, void* output, crypto
 #define CN_STEP4(a, b, c, l, mc, ptr, idx)				\
 	lo = _umul128(idx, _mm_cvtsi128_si64(b), &hi);		\
 	a = _mm_add_epi64(a, _mm_set_epi64x(lo, hi));		\
-	if(ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_bittube2) \
+	if(ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_stellite || ALGO == cryptonight_masari || ALGO == cryptonight_bittube2) \
 	{ \
 		_mm_store_si128(ptr, _mm_xor_si128(a, mc)); \
 		if (ALGO == cryptonight_bittube || ALGO == cryptonight_bittube2) \
@@ -795,6 +830,14 @@ void cryptonight_double_hash(const void* input, size_t len, void* output, crypto
 		int64_t q = n / (d | 0x5); \
 		((int64_t*)&l[idx & MASK])[0] = n ^ q; \
 		idx = d ^ q; \
+	} \
+	else if(ALGO == cryptonight_haven) \
+	{ \
+		int64_t n  = ((int64_t*)&l[idx & MASK])[0]; \
+		int32_t d  = ((int32_t*)&l[idx & MASK])[2]; \
+		int64_t q = n / (d | 0x5); \
+		((int64_t*)&l[idx & MASK])[0] = n ^ q; \
+		idx = (~d) ^ q; \
 	}
 
 #define CONST_INIT(ctx, n) \
@@ -809,7 +852,7 @@ void cryptonight_triple_hash(const void* input, size_t len, void* output, crypto
 	constexpr size_t ITERATIONS = cn_select_iter<ALGO>();
 	constexpr size_t MEM = cn_select_memory<ALGO>();
 
-	if((ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_bittube2) && len < 43)
+	if((ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_stellite || ALGO == cryptonight_masari || ALGO == cryptonight_bittube2) && len < 43)
 	{
 		memset(output, 0, 32 * 3);
 		return;
@@ -903,7 +946,7 @@ void cryptonight_quad_hash(const void* input, size_t len, void* output, cryptoni
 	constexpr size_t ITERATIONS = cn_select_iter<ALGO>();
 	constexpr size_t MEM = cn_select_memory<ALGO>();
 
-	if((ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_bittube2) && len < 43)
+	if((ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_stellite || ALGO == cryptonight_masari || ALGO == cryptonight_bittube2) && len < 43)
 	{
 		memset(output, 0, 32 * 4);
 		return;
@@ -1012,7 +1055,7 @@ void cryptonight_penta_hash(const void* input, size_t len, void* output, crypton
 	constexpr size_t ITERATIONS = cn_select_iter<ALGO>();
 	constexpr size_t MEM = cn_select_memory<ALGO>();
 
-	if((ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_bittube2) && len < 43)
+	if((ALGO == cryptonight_monero || ALGO == cryptonight_aeon || ALGO == cryptonight_bittube || ALGO == cryptonight_stellite || ALGO == cryptonight_masari || ALGO == cryptonight_bittube2) && len < 43)
 	{
 		memset(output, 0, 32 * 5);
 		return;

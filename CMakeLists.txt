@@ -141,7 +141,6 @@ if(CUDA_ENABLE)
                 # set flags to create device code for the given architectures
                 set(CLANG_BUILD_FLAGS "${CLANG_BUILD_FLAGS} --cuda-gpu-arch=sm_${CUDA_ARCH_ELEM}")
             endforeach()
-
         elseif(CUDA_COMPILER STREQUAL "nvcc")
             # add c++11 for cuda
             if(NOT CMAKE_CXX_FLAGS MATCHES "-std=c\\+\\+11")
@@ -187,7 +186,7 @@ if(CUDA_ENABLE)
             endif()
 
             if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC" AND
-                (CUDA_VERSION VERSION_EQUAL 9.0 OR CUDA_VERSION VERSION_EQUAL 9.1)
+                (CUDA_VERSION VERSION_EQUAL 9.0 OR CUDA_VERSION VERSION_EQUAL 9.1 OR CUDA_VERSION VERSION_EQUAL 9.2)
             )
                 # workaround find_package(CUDA) is using the wrong path to the CXX host compiler
                 # overwrite the CUDA host compiler variable with the used CXX MSVC
@@ -284,7 +283,7 @@ endif()
 # Find microhttpd
 ################################################################################
 
-option(MICROHTTPD_ENABLE "Enable or disable the requirement of microhttp (http deamon)" ON)
+option(MICROHTTPD_ENABLE "Enable or disable the requirement of microhttp (http daemon)" ON)
 if(MICROHTTPD_ENABLE)
     find_path(MTHD_INCLUDE_DIR
         NAMES
@@ -307,7 +306,7 @@ if(MICROHTTPD_ENABLE)
         PATH_SUFFIXES
             lib)
     if(MHTD STREQUAL "MHTD-NOTFOUND")
-        message(FATAL_ERROR "microhttpd NOT found: use `-DMICROHTTPD_ENABLE=OFF` to build without http deamon support")
+        message(FATAL_ERROR "microhttpd NOT found: use `-DMICROHTTPD_ENABLE=OFF` to build without http daemon support")
     else()
         set(LIBS ${LIBS} ${MHTD})
         include_directories(AFTER ${MTHD_INCLUDE_DIR})
@@ -428,7 +427,6 @@ else()
     # activate sse2 and aes-ni
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2 -maes")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2 -maes")
-
 endif()
 
 # add -Wall for debug builds with gcc

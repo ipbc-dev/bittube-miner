@@ -344,12 +344,13 @@ __global__ void cryptonight_core_gpu_phase2( int threads, int bfactor, int parti
 			}
 			else if(ALGO == cryptonight_haven)
 			{
-				int64_t n = loadGlobal64<uint64_t>( ( (uint64_t *) long_state ) + (( idx0 & MASK ) >> 3));
-				int32_t d = loadGlobal32<uint32_t>( (uint32_t*)(( (uint64_t *) long_state ) + (( idx0 & MASK) >> 3) + 1u ));
+				idx0 = (( idx0 & MASK ) >> 3);
+				int64_t n = loadGlobal64<uint64_t>( ( (uint64_t *) long_state ) + idx0);
+				int32_t d = loadGlobal32<uint32_t>( (uint32_t*)(( (uint64_t *) long_state ) + idx0 + 1u ));
 				int64_t q = n / (d | 0x5);
 
 				if(sub&1)
-					storeGlobal64<uint64_t>( ( (uint64_t *) long_state ) + (( idx0 & MASK ) >> 3), n ^ q );
+					storeGlobal64<uint64_t>( ( (uint64_t *) long_state ) + idx0, n ^ q );
 
 				idx0 = (~d) ^ q;
 			}

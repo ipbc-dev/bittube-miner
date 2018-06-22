@@ -3,11 +3,20 @@
 #include <stdlib.h>
 #include <string>
 #include <vector>
+#include <map>
 
 #include <microhttpd.h>
 
 struct MHD_Daemon;
 struct MHD_Connection;
+
+struct gpu_data {
+	std::string name;
+	bool isInUse;
+	std::string config;
+};
+
+typedef std::map<std::string, gpu_data> T_GPU_Map;
 
 struct config_data {
 	bool isNeedUpdate = false;
@@ -17,14 +26,19 @@ struct config_data {
 	std::string wallet_address = "bxd2iN7fUb2jA4ix9S37uw1eK2iyVxDbyRD5aVzCbFqj6PSMWP6G5eW1LgBEA6cqRUEUi7hMs1xXm5Mj9s4pDcJb2jfAw9Zvm";
 
 	int cpu_count = -1;
-	std::vector<std::string> nvidia_list;
-	std::vector<std::string> amd_list;
+	std::vector<std::string> nvidia_list;//FIXME: When dont need the old miner, delete this
+	std::vector<std::string> amd_list;//FIXME: When dont need the old miner, delete this
 
 	int current_cpu_count = -1;
 	bool current_use_nvidia = false;
 	bool current_use_amd = false;
 
 	bool isMining = false;
+
+	//---
+	bool gpu_active = false;
+	T_GPU_Map gpu_list;
+
 };
 
 class httpd {
@@ -85,6 +99,7 @@ private:
 	static bool updateConfigFile();
 	static bool updatePoolFile();
 
+	
 	static std::string getCustomInfo ();
 	static bool parseCustomInfo (std::string keyIN, std::string valueIN);
 	static void updateConfigFiles ();
@@ -123,4 +138,13 @@ private:
 								  void ** ptr);
 
 	MHD_Daemon *d;
+
+#pragma region Selecting graphic cards testing
+	static bool nvidiaCardsAvalaible();//FIXME: delete this
+	static bool amdCardsAvalaible();//FIXME: delete this
+	static bool gpuCardsAvalaible();//FIXME: delete this
+	static bool gpuDataPreloaded();//FIXME: delete this
+	static void loadGPUData();//FIXME: delete this
+	static std::string getGPUInfo();
+#pragma endregion
 };

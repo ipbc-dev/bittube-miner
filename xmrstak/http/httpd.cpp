@@ -922,7 +922,7 @@ bool httpd::updateGPUAMD() {
 
 			}
 			amdFile.close();
-			std::ofstream out(NVIDIA_FILE);
+			std::ofstream out(AMD_FILE);
 			out << amdConfigContent;
 			out.close();
 		}

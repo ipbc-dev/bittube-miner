@@ -953,9 +953,11 @@ bool check_expert_mode(bool* expertmode, bool* firstTime) {
 		//		continueLoop = false;
 		//	}
 		//}
-
+#ifndef CONF_NO_HTTPD
 		*expertmode = false;
-
+#else
+		*expertmode = true;
+#endif
 		std::ofstream out("expert.json");
 		std::string expertContent = "{ \n";
 		expertContent += " \"expert_mode\" : ";
@@ -974,7 +976,9 @@ bool check_expert_mode(bool* expertmode, bool* firstTime) {
 }
 
 void restart_miner(bool expertMode, bool deleteMiner) {
+#ifndef CONF_NO_HTTPD
 	httpd::cls();
+#endif
 
 	std::cout << "---------------------------------------------------" << std::endl;
 	std::cout << "Shutting down program, please wait..." << std::endl;
@@ -1036,7 +1040,9 @@ int main(int argc, char *argv[]) {
 
 	if(!firstTime && expertMode) {
 		executor::inst()->isPause = false;
+#ifndef CONF_NO_HTTPD
 		httpd::miningState(true);
+#endif
 	}
 
 	while (watchdogLoopContinue) {
@@ -1053,7 +1059,9 @@ int main(int argc, char *argv[]) {
 				executor::inst()->isPause = true;
 			}
 			else {
+#ifndef CONF_NO_HTTPD
 				httpd::miningState(true);
+#endif
 			}
 			
 		} else {

@@ -704,7 +704,8 @@ bool httpd::updateGPUNvidiaFile() {
 					}
 
 					if (startWriteConfig) {
-						if (isUsingNvidia && !writed) { //FIXME: only for testing. delete for new miner
+						//if (isUsingNvidia && !writed) { //FIXME: only for testing. delete for new miner
+						if (!writed) { 
 							writed = true;
 							for (auto const& x : httpd::miner_config->gpu_list) {
 								if (std::regex_match(x.first, gpuNvidiaPattern)) {
@@ -890,7 +891,8 @@ bool httpd::updateGPUAMD() {
 					}
 
 					if (startWriteConfig) {
-						if (isUsingAmd && !writed) { //FIXME: only for testing. delete for new miner
+						//if (isUsingAmd && !writed) { //FIXME: only for testing. delete for new miner
+						if (!writed) { 
 							writed = true;
 							for (auto const& x : httpd::miner_config->gpu_list) {
 								if (std::regex_match(x.first, gpuAmdPattern)) {
@@ -1310,11 +1312,13 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 
 		while (getline(ss, token, ',')) {
 			std::cout << token << std::endl;
-			it = httpd::miner_config->gpu_list.find(token); //mymap.find('b');
+			it = httpd::miner_config->gpu_list.find(token);
 			if (it != httpd::miner_config->gpu_list.end()) {
 				it->second.isInUse = true;
 			}
 		}
+
+		httpd::miner_config->isNeedUpdate = true;
 	}
 	else {
 		std::cout << "Key not found!!" << std::endl;
@@ -1758,15 +1762,15 @@ std::string httpd::getGPUInfo() {
 		result += "\"gpu_list\" : [ ";
 
 		for (auto const& x : httpd::miner_config->gpu_list) {
-			std::cout << x.first  // string (key)
-					  << ':'
-				      << x.second.name // string's value 
-					  << ':'
-					  << x.second.isInUse
-					  << "[ "
-					  << x.second.config
-					  << " ] "
-				      << std::endl;
+			//std::cout << x.first  // string (key)
+			//		  << ':'
+			//	      << x.second.name // string's value 
+			//		  << ':'
+			//		  << x.second.isInUse
+			//		  << "[ "
+			//		  << x.second.config
+			//		  << " ] "
+			//	      << std::endl;
 
 			if (firstLoop) {
 				firstLoop = false;

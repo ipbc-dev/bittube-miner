@@ -1212,6 +1212,8 @@ std::string httpd::getCustomInfo () {
  */
 bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 	bool result = false;
+	std::cout << "+++" << keyIN << " => " << valueIN << std::endl;
+
 
 	if (keyIN.compare("cpu_count") == 0) {
 		std::cout << "cpu_count key found" << std::endl;
@@ -1301,6 +1303,7 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 		
 	}
 	else if (keyIN.compare("gpu_list") == 0) {
+		std::cout << "--->>> gpu_list: " << valueIN << std::endl;
 		std::string listTmp = valueIN;
 		std::stringstream ss(listTmp);
 		std::map<std::string, gpu_data>::iterator it;

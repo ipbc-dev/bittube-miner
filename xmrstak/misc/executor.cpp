@@ -75,15 +75,15 @@ void executor::static_delete() {
 		pHttpString = nullptr;
 	}
 
-	if (pools.size() > 0) {
+	//if (pools.size() > 0) {
 		//for (auto & i : pools) {
 			//if (i.get_thread() != nullptr) 
 			//if(i.get_thread()->joinable()){
 				//i.get_thread()->join();
 			//}
 		//}
-		pools.clear();
-	}
+		//pools.clear();
+	//}
 }
 
 executor::executor()

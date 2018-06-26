@@ -574,7 +574,8 @@ bool httpd::updateCPUFile() {
 			std::ifstream cpuFile(CPU_FILE);
 
 			if (cpuFile.fail()) {
-				std::cout << "not cpu.txt found" << std::endl;
+				printer::inst()->print_str("cpu.txt not found");
+				//std::cout << "not cpu.txt found" << std::endl;
 
 				//TODO: error handling. Search for cpu backup file and try to get info there  
 
@@ -693,7 +694,8 @@ bool httpd::updateGPUNvidiaFile() {
 		std::ifstream nvidiaFile(NVIDIA_FILE);
 
 		if (nvidiaFile.fail()) {
-			std::cout << "nvidia.txt not found" << std::endl;
+			printer::inst()->print_str("nvidia.txt not found");
+			//std::cout << "nvidia.txt not found" << std::endl;
 			//TODO: error handling. Search for cpu backup file and try to get info there 
 		} else {
 			for (std::string line; std::getline(nvidiaFile, line); ) {
@@ -880,7 +882,8 @@ bool httpd::updateGPUAMD() {
 		std::ifstream amdFile(AMD_FILE);
 
 		if (amdFile.fail()) {
-			std::cout << "amd.txt not found" << std::endl;
+			printer::inst()->print_str("amd.txt not found");
+			//std::cout << "amd.txt not found" << std::endl;
 			//TODO: error handling. Search for cpu backup file and try to get info there 
 		} else {
 			for (std::string line; std::getline(amdFile, line); ) {
@@ -1053,7 +1056,8 @@ bool httpd::updateConfigFile() {
 			std::ifstream configFile(CONFIG_FILE);
 
 			if (configFile.fail()) {
-				std::cout << "not config.txt found" << std::endl;
+				printer::inst()->print_str("config.txt not found");
+				//std::cout << "not config.txt found" << std::endl;
 
 				//TODO: error handling. Search for cpu backup file and try to get info there  
 
@@ -1120,7 +1124,8 @@ bool httpd::updatePoolFile() {
 			std::ifstream poolFile(POOL_FILE);
 
 			if (poolFile.fail()) {
-				std::cout << "not config.txt found" << std::endl;
+				printer::inst()->print_str("config.txt not found");
+				//std::cout << "not config.txt found" << std::endl;
 
 				//TODO: error handling. Search for cpu backup file and try to get info there  
 
@@ -1212,11 +1217,13 @@ std::string httpd::getCustomInfo () {
  */
 bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 	bool result = false;
-	std::cout << "+++" << keyIN << " => " << valueIN << std::endl;
+	printer::inst()->print_msg(L0, "+++ %d => %e", keyIN, valueIN);
+	//std::cout << "+++" << keyIN << " => " << valueIN << std::endl;
 
 
 	if (keyIN.compare("cpu_count") == 0) {
-		std::cout << "cpu_count key found" << std::endl;
+		printer::inst()->print_str("cpu_count key found");
+		//std::cout << "cpu_count key found" << std::endl;
 
 		try {
 
@@ -1229,11 +1236,14 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 			}
 
 		} catch (int param) { 
-			std::cout << "int exception"; 
+			printer::inst()->print_str("int exception");
+			//std::cout << "int exception"; 
 		} catch (char param) { 
-			std::cout << "char exception";
+			printer::inst()->print_str("char exception");
+			//std::cout << "char exception";
 		} catch (...) { 
-			std::cout << "default exception"; 
+			printer::inst()->print_str("default exception");
+			//std::cout << "default exception"; 
 		}
 
 		result = true;
@@ -1277,13 +1287,16 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 			
 		}
 		catch (int param) {
-			std::cout << "int exception";
+			printer::inst()->print_str("int exception");
+			//std::cout << "int exception";
 		}
 		catch (char param) {
-			std::cout << "char exception";
+			printer::inst()->print_str("char exception");
+			//std::cout << "char exception";
 		}
 		catch (...) {
-			std::cout << "default exception";
+			printer::inst()->print_str("default exception");
+			//std::cout << "default exception";
 		}
 	}
 	else if (keyIN.compare("pool_address") == 0) {
@@ -1303,7 +1316,8 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 		
 	}
 	else if (keyIN.compare("gpu_list") == 0) {
-		std::cout << "--->>> gpu_list: " << valueIN << std::endl;
+		printer::inst()->print_msg(L0, "--->>> gpu_list: %d", valueIN);
+		//std::cout << "--->>> gpu_list: " << valueIN << std::endl;
 		std::string listTmp = valueIN;
 		std::stringstream ss(listTmp);
 		std::map<std::string, gpu_data>::iterator it;
@@ -1314,7 +1328,7 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 		}
 
 		while (getline(ss, token, ',')) {
-			std::cout << token << std::endl;
+			//std::cout << token << std::endl;
 			it = httpd::miner_config->gpu_list.find(token);
 			if (it != httpd::miner_config->gpu_list.end()) {
 				it->second.isInUse = true;
@@ -1324,7 +1338,8 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 		httpd::miner_config->isNeedUpdate = true;
 	}
 	else {
-		std::cout << "Key not found!!" << std::endl;
+		printer::inst()->print_str("Key not found!!");
+		//std::cout << "Key not found!!" << std::endl;
 	}
 	return result;
 }
@@ -1507,7 +1522,8 @@ int httpd::req_handler(void * cls,
 	}
 
 	if (!jconf::inst()->is_safe_to_touch()) {
-		std::cout << "ABORT HTTP HANDLER, jconf not safe to touch. " << method << " " << url << std::endl;
+		printer::inst()->print_msg(L0, "ABORT HTTP HANDLER, jconf not safe to touch. %d %e", method, url);
+		//std::cout << "ABORT HTTP HANDLER, jconf not safe to touch. " << method << " " << url << std::endl;
 		return MHD_NO;
 	}
 

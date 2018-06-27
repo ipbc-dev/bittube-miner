@@ -1057,7 +1057,7 @@ bool httpd::updatePoolFile() {
 	bool result = false;
 	bool isUpdateData = true;
 
-	std::regex regPattern("[^*]*\(pool_address\)\.*[:][^\"]*\(\"[a-zA-Z0-9.]+[:][0-9]+\"\)\.*[,]\.*(wallet_address)\.*[:]\.*(\"[a-zA-Z0-9]+\")\.*rig_id\.*");
+	std::regex regPattern("[^*]*\(pool_address\)\.*[:][^\"]*\(\"[a-zA-Z0-9.-]+[:][0-9]+\"\)\.*[,]\.*(wallet_address)\.*[:]\.*(\"[a-zA-Z0-9]+\")\.*rig_id\.*");
 	std::smatch base_match;
 	std::string poolAddress = "-1";
 	std::string walletAddress = "-1";
@@ -1171,7 +1171,7 @@ std::string httpd::getCustomInfo () {
  */
 bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 	bool result = false;
-	//printer::inst()->print_msg(L0, "+++ %s => %s \n", keyIN, valueIN);
+	printer::inst()->print_msg(L0, "+++ %s => %s \n", keyIN, valueIN);
 
 	if (keyIN.compare("cpu_count") == 0) {
 		//printer::inst()->print_msg(L0, "cpu_count key found \n");

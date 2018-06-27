@@ -1290,17 +1290,17 @@ void executor::http_json_report(std::string& out)
 		fAvgResTime = double(iConnSec) / iPoolCallTimes.size();
 
 	char buffer[2048];
-	res_error.reserve((vMineResults.size() - 1) * 128);
-	for(size_t i=1; i < vMineResults.size(); i++)
-	{
-		using namespace std::chrono;
-		if(i != 1) res_error.append(1, ',');
+	//res_error.reserve((vMineResults.size() - 1) * 128);
+	//for(size_t i=1; i < vMineResults.size(); i++)
+	//{
+	//	using namespace std::chrono;
+	//	if(i != 1) res_error.append(1, ',');
 
-		snprintf(buffer, sizeof(buffer), sJsonApiResultError, int_port(vMineResults[i].count),
-			int_port(duration_cast<seconds>(vMineResults[i].time.time_since_epoch()).count()),
-			vMineResults[i].msg.c_str());
-		res_error.append(buffer);
-	}
+	//	snprintf(buffer, sizeof(buffer), sJsonApiResultError, int_port(vMineResults[i].count),
+	//		int_port(duration_cast<seconds>(vMineResults[i].time.time_since_epoch()).count()),
+	//		vMineResults[i].msg.c_str());
+	//	res_error.append(buffer);
+	//}
 
 	size_t n_calls = iPoolCallTimes.size();
 	size_t iPoolPing = 0;
@@ -1311,17 +1311,17 @@ void executor::http_json_report(std::string& out)
 		iPoolPing = iPoolCallTimes[n_calls/2];
 	}
 
-	cn_error.reserve(vSocketLog.size() * 256);
-	for(size_t i=0; i < vSocketLog.size(); i++)
-	{
-		using namespace std::chrono;
-		if(i != 0) cn_error.append(1, ',');
+	//cn_error.reserve(vSocketLog.size() * 256);
+	//for(size_t i=0; i < vSocketLog.size(); i++)
+	//{
+	//	using namespace std::chrono;
+	//	if(i != 0) cn_error.append(1, ',');
 
-		snprintf(buffer, sizeof(buffer), sJsonApiConnectionError,
-			int_port(duration_cast<seconds>(vMineResults[i].time.time_since_epoch()).count()),
-			vSocketLog[i].msg.c_str());
-		cn_error.append(buffer);
-	}
+	//	snprintf(buffer, sizeof(buffer), sJsonApiConnectionError,
+	//		int_port(duration_cast<seconds>(vMineResults[i].time.time_since_epoch()).count()),
+	//		vSocketLog[i].msg.c_str());
+	//	cn_error.append(buffer);
+	//}
 
 	size_t bb_size = 2048 + hr_thds.size() + res_error.size() + cn_error.size();
 	std::unique_ptr<char[]> bigbuf( new char[ bb_size ] );

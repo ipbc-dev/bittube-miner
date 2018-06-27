@@ -897,11 +897,11 @@ void delete_miner() {
 	}
 }
 
-bool check_expert_mode(bool* expertmode, bool* firstTime) {
+bool check_expert_mode(bool* expertmode, bool* firstTime, bool* startRunning) {
 	bool errorResult = false;
 	*expertmode = false;
 	*firstTime = true;
-	bool startRunning = false;
+	//bool startRunning = false;
 	
 	std::ifstream firstConfig("expert.json");
 	std::regex expertParamPattern(".*\(expert_mode\)\.*[:]\.*(true|false)\.*");
@@ -931,7 +931,12 @@ bool check_expert_mode(bool* expertmode, bool* firstTime) {
 			}
 
 			if (std::regex_match(line, base_match, startRunningParamPattern)) {
-				//TODO :<<---------------------------------------------------------------------------------******
+				if (base_match[2].compare("true") == 0) {
+					*startRunning = true;
+				}
+				else if ((base_match[2].compare("false") != 0)) {
+					*startRunning = false;
+				}
 			}
 
 		}
@@ -961,6 +966,14 @@ bool check_expert_mode(bool* expertmode, bool* firstTime) {
 	else {
 		expertContent += "false";
 	}
+	expertContent += " ,\n \"start_running\" : ";
+	if (*startRunning) {
+		expertContent += "true";
+	}
+	else {
+		expertContent += "false";
+	}
+	
 	expertContent += " \n\n }";
 	out << expertContent;
 	out.close();
@@ -980,10 +993,43 @@ void change_firstRun(bool firstRun) {
 			if (std::regex_match(line, base_match, firstRunParamPattern)) {
 				if (firstRun) {
 					expertContent += " \"first_run\" : true";
-					expertContent += "\n";
+					expertContent += " ,\n";
 				}
 				else {
 					expertContent += " \"first_run\" : false";
+					expertContent += " ,\n";
+				}
+			}
+			else {
+				expertContent += line;
+				expertContent += "\n";
+			}
+		}
+		firstConfig.close();
+		std::ofstream out("expert.json");
+		out << expertContent;
+		out.close();
+	}
+	else {
+		//TODO: error handling
+	}
+}
+
+void change_startRunning(bool startRunning) {
+	std::ifstream firstConfig("expert.json");
+	std::regex startRunningParamPattern(".*\(start_running\)\.*[:]\.*(true|false)\.*");
+	std::smatch base_match;
+	std::string expertContent = "";
+
+	if (!firstConfig.fail()) {
+		for (std::string line; std::getline(firstConfig, line); ) {
+			if (std::regex_match(line, base_match, startRunningParamPattern)) {
+				if (startRunning) {
+					expertContent += " \"start_running\" : true";
+					expertContent += "\n";
+				}
+				else {
+					expertContent += " \"start_running\" : false";
 					expertContent += "\n";
 				}
 			}
@@ -1013,6 +1059,7 @@ int start_miner_execution() {
 
 	executor::inst()->ex_start(jconf::inst()->DaemonMode());
 	change_firstRun(false);
+	change_startRunning(true);
 	return result;
 }
 
@@ -1041,7 +1088,8 @@ void restart_miner(bool expertMode, bool deleteMiner) {
 int main(int argc, char *argv[]) {
 	bool expertMode = false;
 	bool firstTime = false;
-	bool expertRetValue = check_expert_mode(&expertMode, &firstTime);
+	bool startMining = false;
+	bool expertRetValue = check_expert_mode(&expertMode, &firstTime, &startMining);
 
 #ifndef CONF_NO_TLS
 	SSL_library_init();
@@ -1068,7 +1116,7 @@ int main(int argc, char *argv[]) {
 	bool watchdogLoopContinue = true;
 	std::thread* inputThread = nullptr;
 
-	if(!firstTime && expertMode) {
+	if(((!firstTime) && (expertMode)) || (startMining)) {
 		executor::inst()->isPause = false;
 #ifndef CONF_NO_HTTPD
 		httpd::miningState(true);
@@ -1084,9 +1132,10 @@ int main(int argc, char *argv[]) {
 			int startRetValue = start_miner_execution();
 			needDeleteMiner = true;
 
-			if (!expertMode) {
+			if (!expertMode && !startMining) {
 				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 				executor::inst()->isPause = true;
+				change_startRunning(false);
 			}
 			else {
 #ifndef CONF_NO_HTTPD
@@ -1110,12 +1159,19 @@ int main(int argc, char *argv[]) {
 					if (runningM) {
 						runningM = false;
 					}
+					change_startRunning(false);
 				}
 			} else { // Restarting program
 
-				expertRetValue = check_expert_mode(&expertMode, &firstTime);
+				expertRetValue = check_expert_mode(&expertMode, &firstTime, &startMining);
 				restart_miner(expertMode, needDeleteMiner);
-				executor::inst()->isPause = false;
+				if (startMining) {
+					executor::inst()->isPause = false;
+				}
+				else {
+					executor::inst()->isPause = true;
+				}
+				
 				wasStarted = false;
 				runningM = true;
 				executor::inst()->needRestart = false;

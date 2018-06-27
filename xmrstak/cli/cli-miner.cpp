@@ -808,8 +808,6 @@ int program_config(bool expertMode) {
 	return result;
 }
 
-
-
 void show_credits(bool expertMode) {
 	if (!expertMode) {
 		printer::inst()->print_str("-------------------------------------------------------------------\n");
@@ -876,7 +874,7 @@ void parse_runtime_input(bool* running) {
 void delete_miner() {
 
 	try {
-		//printer::cls();
+		printer::cls();
 		jconf::cls();
 		executor::cls();
 
@@ -894,8 +892,8 @@ void delete_miner() {
 		
 	}
 	catch (...) {
-		printer::inst()->print_str("Error deleting current miner execution");
-		//std::cout << "Error deleting current miner execution" << std::endl;
+		printer::inst()->print_msg(L0, "Error deleting current miner execution \n");
+
 	}
 }
 
@@ -903,12 +901,12 @@ bool check_expert_mode(bool* expertmode, bool* firstTime) {
 	bool errorResult = false;
 	*expertmode = false;
 	*firstTime = true;
-
-	bool firstRun = true;
+	bool startRunning = false;
 	
 	std::ifstream firstConfig("expert.json");
 	std::regex expertParamPattern(".*\(expert_mode\)\.*[:]\.*(true|false)\.*");
 	std::regex firstRunParamPattern(".*\(first_run\)\.*[:]\.*(true|false)\.*");
+	std::regex startRunningParamPattern(".*\(start_running\)\.*[:]\.*(true|false)\.*");
 	std::smatch base_match;
 
 	if (!firstConfig.fail()) {
@@ -919,74 +917,54 @@ bool check_expert_mode(bool* expertmode, bool* firstTime) {
 					*expertmode = true;
 				}
 				else if ((base_match[2].compare("false") != 0)) {
-					//printer::inst()->print_str("Error!! corrupt expert_mode value");
-					//std::cout << "Error!! corrupt expert_mode value" << std::endl;
 					*firstTime = true; //Reset this config
 				}
 			}
 
 			if (std::regex_match(line, base_match, firstRunParamPattern)) {
 				if (base_match[2].compare("true") == 0) {
-					firstRun = true;
 					*firstTime = true;
 				}
 				else if ((base_match[2].compare("false") != 0)) {
-					//printer::inst()->print_str("Error!! corrupt expert_mode value");
-					//std::cout << "Error!! corrupt expert_mode value" << std::endl;
-					firstRun = true; //Reset this config
 					*firstTime = false;
 				}
 			}
 
+			if (std::regex_match(line, base_match, startRunningParamPattern)) {
+				//TODO :<<---------------------------------------------------------------------------------******
+			}
+
 		}
+
 		firstConfig.close();
 	}
 	
 
-	//if (*firstTime) {
-		//std::string answer = "";
-		//bool continueLoop = true;
-		
-		//std::cout << "Are you an expert?(y/n): " << std::endl;
-		//std::cin >> answer;
-
-		//while (continueLoop) {
-		//	if ((answer.compare("y") == 0) ||
-		//		(answer.compare("Y") == 0)) {
-		//		continueLoop = false;
-		//		*expertmode = true;
-		//
-		//	}
-		//	else if ((answer.compare("n") == 0) ||
-		//		(answer.compare("N") == 0)) {
-		//		continueLoop = false;
-		//	}
-		//}
 #ifndef CONF_NO_HTTPD
 		*expertmode = false;
 #else
 		*expertmode = true;
 #endif
-		std::ofstream out("expert.json");
-		std::string expertContent = "{ \n";
-		expertContent += " \"expert_mode\" : ";
-		if (*expertmode) {
-			expertContent += "true";
-		}
-		else {
-			expertContent += "false";
-		}
-		expertContent += "\n \"first_run\" : ";
-		if (firstRun) {
-			expertContent += "true";
-		}
-		else {
-			expertContent += "false";
-		}
-		expertContent += " \n } \n";
-		out << expertContent;
-		out.close();
-	//}
+	std::ofstream out("expert.json");
+	std::string expertContent = "{ \n";
+	expertContent += " \"expert_mode\" : ";
+	if (*expertmode) {
+		expertContent += "true";
+	}
+	else {
+		expertContent += "false";
+	}
+	expertContent += " ,\n \"first_run\" : ";
+	if (*firstTime) {
+		expertContent += "true";
+	}
+	else {
+		expertContent += "false";
+	}
+	expertContent += " \n\n }";
+	out << expertContent;
+	out.close();
+
 	
 	return errorResult;
 }
@@ -1000,11 +978,13 @@ void change_firstRun(bool firstRun) {
 	if (!firstConfig.fail()) {
 		for (std::string line; std::getline(firstConfig, line); ) {
 			if (std::regex_match(line, base_match, firstRunParamPattern)) {
-				if (base_match[2].compare("true") == 0) {
+				if (firstRun) {
 					expertContent += " \"first_run\" : true";
+					expertContent += "\n";
 				}
-				else if ((base_match[2].compare("false") != 0)) {
+				else {
 					expertContent += " \"first_run\" : false";
+					expertContent += "\n";
 				}
 			}
 			else {
@@ -1033,7 +1013,6 @@ int start_miner_execution() {
 
 	executor::inst()->ex_start(jconf::inst()->DaemonMode());
 	change_firstRun(false);
-	executor::inst()->isPause = true;
 	return result;
 }
 
@@ -1041,10 +1020,8 @@ void restart_miner(bool expertMode, bool deleteMiner) {
 #ifndef CONF_NO_HTTPD
 	httpd::cls();
 #endif
-	printer::inst()->print_str("---------------------------------------------------");
-	printer::inst()->print_str("Shutting down program, please wait...");
-	//std::cout << "---------------------------------------------------" << std::endl;
-	//std::cout << "Shutting down program, please wait..." << std::endl;
+	printer::inst()->print_msg(L0, "--------------------------------------------------- \n");
+	printer::inst()->print_msg(L0, "Shutting down program, please wait... \n");
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
@@ -1052,19 +1029,13 @@ void restart_miner(bool expertMode, bool deleteMiner) {
 		delete_miner();
 	}
 
-	executor::inst()->isPause = true;
-	printer::inst()->print_str("---------------------------------------------------");
-	printer::inst()->print_str("Restarting program, please wait...");
-	//std::cout << "---------------------------------------------------" << std::endl;
-	//std::cout << "Restarting program, please wait..." << std::endl;
+	printer::inst()->print_msg(L0, "--------------------------------------------------- \n");
+	printer::inst()->print_msg(L0, "Restarting program, please wait... \n");
+
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	int configRetValue = program_config(expertMode);
-	//show_credits(expertMode);
-	//if (!expertMode) {
-	//	show_manage_info();
-	//}
-	
+
 }
 
 int main(int argc, char *argv[]) {
@@ -1085,17 +1056,11 @@ int main(int argc, char *argv[]) {
 
 	int parseRetValue = parse_argv(argc, argv);
 	int configRetValue = program_config(expertMode);
-	//show_credits(expertMode);
-	//if (!expertMode) {
-		//show_manage_info();
-	//}
 
 	using namespace xmrstak;
 
-	//--
 	bool wasStarted = false;
 	bool runningM = true;
-	bool fromPause = false;
 	bool runningInputParser = false;
 	bool needDeleteMiner = false;
 
@@ -1113,8 +1078,7 @@ int main(int argc, char *argv[]) {
 	while (watchdogLoopContinue) {
 		
 		if (firstTime) { // Start miner process one time to finish configuration process
-			printer::inst()->print_str("Configuring, please wait a little...");
-			//std::cout << "Configuring, please wait a little..." << std::endl;
+			printer::inst()->print_msg(L0, "Configuring, please wait a little... \n");
 			firstTime = false;
 			executor::inst()->isPause = false;
 			int startRetValue = start_miner_execution();
@@ -1141,30 +1105,17 @@ int main(int argc, char *argv[]) {
 				}
 
 				if (!executor::inst()->isPause) {
-					if (fromPause) {
-						fromPause = false;
-						//std::cin.putback('\n');
-						//std::cin.clear();
-						//std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-					}
 					runningM = true;
-					//parse_runtime_input();
-					//if (!runningInputParser) {
-					//	inputThread = new std::thread(&parse_runtime_input, &runningInputParser);
-					//	inputThread->detach();
-					//}
 				} else {
-					fromPause = true;
 					if (runningM) {
 						runningM = false;
-						//show_manage_info();
 					}
 				}
 			} else { // Restarting program
 
-				
+				expertRetValue = check_expert_mode(&expertMode, &firstTime);
 				restart_miner(expertMode, needDeleteMiner);
-				executor::inst()->isPause = true;
+				executor::inst()->isPause = false;
 				wasStarted = false;
 				runningM = true;
 				executor::inst()->needRestart = false;

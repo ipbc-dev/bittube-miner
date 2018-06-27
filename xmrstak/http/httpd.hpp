@@ -140,11 +140,6 @@ private:
 	MHD_Daemon *d;
 
 #pragma region Selecting graphic cards testing
-	static bool nvidiaCardsAvalaible();//FIXME: delete this
-	static bool amdCardsAvalaible();//FIXME: delete this
-	static bool gpuCardsAvalaible();//FIXME: delete this
-	static bool gpuDataPreloaded();//FIXME: delete this
-	static void loadGPUData();//FIXME: delete this
 	static std::string getGPUInfo();
 #pragma endregion
 };

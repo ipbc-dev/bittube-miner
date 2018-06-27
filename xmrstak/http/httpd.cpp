@@ -152,8 +152,6 @@ std::string httpd::parseCPUFile() {
 	std::regex regPattern2("\.*\(current_cpu_count\)\.*\([0-9]\+\)\.*");
 	std::smatch base_match;
 	std::smatch base_match2;
-	
-	//TODO: check if we have parse this info before
 
 	std::ifstream cpuFile(CPU_FILE);
 
@@ -198,7 +196,6 @@ std::string httpd::parseGPUNvidiaFile() {
 	std::regex initGpuInfoPattern("[^*]*\(gpu_threads_conf\)\.*");
 	std::regex oneGpuInfoPattern("[^*]*\(index\)\.*");
 	std::regex endOneGpuInfoPattern("[^*]*\(\\}\)\.*");
-	//std::regex endGpuInfoPattern("[^*]*\(gpu_threads_conf\)\.*");
 
 	bool initGpuSection = false;
 	bool initOneGpuInfo = false;
@@ -207,17 +204,11 @@ std::string httpd::parseGPUNvidiaFile() {
 
 	int gpuIndex = 0;
 	std::vector<std::string> gpuInfoList;
-	//--------------------------------
 
-
-	//std::ifstream nvidiaFile(NVIDIA_FILE);
 	std::ifstream nvidiaFile("./nvidia-bck.txt");
 
-	if (nvidiaFile.fail()) {
+	if (!nvidiaFile.fail()) {
 
-		//TODO: error handling. Search for nvidia backup file and try to get info there
-
-	} else {
 		httpd::miner_config->nvidia_list.clear();
 		std::string partialResult = "";
 
@@ -347,16 +338,10 @@ std::string httpd::parseGPUAMD() {
 	int gpuIndex = 0;
 	std::vector<std::string> gpuInfoList;
 	//--------------------------------
-
-	//TODO: check if we have parse this info before
 	
-	//std::ifstream amdFile(AMD_FILE);
 	std::ifstream amdFile("./amd-bck.txt");
 
-	if (amdFile.fail()) {
-		//TODO: error handling. Search for amd backup file and try to get info there
-	}
-	else {
+	if (!amdFile.fail()) {
 		httpd::miner_config->amd_list.clear();
 		std::string partialResult = "";
 
@@ -470,8 +455,6 @@ std::string httpd::parseConfigFile() {
 	std::regex regPattern("[^*]*\(httpd_port\)\.*[:][^0-9]*\([0-9]+\)\.*[,]\.*");
 	std::smatch base_match;
 
-	//TODO: check if we have parse this info before
-
 	std::ifstream configFile(CONFIG_FILE);
 
 	if (configFile.fail()) {
@@ -496,10 +479,8 @@ std::string httpd::parseConfigFile() {
  */
 std::string httpd::parsePoolFile() {
 	std::string result = "";
-	std::regex regPattern("[^*]*\(pool_address\)\.*[:][^\"]*\"\([a-zA-Z0-9.]+[:][0-9]+\)\"\.*[,]\.*(wallet_address)\.*[:]\.*\"\([a-zA-Z0-9]+\)\"\.*rig_id\.*");
+	std::regex regPattern("[^*]*\(pool_address\)\.*[:][^\"]*\"\([a-zA-Z0-9.-]+[:][0-9]+\)\"\.*[,]\.*(wallet_address)\.*[:]\.*\"\([a-zA-Z0-9]+\)\"\.*rig_id\.*");
 	std::smatch base_match;
-
-	//TODO: check if we have parse this info before
 
 	std::ifstream poolFile(POOL_FILE);
 
@@ -566,7 +547,6 @@ bool httpd::updateCPUFile() {
 
 	}
 
-	//TODO: check if needed to update cpu.txt with the new config
 
 	// Updating cpu.txt file --------------------------------------
 	if (isUpdateData) {
@@ -574,11 +554,7 @@ bool httpd::updateCPUFile() {
 			std::ifstream cpuFile(CPU_FILE);
 
 			if (cpuFile.fail()) {
-				printer::inst()->print_str("cpu.txt not found");
-				//std::cout << "not cpu.txt found" << std::endl;
-
-				//TODO: error handling. Search for cpu backup file and try to get info there  
-
+				printer::inst()->print_msg(L0, "cpu.txt not found \n");
 			}
 			else {
 				for (std::string line; std::getline(cpuFile, line); ) {
@@ -650,9 +626,6 @@ bool httpd::updateCPUFile() {
 				out.close();
 			}
 		}
-
-		//TODO: check if cpu.txt file was updated and set result value
-
 		result = true;
 	}
 	//-------------------------------------------------------------
@@ -694,9 +667,7 @@ bool httpd::updateGPUNvidiaFile() {
 		std::ifstream nvidiaFile(NVIDIA_FILE);
 
 		if (nvidiaFile.fail()) {
-			printer::inst()->print_str("nvidia.txt not found");
-			//std::cout << "nvidia.txt not found" << std::endl;
-			//TODO: error handling. Search for cpu backup file and try to get info there 
+			printer::inst()->print_msg(L0, "nvidia.txt not found \n");
 		} else {
 			for (std::string line; std::getline(nvidiaFile, line); ) {
 				if (isGpuSection) {
@@ -706,7 +677,6 @@ bool httpd::updateGPUNvidiaFile() {
 					}
 
 					if (startWriteConfig) {
-						//if (isUsingNvidia && !writed) { //FIXME: only for testing. delete for new miner
 						if (!writed) { 
 							writed = true;
 							for (auto const& x : httpd::miner_config->gpu_list) {
@@ -743,10 +713,6 @@ bool httpd::updateGPUNvidiaFile() {
 	}
 
 	//--------------------------------
-
-
-
-
 
 
 
@@ -882,9 +848,7 @@ bool httpd::updateGPUAMD() {
 		std::ifstream amdFile(AMD_FILE);
 
 		if (amdFile.fail()) {
-			printer::inst()->print_str("amd.txt not found");
-			//std::cout << "amd.txt not found" << std::endl;
-			//TODO: error handling. Search for cpu backup file and try to get info there 
+			printer::inst()->print_msg(L0, "amd.txt not found \n");
 		} else {
 			for (std::string line; std::getline(amdFile, line); ) {
 				if (isGpuSection) {
@@ -894,7 +858,6 @@ bool httpd::updateGPUAMD() {
 					}
 
 					if (startWriteConfig) {
-						//if (isUsingAmd && !writed) { //FIXME: only for testing. delete for new miner
 						if (!writed) { 
 							writed = true;
 							for (auto const& x : httpd::miner_config->gpu_list) {
@@ -1048,16 +1011,13 @@ bool httpd::updateConfigFile() {
 
 	}
 
-	//TODO: check if needed to update cpu.txt with the new config
-
 	// Updating cpu.txt file --------------------------------------
 	if (isUpdateData) {
 		if (httpdPort > -1) {
 			std::ifstream configFile(CONFIG_FILE);
 
 			if (configFile.fail()) {
-				printer::inst()->print_str("config.txt not found");
-				//std::cout << "not config.txt found" << std::endl;
+				printer::inst()->print_msg(L0, "config.txt not found \n");
 
 				//TODO: error handling. Search for cpu backup file and try to get info there  
 
@@ -1114,8 +1074,6 @@ bool httpd::updatePoolFile() {
 
 	}
 
-	//TODO: check if needed to update cpu.txt with the new config
-
 	// Updating cpu.txt file --------------------------------------
 	if (isUpdateData) {
 		if ((poolAddress.compare("-1") != 0) &&
@@ -1124,8 +1082,7 @@ bool httpd::updatePoolFile() {
 			std::ifstream poolFile(POOL_FILE);
 
 			if (poolFile.fail()) {
-				printer::inst()->print_str("config.txt not found");
-				//std::cout << "not config.txt found" << std::endl;
+				printer::inst()->print_msg(L0, "config.txt not found \n");
 
 				//TODO: error handling. Search for cpu backup file and try to get info there  
 
@@ -1156,8 +1113,6 @@ bool httpd::updatePoolFile() {
 			}
 		}
 
-		//TODO: check if cpu.txt file was updated and set result value
-
 		result = true;
 	}
 	//-------------------------------------------------------------
@@ -1186,7 +1141,6 @@ std::string httpd::getCustomInfo () {
 	partialRes = parseCPUFile();
 	partialRes += parseGPUNvidiaFile();
 	partialRes += parseGPUAMD();
-	//httpd::loadGPUData();
 	partialRes += getGPUInfo();
 	partialRes += parseConfigFile();
 	partialRes += parsePoolFile();
@@ -1217,13 +1171,10 @@ std::string httpd::getCustomInfo () {
  */
 bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 	bool result = false;
-	printer::inst()->print_msg(L0, "+++ %d => %e", keyIN, valueIN);
-	//std::cout << "+++" << keyIN << " => " << valueIN << std::endl;
-
+	//printer::inst()->print_msg(L0, "+++ %s => %s \n", keyIN, valueIN);
 
 	if (keyIN.compare("cpu_count") == 0) {
-		printer::inst()->print_str("cpu_count key found");
-		//std::cout << "cpu_count key found" << std::endl;
+		//printer::inst()->print_msg(L0, "cpu_count key found \n");
 
 		try {
 
@@ -1236,14 +1187,11 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 			}
 
 		} catch (int param) { 
-			printer::inst()->print_str("int exception");
-			//std::cout << "int exception"; 
+			printer::inst()->print_msg(L0, "int exception \n");
 		} catch (char param) { 
-			printer::inst()->print_str("char exception");
-			//std::cout << "char exception";
+			printer::inst()->print_msg(L0, "char exception \n");
 		} catch (...) { 
-			printer::inst()->print_str("default exception");
-			//std::cout << "default exception"; 
+			printer::inst()->print_msg(L0, "default exception \n");
 		}
 
 		result = true;
@@ -1287,16 +1235,13 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 			
 		}
 		catch (int param) {
-			printer::inst()->print_str("int exception");
-			//std::cout << "int exception";
+			printer::inst()->print_msg(L0, "int exception \n");
 		}
 		catch (char param) {
-			printer::inst()->print_str("char exception");
-			//std::cout << "char exception";
+			printer::inst()->print_msg(L0, "char exception \n");
 		}
 		catch (...) {
-			printer::inst()->print_str("default exception");
-			//std::cout << "default exception";
+			printer::inst()->print_msg(L0, "default exception \n");
 		}
 	}
 	else if (keyIN.compare("pool_address") == 0) {
@@ -1316,8 +1261,8 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 		
 	}
 	else if (keyIN.compare("gpu_list") == 0) {
-		printer::inst()->print_msg(L0, "--->>> gpu_list: %d", valueIN);
-		//std::cout << "--->>> gpu_list: " << valueIN << std::endl;
+		//printer::inst()->print_msg(L0, "--->>> gpu_list: %s", valueIN);
+
 		std::string listTmp = valueIN;
 		std::stringstream ss(listTmp);
 		std::map<std::string, gpu_data>::iterator it;
@@ -1328,7 +1273,6 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 		}
 
 		while (getline(ss, token, ',')) {
-			//std::cout << token << std::endl;
 			it = httpd::miner_config->gpu_list.find(token);
 			if (it != httpd::miner_config->gpu_list.end()) {
 				it->second.isInUse = true;
@@ -1338,8 +1282,7 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 		httpd::miner_config->isNeedUpdate = true;
 	}
 	else {
-		printer::inst()->print_str("Key not found!!");
-		//std::cout << "Key not found!!" << std::endl;
+		printer::inst()->print_msg(L0, "Key not found!! \n");
 	}
 	return result;
 }
@@ -1431,8 +1374,6 @@ void httpd::request_completed (void *cls,
 							   struct MHD_Connection *connection, 
 							   void **con_cls,
 							   enum MHD_RequestTerminationCode toe) {
-	//std::cout << "----[httpd::request_completed(...)]" << std::endl;
-
 	updateConfigFiles ();
 }
 
@@ -1444,8 +1385,6 @@ int httpd::starting_process_post (MHD_Connection* connection,
 												const char* upload_data,
 												size_t* upload_data_size,
 												void ** ptr) {
-
-	//std::cout << "[httpd::starting_process_post(...)]Receiving a post msg... " << std::endl;
 
 	if(NULL == *ptr) {
 		struct connection_info_struct *con_info;
@@ -1500,8 +1439,6 @@ int httpd::req_handler(void * cls,
 							  void ** ptr) {
 
 	struct MHD_Response * rsp;
-	//std::cout << "Receiving a http request..."  << std::endl;
-	//std::cout << "Http request info: " << url << std::endl;
 
 	int retValue;
 
@@ -1522,8 +1459,7 @@ int httpd::req_handler(void * cls,
 	}
 
 	if (!jconf::inst()->is_safe_to_touch()) {
-		printer::inst()->print_msg(L0, "ABORT HTTP HANDLER, jconf not safe to touch. %d %e", method, url);
-		//std::cout << "ABORT HTTP HANDLER, jconf not safe to touch. " << method << " " << url << std::endl;
+		printer::inst()->print_msg(L0, "ABORT HTTP HANDLER, jconf not safe to touch. %s %s \n", method, url);
 		return MHD_NO;
 	}
 
@@ -1634,26 +1570,10 @@ int httpd::req_handler(void * cls,
 		MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
 		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 	} else {
-		//send_page(connection, errorpage);
 		std::string responseT(errorpage);
 		rsp = MHD_create_response_from_buffer(responseT.size(), (void*)responseT.c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
 		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
-
-		//Do a 302 redirect to /h
-		/*char loc_path[256];
-		const char* host_val = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "Host");
-
-		if(host_val != nullptr)
-			snprintf(loc_path, sizeof(loc_path), "http://%s/h", host_val);
-		else
-			snprintf(loc_path, sizeof(loc_path), "/h");
-
-		rsp = MHD_create_response_from_buffer(0, nullptr, MHD_RESPMEM_PERSISTENT);
-		int ret = MHD_queue_response(connection, MHD_HTTP_TEMPORARY_REDIRECT, rsp);
-		MHD_add_response_header(rsp, "Location", loc_path);
-		MHD_destroy_response(rsp);
-		return ret;*/
 	}
 
 	int ret = MHD_queue_response(connection, MHD_HTTP_OK, rsp);
@@ -1673,7 +1593,7 @@ bool httpd::start_daemon() {
 
 	if(d == nullptr)
 	{
-		printer::inst()->print_str("HTTP Daemon failed to start.");
+		printer::inst()->print_msg(L0, "HTTP Daemon failed to start. \n");
 		return false;
 	}
 
@@ -1684,88 +1604,6 @@ bool httpd::start_daemon() {
 #pragma endregion
 
 #pragma region Selecting graphic cards testing
-/*
- * Description:
- */
-bool httpd::nvidiaCardsAvalaible() {
-	bool result = true;
-
-	std::ifstream nvidiaBCKFile("./nvidia-bck.txt");
-
-	if (nvidiaBCKFile.fail()) {
-		result = false;
-	}
-
-	return result;
-}
-
-/*
- * Description:
- */
-bool httpd::amdCardsAvalaible() {
-	bool result = true;
-
-	std::ifstream amdBCKFile("./amd-bck.txt");
-	
-
-	if (amdBCKFile.fail()) {
-		result = false;
-	}
-
-	return result;
-}
-
-/*
- * Description:
- */
-bool httpd::gpuCardsAvalaible() {
-	bool result = false;
-
-	if (httpd::nvidiaCardsAvalaible() || httpd::amdCardsAvalaible()) {
-		result = true;
-	}
-
-	return result;
-}
-
-/*
- * Description:
- */
-bool httpd::gpuDataPreloaded() {
-	bool result = false;
-	
-	if (httpd::miner_config != nullptr) {
-		if (httpd::miner_config->gpu_list.size() == (httpd::miner_config->nvidia_list.size() + httpd::miner_config->amd_list.size())) {
-			result = true;
-		}
-	} else {
-		//TODO: error handling
-	}
-
-	return result;
-}
-
-/*
- * Description:
- */
-void httpd::loadGPUData() {
-	if (httpd::miner_config != nullptr) {
-		if (!httpd::gpuDataPreloaded()) {
-			httpd::miner_config->gpu_list.clear();
-			for (int i = 0; i < httpd::miner_config->nvidia_list.size(); ++i) {
-				std::string idTmp = "nvidia-" + std::to_string(i);
-				//httpd::miner_config->gpu_list.emplace(idTmp, gpu_data{ httpd::miner_config->nvidia_list[i], true });
-			}
-
-			for (int i = 0; i < httpd::miner_config->amd_list.size(); ++i) {
-				std::string idTmp = "amd-" + std::to_string(i);
-				//httpd::miner_config->gpu_list.emplace(idTmp, gpu_data{ httpd::miner_config->amd_list[i], true });
-			}
-		}
-	} else {
-		//TODO: error handling
-	}
-}
 
 /*
  * Description:
@@ -1810,7 +1648,7 @@ std::string httpd::getGPUInfo() {
 			}
 			result += "} ";
 		}
-		result += " ], ";
+		result += " ],\n";
 	}
 	else {
 		//TODO: error handling

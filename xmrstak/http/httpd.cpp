@@ -153,27 +153,61 @@ std::string httpd::parseCPUFile() {
 	std::smatch base_match;
 	std::smatch base_match2;
 
+	std::string cpuCounResult = "";
+	bool isCpuCountFound = false;
+	std::string currentCpuCountResult = "";
+	bool isCurrCpuCountFound = false;
+
 	std::ifstream cpuFile(CPU_FILE);
 
 	if (cpuFile.fail()) {
 
 		//TODO: error handling. Search for cpu backup file and try to get info there  
+		// ¿? needRestart -> true ¿?
 
 	} else {
 		for (std::string line; std::getline(cpuFile, line); ) {
 			if (std::regex_match(line, base_match, regPattern)) {
-				result = " \"cpu_count\" : ";
-				result += base_match[2];
-				result += ", \n";
+				//result = " \"cpu_count\" : ";
+				//result += base_match[2];
+				//result += ", \n";
+
+				cpuCounResult = " \"cpu_count\" : ";
+				cpuCounResult += base_match[2];
+				cpuCounResult += ", \n";
 
 				httpd::miner_config->cpu_count = std::stoi(base_match[2]); 
+				isCpuCountFound = true;
 			}
 			if (std::regex_match(line, base_match2, regPattern2)) {
-				result += "\"current_cpu_count\" : ";
-				result += base_match2[2];
-				result += ", \n";
+				//result += "\"current_cpu_count\" : ";
+				//result += base_match2[2];
+				//result += ", \n";
+
+				currentCpuCountResult = "\"current_cpu_count\" : ";
+				currentCpuCountResult += base_match2[2];
+				currentCpuCountResult += ", \n";
+
 				httpd::miner_config->current_cpu_count = std::stoi(base_match2[2]);
+				isCurrCpuCountFound = true;
 			}
+		}
+		if (isCpuCountFound) {
+			result += cpuCounResult;
+		} else {
+			result += " \"cpu_count\" : 0";
+			result += ", \n";
+			//TODO: error handling.  
+			// ¿? needRestart -> true ¿?
+		}
+
+		if (isCurrCpuCountFound) {
+			result += currentCpuCountResult;
+		} else {
+			result += "\"current_cpu_count\" : 0";
+			result += ", \n";
+			//TODO: error handling.  
+			// ¿? needRestart -> true ¿?
 		}
 	}
 	return result;
@@ -207,7 +241,15 @@ std::string httpd::parseGPUNvidiaFile() {
 
 	std::ifstream nvidiaFile("./nvidia-bck.txt");
 
-	if (!nvidiaFile.fail()) {
+	std::string nvidiaListResult = "";
+	bool nvidiaListFound = false;
+
+	if (nvidiaFile.fail()) {
+
+		//TODO: error handling. Search for cpu backup file and try to get info there  
+		// ¿? needRestart -> true ¿?
+
+	} else {
 
 		httpd::miner_config->nvidia_list.clear();
 		std::string partialResult = "";
@@ -244,18 +286,23 @@ std::string httpd::parseGPUNvidiaFile() {
 				else {
 					if (initArray && std::regex_match(line, endPattern)) {
 						initArray = false;
-						result += "], \n";
+						//result += "], \n";
+						nvidiaListResult += "], \n";
 					}
 					else if (initArray) {
 						if (std::regex_match(line, base_match, namePattern)) {
+							nvidiaListFound = true;
 							if (primera) {
 								primera = false;
-								result += "\"nvidia_list\" : [";
+								//result += "\"nvidia_list\" : [";
+								nvidiaListResult += "\"nvidia_list\" : [";
 							}
 							else {
-								result += ", \n";
+								//result += ", \n";
+								nvidiaListResult += ", \n";
 							}
-							result += base_match[1];
+							//result += base_match[1];
+							nvidiaListResult += base_match[1];
 							httpd::miner_config->nvidia_list.push_back(base_match[1]);
 						
 							std::string idTmp = "nvidia-" + std::to_string(gpuIndex);
@@ -271,32 +318,14 @@ std::string httpd::parseGPUNvidiaFile() {
 					}
 				}
 			}
-			//--------------------------------
-
-
-
-			//---if (initArray && std::regex_match(line, endPattern)) {
-			//---	initArray = false;
-			//---	result += "], \n";
-			//---} else if (initArray) {
-			//---	if (std::regex_match(line, base_match, namePattern)) {
-			//---		if (primera) {
-			//---			primera = false;
-			//---			result += "\"nvidia_list\" : [";
-			//---		} else {
-			//---			result += ", \n";
-			//---		}
-			//---		result += base_match[1];
-			//---		httpd::miner_config->nvidia_list.push_back(base_match[1]);
-					//--- Selecting each graphic card test
-					// TODO: check if this graphic card was emplaced before
-					//httpd::miner_config->gpu_list.emplace(base_match[1], true);
-					//---
-			//---	}
-			//---} else if (!initArray && std::regex_match(line, mainPattern)) {
-			//---	initArray = true;
-			//---}
 		}
+	}
+	if (nvidiaListFound) {
+		result += nvidiaListResult;
+	} else {
+		result += "\"nvidia_list\" : [ ] , \n";
+		//TODO: error handling.  
+		// ¿? needRestart -> true ¿?
 	}
 
 	if (httpd::miner_config != nullptr) {
@@ -307,6 +336,11 @@ std::string httpd::parseGPUNvidiaFile() {
 		else {
 			result += "false, \n";
 		}
+	} else {
+		result += "\"nvidia_current\" : false, \n";
+		//TODO: error handling.  
+		// create httpd::miner_config object ¿?
+		// ¿? needRestart -> true ¿?
 	}
 
 	return result;
@@ -341,7 +375,16 @@ std::string httpd::parseGPUAMD() {
 	
 	std::ifstream amdFile("./amd-bck.txt");
 
-	if (!amdFile.fail()) {
+	std::string amdListResult = "";
+	bool amdListFound = false;
+
+	if (amdFile.fail()) {
+
+		//TODO: error handling. Search for cpu backup file and try to get info there  
+		// ¿? needRestart -> true ¿?
+
+	} else {
+
 		httpd::miner_config->amd_list.clear();
 		std::string partialResult = "";
 
@@ -376,18 +419,23 @@ std::string httpd::parseGPUAMD() {
 					
 					if (initArray && std::regex_match(line, endPattern)) {
 						initArray = false;
-						result += "], \n";
+						//result += "], \n";
+						amdListResult += "], \n";
 					}
 					else if (initArray) {
 						if (std::regex_match(line, base_match, namePattern)) {
+							amdListFound = true;
 							if (primera) {
 								primera = false;
-								result += "\"amd_list\" : [";
+								//result += "\"amd_list\" : [";
+								amdListResult += "\"amd_list\" : [";
 							}
 							else {
-								result += ", \n";
+								//result += ", \n";
+								amdListResult += ", \n";
 							}
-							result += base_match[1];
+							//result += base_match[1];
+							amdListResult += base_match[1];
 							httpd::miner_config->amd_list.push_back(base_match[1]);
 							
 							std::string idTmp = "amd-" + std::to_string(gpuIndex);
@@ -401,37 +449,18 @@ std::string httpd::parseGPUAMD() {
 					else if (!initArray && std::regex_match(line, mainPattern)) {
 						initArray = true;
 					}
-
-
-
 				}
 			}
-			//--------------------------------
-
-
-			//---if (initArray && std::regex_match(line, endPattern)) {
-			//---	initArray = false;
-			//---	result += "], \n";
-			//---}
-			//---else if (initArray) {
-			//---	if (std::regex_match(line, base_match, namePattern)) {
-			//---		if (primera) {
-			//---			primera = false;
-			//---			result += "\"amd_list\" : [";
-			//---		} else {
-			//---			result += ", \n";
-			//---		}
-			//---		result += base_match[1];
-			//---		httpd::miner_config->amd_list.push_back(base_match[1]);
-					//--- Selecting each graphic card test
-					// TODO: check if this graphic card was emplaced before
-					//httpd::miner_config->gpu_list.emplace(base_match[1], true);
-					//---
-			//---	}
-			//---} else if (!initArray && std::regex_match(line, mainPattern)) {
-			//---	initArray = true;
-			//---}
 		}
+	}
+
+	if (amdListFound) {
+		result += amdListResult;
+	}
+	else {
+		result += "\"amd_list\" : [ ], \n";
+		//TODO: error handling.  
+		// ¿? needRestart -> true ¿?
 	}
 
 	if (httpd::miner_config != nullptr) {
@@ -442,6 +471,11 @@ std::string httpd::parseGPUAMD() {
 		else {
 			result += "false, \n";
 		}
+	} else {
+		result += "\"amd_current\" : false, \n";
+		//TODO: error handling.  
+		// create httpd::miner_config object
+		// ¿? needRestart -> true ¿?
 	}
 
 	return result;
@@ -457,13 +491,17 @@ std::string httpd::parseConfigFile() {
 
 	std::ifstream configFile(CONFIG_FILE);
 
+	bool httpdFound = false;
+
 	if (configFile.fail()) {
 
 		//TODO: error handling. Search for cpu backup file and try to get info there  
+		// ¿? needRestart -> true ¿?
 
 	} else {
 		for (std::string line; std::getline(configFile, line); ) {
 			if (std::regex_match(line, base_match, regPattern)) {
+				httpdFound = true;
 				result = " \"httpd_port\" : ";
 				result += base_match[2];
 				result += ", \n";
@@ -471,6 +509,13 @@ std::string httpd::parseConfigFile() {
 			}
 		}
 	}
+
+	if (!httpdFound) {
+		result = " \"httpd_port\" : 0, \n";
+		//TODO: error handling.  
+		// ¿? needRestart -> true ¿?
+	}
+
 	return result;
 }
 
@@ -479,32 +524,71 @@ std::string httpd::parseConfigFile() {
  */
 std::string httpd::parsePoolFile() {
 	std::string result = "";
-	std::regex regPattern("[^*]*\(pool_address\)\.*[:][^\"]*\"\([a-zA-Z0-9.-]+[:][0-9]+\)\"\.*[,]\.*(wallet_address)\.*[:]\.*\"\([a-zA-Z0-9]+\)\"\.*rig_id\.*");
+	//std::regex regPattern("[^*]*\(pool_address\)\.*[:][^\"]*\"\([a-zA-Z0-9.-]+[:][0-9]+\)\"\.*[,]\.*(wallet_address)\.*[:]\.*\"\([a-zA-Z0-9]+\)\"\.*rig_id\.*");
 	std::smatch base_match;
+	std::smatch base_match2;
+
+	std::regex poolPattern("[^*]*\(pool_address\)\.*[:][^\"]*\"\([a-zA-Z0-9.-]+[:][0-9]+\)\"\.*[,]\.*wallet_address\.*");
+	std::regex walletPattern("[^*]*\(wallet_address\)\.*[:]\.*\"\([a-zA-Z0-9]+\)\"\.*[,]\.*rig_id\.*");
 
 	std::ifstream poolFile(POOL_FILE);
+
+	std::string poolAddressResult = "";
+	bool poolAddressFound = false;
+	std::string walletAddressResult = "";
+	bool walletAddressFound = false;
 
 	if (poolFile.fail()) {
 
 		//TODO: error handling. Search for pool backup file and try to get info there  
+		// ¿? needRestart -> true ¿?
 
 	} else {
 		for (std::string line; std::getline(poolFile, line); ) {
-			if (std::regex_match(line, base_match, regPattern)) {
+			//if (std::regex_match(line, base_match, regPattern)) {
+			if(std::regex_match(line, base_match, poolPattern)) {
 
-				result = " \"pool_address\" : \"";
-				result += base_match[2];
-				result += "\", \n";
+				//result = " \"pool_address\" : \"";
+				//result += base_match[2];
+				//result += "\", \n";
+
+				poolAddressFound = true;
+				poolAddressResult = " \"pool_address\" : \"";
+				poolAddressResult += base_match[2];
+				poolAddressResult += "\", \n";
 				httpd::miner_config->pool_address = base_match[2];
+			}
 
-				result += " \"wallet_address\" : \"";
-				result += base_match[4];
-				result += "\",  \n";
-				httpd::miner_config->wallet_address = base_match[4];
+			if (std::regex_match(line, base_match2, walletPattern)) {
+
+				//result += " \"wallet_address\" : \"";
+				//result += base_match[4];
+				//result += "\",  \n";
+
+				walletAddressFound = true;
+				walletAddressResult = " \"wallet_address\" : \"";
+				walletAddressResult += base_match2[2];
+				walletAddressResult += "\",  \n";
+				httpd::miner_config->wallet_address = base_match[2];
 			}
 		}
 	}
 
+	if (poolAddressFound) {
+		result += poolAddressResult;
+	} else {
+		result += " \"pool_address\" : \"fail\", \n";
+		//TODO: error handling.  
+		// ¿? needRestart -> true ¿?
+	}
+
+	if (walletAddressFound) {
+		result += walletAddressResult;
+	} else {
+		result += " \"wallet_address\" : \"fail\", \n";
+		//TODO: error handling.  
+		// ¿? needRestart -> true ¿?
+	}
 	return result;
 }
 
@@ -712,104 +796,6 @@ bool httpd::updateGPUNvidiaFile() {
 		}
 	}
 
-	//--------------------------------
-
-
-
-	//bool result = false;
-	//bool isUpdateData = true;
-	//bool isGpuSectionEnd = false;
-
-	//std::string nvidiaConfigContent = "";
-	//std::regex gpuSectionPattern("[^*]*\(gpu_threads_conf\)\.*");
-	//std::regex gpuSectionEndPattern("\.*\(gpu_info\)\.*");
-	////std::regex gpuSectionEndPattern("\.*\(\\]\,\)\.*");
-	//
-	//bool isGpuSection = false;
-
-	//std::regex gpuLineStartPattern("\.*\(index\)\.*[0-9]\.*");
-	//std::regex gpuLineEndPattern("\.*\(affine_to_cpu\)\.*\(\sync_mode)\.*");
-	//bool isGpuLine = false;
-
-	//bool isUsingNvidia = false;
-
-	//if (httpd::miner_config != nullptr) {
-	//	isUsingNvidia = miner_config->current_use_nvidia;
-	//} else {
-	//	isUpdateData = false;
-
-	//	//TODO: error handling
-
-	//}
-
-	//TODO: check if needed to update nvidia.txt with the new config
-
-	// Updating nvidia.txt file -----------------------------------
-	//if (isUpdateData) {
-	//	if (isUsingNvidia) {
-	//		std::ifstream nvidiaBCKFile("./nvidia-bck.txt");
-
-	//		if (nvidiaBCKFile.fail()) {
-	//			std::cout << "nvidia-bck.txt not found" << std::endl;
-	//		} else {
-	//			if (remove(NVIDIA_FILE.c_str()) != 0) {
-	//				std::cout << "Error deleting file [nvidia.txt]" << std::endl;
-	//			} else {
-	//				std::cout << "File successfully deleted [nvidia.txt]" << std::endl;
-	//			}
-
-	//			try {
-	//				std::ofstream  dst(NVIDIA_FILE, std::ios::binary);
-	//				dst << nvidiaBCKFile.rdbuf();
-	//			}
-	//			catch (...) {
-	//				std::cout << "ERROR doing a config files backup" << std::endl;
-	//			}
-	//		}
-	//	} else {
-
-	//		std::ifstream nvidiaFile(NVIDIA_FILE);
-
-	//		if (nvidiaFile.fail()) {
-	//			std::cout << "nvidia.txt not found" << std::endl;
-
-	//			//TODO: error handling. Search for cpu backup file and try to get info there  
-
-	//		} else {
-	//			for (std::string line; std::getline(nvidiaFile, line); ) {
-	//				if (!isGpuSection) {
-	//					nvidiaConfigContent += line;
-	//					nvidiaConfigContent += "\n";
-	//					if (std::regex_match(line, gpuSectionPattern)) {
-	//						isGpuSection = true;
-	//						nvidiaConfigContent += "[ ], \n \n";
-	//					}
-	//				}
-	//				else {
-	//					if (std::regex_match(line, gpuSectionEndPattern)) {
-	//						isGpuSectionEnd = true;
-	//					}
-	//					if (isGpuSectionEnd) {
-	//						//nvidiaConfigContent += " \n \n";
-	//						nvidiaConfigContent += line;
-	//						nvidiaConfigContent += "\n";
-	//						isGpuSection = false;
-	//					}
-	//				}
-	//			}
-	//			nvidiaFile.close();
-	//			std::ofstream out(NVIDIA_FILE);
-	//			out << nvidiaConfigContent;
-	//			out.close();
-	//		}
-	//	}
-
-	//	//TODO: check if nvidia.txt file was updated and set result value
-
-	//	result = true;
-	//}
-	//-------------------------------------------------------------
-
 	return result;
 }
 
@@ -893,99 +879,6 @@ bool httpd::updateGPUAMD() {
 			out.close();
 		}
 	}
-	//--------------------------------
-
-
-
-	//---bool result = false;
-	//---bool isUpdateData = true;
-	//---bool isGpuSectionEnd = false;
-
-	//---std::string amdConfigContent = "";
-	//---std::regex gpuSectionPattern("^(\"gpu_threads_conf\"\)\.*?$");
-	//---std::regex gpuSectionEndPattern("\.*\(\\]\,\)\.*");
-	//---bool isGpuSection = false;
-
-	//---std::regex gpuLineStartPattern("\.*\(index\)\.*[0-9]\.*");
-	//---std::regex gpuLineEndPattern("\.*\(affine_to_cpu\)\.*\(\sync_mode)\.*");
-	//---bool isGpuLine = false;
-
-	//---bool isUsingAmd = false;
-
-	//---if (httpd::miner_config != nullptr) {
-	//---	isUsingAmd = miner_config->current_use_amd;
-	//---} else {
-	//---	isUpdateData = false;
-	//---}
-
-	//TODO: check if needed to update amd.txt with the new config
-
-	// Updating amd.txt file --------------------------------------
-	//---if (isUpdateData) {
-	//---	if (isUsingAmd) {
-	//---		std::ifstream amdBCKFile("./amd-bck.txt");
-
-	//---		if (amdBCKFile.fail()) {
-	//---			std::cout << "amd-bck.txt not found" << std::endl;
-	//---		} else {
-	//---			if (remove(AMD_FILE.c_str()) != 0) {
-	//---				std::cout << "Error deleting file [amd.txt]" << std::endl;
-	//---			}
-	//---			else {
-	//---				std::cout << "File successfully deleted [amd.txt]" << std::endl;
-	//---			}
-
-	//---			try {
-	//---				std::ofstream  dst(AMD_FILE, std::ios::binary);
-	//---				dst << amdBCKFile.rdbuf();
-	//---			}
-	//---			catch (...) {
-	//---				std::cout << "ERROR doing a config files backup" << std::endl;
-	//---			}
-	//---		}
-	//---	} else {
-	//---		std::ifstream amdFile(AMD_FILE);
-
-	//---		if (amdFile.fail()) {
-	//---			std::cout << "amd.txt not found" << std::endl;
-
-				//TODO: error handling. Search for cpu backup file and try to get info there  
-
-	//---		}
-	//---		else {
-	//---			for (std::string line; std::getline(amdFile, line); ) {
-	//---				if (!isGpuSection) {
-	//---					amdConfigContent += line;
-	//---					amdConfigContent += "\n";
-	//---					if (std::regex_match(line, gpuSectionPattern)) {
-	//---						isGpuSection = true;
-	//---						amdConfigContent += " null, \n \n";
-	//---					}
-	//---				}
-	//---				else {
-	//---					if (isGpuSectionEnd) {
-	//---						amdConfigContent += line;
-	//---						amdConfigContent += "\n";
-	//---						isGpuSection = false;
-	//---					}
-	//---					if (std::regex_match(line, gpuSectionEndPattern)) {
-							//amdConfigContent += " \n \n";
-	//---						isGpuSectionEnd = true;
-	//---					}
-	//---				}
-	//---			}
-	//---			amdFile.close();
-	//---			std::ofstream out(AMD_FILE);
-	//---			out << amdConfigContent;
-	//---			out.close();
-	//---		}
-	//---	}
-
-		//TODO: check if nvidia.txt file was updated and set result value
-
-	//---	result = true;
-	//---}
-	//-------------------------------------------------------------
 
 	return result;
 }

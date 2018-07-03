@@ -1257,7 +1257,46 @@ int httpd::req_handler(void * cls,
 		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(rsp, "Content-Type", "application/json; charset=utf-8");
 		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
-	} else {
+	}
+	else if (strcasecmp(url, "/style.css") == 0)
+	{
+		const char* req_etag = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "If-None-Match");
+
+		if (req_etag != NULL && strcmp(req_etag, sHtmlCssEtag) == 0)
+		{ //Cache hit
+			rsp = MHD_create_response_from_buffer(0, nullptr, MHD_RESPMEM_PERSISTENT);
+
+			int ret = MHD_queue_response(connection, MHD_HTTP_NOT_MODIFIED, rsp);
+			MHD_destroy_response(rsp);
+			return ret;
+		}
+
+		rsp = MHD_create_response_from_buffer(sHtmlCssSize, (void*)sHtmlCssFile, MHD_RESPMEM_PERSISTENT);
+		MHD_add_response_header(rsp, "ETag", sHtmlCssEtag);
+		MHD_add_response_header(rsp, "Content-Type", "text/css; charset=utf-8");
+	}
+	else if (strcasecmp(url, "/h") == 0 || strcasecmp(url, "/hashrate") == 0)
+	{
+		executor::inst()->get_http_report(EV_HTML_HASHRATE, str);
+
+		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
+		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
+	}
+	else if (strcasecmp(url, "/c") == 0 || strcasecmp(url, "/connection") == 0)
+	{
+		executor::inst()->get_http_report(EV_HTML_CONNSTAT, str);
+
+		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
+		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
+	}
+	else if (strcasecmp(url, "/r") == 0 || strcasecmp(url, "/results") == 0)
+	{
+		executor::inst()->get_http_report(EV_HTML_RESULTS, str);
+
+		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
+		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
+	} 
+	else {
 		//send_page(connection, errorpage);
 		std::string responseT(errorpage);
 		rsp = MHD_create_response_from_buffer(responseT.size(), (void*)responseT.c_str(), MHD_RESPMEM_MUST_COPY);

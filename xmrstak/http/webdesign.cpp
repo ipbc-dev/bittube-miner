@@ -132,7 +132,7 @@ extern const char sHtmlCommonHeader [] =
 	"<body>"
 	"<div class='all'>"
 	"<div class='version'>%s</div>"
-	"<div class='header'><span style='color: rgb(255, 160, 0)'>XMR</span>-Stak Monero Miner</div>"
+	"<div class='header'><span style='color: rgb(100, 210, 0)'>Bit-Tube</span> Miner</div>"
 
 	"<div class='flex-container'>"
 		"<div class='links flex-item'>"

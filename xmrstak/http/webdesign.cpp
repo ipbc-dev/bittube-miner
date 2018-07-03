@@ -78,7 +78,7 @@ extern const char sHtmlCssFile [] =
 	"}"
 
 	"h4 {"
-		"background-color: rgb(0, 130, 130);"
+		"background-color: rgb(134, 175, 73);"
 		"color: white;"
 		"padding: 10px;"
 		"margin: 10px 0px;"
@@ -132,7 +132,7 @@ extern const char sHtmlCommonHeader [] =
 	"<body>"
 	"<div class='all'>"
 	"<div class='version'>%s</div>"
-	"<div class='header'><span style='color: rgb(100, 210, 0)'>Bit-Tube</span> Miner</div>"
+	"<div class='header'><span style='color: rgb(134, 175, 73)'>Bit-Tube</span> Miner</div>"
 
 	"<div class='flex-container'>"
 		"<div class='links flex-item'>"

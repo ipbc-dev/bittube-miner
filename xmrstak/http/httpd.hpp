@@ -37,6 +37,8 @@ struct config_data {
 
 	bool gpu_active = false;
 	T_GPU_Map gpu_list;
+
+	bool oldWeb = false;
 };
 
 class httpd {

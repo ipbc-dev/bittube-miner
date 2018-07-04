@@ -703,7 +703,6 @@ bool httpd::updateCPUFile() {
  * Description: Update nvidia.txt with new config data
  */
 bool httpd::updateGPUNvidiaFile() {
-	// Test selecting graphic card ---
 	std::regex gpuNvidiaPattern("\.*\(nvidia\)\.*");
 	std::regex gpuSectionPattern("[^*]*\(gpu_threads_conf\)\.*");
 	std::regex gpuSectionEndPattern("\.*\(gpu_info\)\.*");
@@ -716,6 +715,7 @@ bool httpd::updateGPUNvidiaFile() {
 	bool result = false;
 	bool isUpdateData = true;
 	bool isUsingNvidia = false;
+	bool oldWebMode = false;
 
 	bool isGpuSection = false;
 	bool isGpuSectionEnd = false;
@@ -724,6 +724,7 @@ bool httpd::updateGPUNvidiaFile() {
 
 	if (httpd::miner_config != nullptr) {
 		isUsingNvidia = miner_config->current_use_nvidia;
+		oldWebMode = miner_config->oldWeb;
 	}
 	else {
 		isUpdateData = false;
@@ -749,7 +750,13 @@ bool httpd::updateGPUNvidiaFile() {
 							writed = true;
 							for (auto const& x : httpd::miner_config->gpu_list) {
 								if (std::regex_match(x.first, gpuNvidiaPattern)) {
-									if (x.second.isInUse) {
+									if (oldWebMode) {
+										if (isUsingNvidia) {
+											nvidiaConfigContent += x.second.config;
+											nvidiaConfigContent += "\n";
+										}
+									}
+									else if (x.second.isInUse) {
 										nvidiaConfigContent += x.second.config;
 										nvidiaConfigContent += "\n";
 									}
@@ -801,6 +808,7 @@ bool httpd::updateGPUAMD() {
 	bool result = false;
 	bool isUpdateData = true;
 	bool isUsingAmd = false;
+	bool oldWebMode = false;
 
 	bool isGpuSection = false;
 	bool isGpuSectionEnd = false;
@@ -809,6 +817,7 @@ bool httpd::updateGPUAMD() {
 
 	if (httpd::miner_config != nullptr) {
 		isUsingAmd = miner_config->current_use_amd;
+		oldWebMode = miner_config->oldWeb;
 	}
 	else {
 		isUpdateData = false;
@@ -834,7 +843,13 @@ bool httpd::updateGPUAMD() {
 							writed = true;
 							for (auto const& x : httpd::miner_config->gpu_list) {
 								if (std::regex_match(x.first, gpuAmdPattern)) {
-									if (x.second.isInUse) {
+									if (oldWebMode) {
+										if (isUsingAmd) {
+											amdConfigContent += x.second.config;
+											amdConfigContent += "\n";
+										}
+									}
+									else if (x.second.isInUse) {
 										amdConfigContent += x.second.config;
 										amdConfigContent += "\n";
 									}
@@ -1080,6 +1095,7 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 		}
 
 		if (httpd::miner_config->current_use_nvidia != resultTmp) {
+			httpd::miner_config->oldWeb = true;
 			httpd::miner_config->current_use_nvidia = resultTmp;
 			httpd::miner_config->isNeedUpdate = true;
 		}
@@ -1094,6 +1110,7 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 		}
 
 		if (httpd::miner_config->current_use_amd != resultTmp) {
+			httpd::miner_config->oldWeb = true;
 			httpd::miner_config->current_use_amd = resultTmp;
 			httpd::miner_config->isNeedUpdate = true;
 		}
@@ -1150,6 +1167,7 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 			}
 		}
 
+		httpd::miner_config->oldWeb = false;
 		httpd::miner_config->isNeedUpdate = true;
 	}
 	else {

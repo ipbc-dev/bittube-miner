@@ -1199,11 +1199,10 @@ int main(int argc, char *argv[]) {
 						}
 						
 						if (!runningInputParser) {
-							//TODO: test a lot this delete
 							if (inputThread != nullptr) {
 								delete inputThread;
+								inputThread = nullptr;
 							}
-							//---
 
 							inputThread = new std::thread(&parse_runtime_input, &runningInputParser);
 							inputThread->detach();

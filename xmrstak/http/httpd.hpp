@@ -3,11 +3,20 @@
 #include <stdlib.h>
 #include <string>
 #include <vector>
+#include <map>
 
 #include <microhttpd.h>
 
 struct MHD_Daemon;
 struct MHD_Connection;
+
+struct gpu_data {
+	std::string name;
+	bool isInUse;
+	std::string config;
+};
+
+typedef std::map<std::string, gpu_data> T_GPU_Map;
 
 struct config_data {
 	bool isNeedUpdate = false;
@@ -25,6 +34,9 @@ struct config_data {
 	bool current_use_amd = false;
 
 	bool isMining = false;
+
+	bool gpu_active = false;
+	T_GPU_Map gpu_list;
 };
 
 class httpd {
@@ -44,9 +56,6 @@ public:
 
 		if (oInst->d != nullptr) {
 			MHD_stop_daemon(oInst->d);
-			
-			//delete oInst->d;
-			//oInst->d = nullptr;
 
 			delete oInst;
 			oInst = nullptr;
@@ -63,15 +72,11 @@ public:
 		}
 	};
 
-	
-
 	bool start_daemon();
 
 private:
 	httpd();
 	static httpd* oInst;
-
-
 
 	static std::string parseCPUFile();
 	static std::string parseGPUNvidiaFile();
@@ -123,4 +128,6 @@ private:
 								  void ** ptr);
 
 	MHD_Daemon *d;
+
+	static std::string getGPUInfo();
 };

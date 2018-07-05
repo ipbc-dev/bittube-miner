@@ -1498,11 +1498,26 @@ int httpd::req_handler(void * cls,
 		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
 	} 
 	else {
+		//Do a 302 redirect to /h
+		char loc_path[256];
+		const char* host_val = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "Host");
+
+		if (host_val != nullptr)
+			snprintf(loc_path, sizeof(loc_path), "http://%s/h", host_val);
+		else
+			snprintf(loc_path, sizeof(loc_path), "/h");
+
+		rsp = MHD_create_response_from_buffer(0, nullptr, MHD_RESPMEM_PERSISTENT);
+		int ret = MHD_queue_response(connection, MHD_HTTP_TEMPORARY_REDIRECT, rsp);
+		MHD_add_response_header(rsp, "Location", loc_path);
+		MHD_destroy_response(rsp);
+		return ret;
+
 		//send_page(connection, errorpage);
-		std::string responseT(errorpage);
-		rsp = MHD_create_response_from_buffer(responseT.size(), (void*)responseT.c_str(), MHD_RESPMEM_MUST_COPY);
-		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
-		MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
+		//---std::string responseT(errorpage);
+		//---rsp = MHD_create_response_from_buffer(responseT.size(), (void*)responseT.c_str(), MHD_RESPMEM_MUST_COPY);
+		//---MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
+		//---MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 	}
 
 	int ret = MHD_queue_response(connection, MHD_HTTP_OK, rsp);

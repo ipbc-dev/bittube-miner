@@ -39,6 +39,7 @@ struct config_data {
 	T_GPU_Map gpu_list;
 
 	bool oldWeb = false;
+	bool expertMode = false;
 };
 
 class httpd {

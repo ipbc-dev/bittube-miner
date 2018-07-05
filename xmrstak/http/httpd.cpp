@@ -300,6 +300,7 @@ std::string httpd::parseGPUNvidiaFile() {
 								base_match[1],
 								true,
 								gpuInfoList[gpuIndex] });
+							httpd::miner_config->current_use_nvidia = true;
 							++gpuIndex;
 						}
 					}
@@ -432,6 +433,7 @@ std::string httpd::parseGPUAMD() {
 								base_match[1],
 								true,
 								gpuInfoList[gpuIndex] });
+							httpd::miner_config->current_use_amd = true;
 							++gpuIndex;
 						}
 					}
@@ -1171,7 +1173,7 @@ bool httpd::parseCustomInfo (std::string keyIN, std::string valueIN) {
 		httpd::miner_config->isNeedUpdate = true;
 	}
 	else {
-		std::cout << "Key not found!!" << std::endl;
+		printer::inst()->print_msg(L0, "Key not found!! \n");
 	}
 	return result;
 }

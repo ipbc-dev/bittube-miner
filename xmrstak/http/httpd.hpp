@@ -77,6 +77,8 @@ public:
 
 	bool start_daemon();
 
+	static std::string getCustomInfo();
+
 private:
 	httpd();
 	static httpd* oInst;
@@ -93,7 +95,6 @@ private:
 	static bool updateConfigFile();
 	static bool updatePoolFile();
 
-	static std::string getCustomInfo ();
 	static bool parseCustomInfo (std::string keyIN, std::string valueIN);
 	static void updateConfigFiles ();
 

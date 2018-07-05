@@ -35,6 +35,7 @@
 
 #ifndef CONF_NO_HTTPD
 #include "xmrstak/http/httpd.hpp"
+#include <regex>
 #endif
 
 #include <stdlib.h>
@@ -807,13 +808,11 @@ int program_config(bool expertMode) {
 	return result;
 }
 
-
-
 void show_credits(bool expertMode) {
-	if (!expertMode) {
-		printer::inst()->print_str("-------------------------------------------------------------------\n");
-		printer::inst()->print_str("Automatic configuration for non experts is in beta. \n");
-	}
+	//if (!expertMode) {
+	//	printer::inst()->print_str("-------------------------------------------------------------------\n");
+	//	printer::inst()->print_str("Automatic configuration for non experts is in beta. \n");
+	//}
 	printer::inst()->print_str("-------------------------------------------------------------------\n");
 	printer::inst()->print_str(get_version_str_short().c_str());
 	printer::inst()->print_str("\n\n");
@@ -833,39 +832,196 @@ void show_manage_info() {
 	printer::inst()->print_str("Miner execution in pause\n");
 	printer::inst()->print_str("-------------------------------------------------------------------\n");
 	printer::inst()->print_str("To manage your miner: \n");
-	printer::inst()->print_str("Please, go to https://bit.tube/startmining \n");
+	printer::inst()->print_str(" 1. Go to https://bit.tube/startmining \n");
+	printer::inst()->print_str(" 2. Press 'p' to play  \n");
+#ifndef CONF_NO_HTTPD
+	printer::inst()->print_str(" 3. Press 'i' to see current configuration  \n");
+#endif
 }
 
 void show_runtime_help() {
 	printer::inst()->print_str("-------------------------------------------------------------------\n");
 	printer::inst()->print_str("\nYou can use following keys to display reports:\n");
-	printer::inst()->print_str("'h' - hashrate\n");
-	printer::inst()->print_str("'r' - results\n");
-	printer::inst()->print_str("'c' - connection\n");
+#ifndef CONF_NO_HTTPD
+	printer::inst()->print_str("'i' - configuration\n");
+#endif
+	printer::inst()->print_str("'h' - hashrate (not paused)\n");
+	printer::inst()->print_str("'r' - results (not paused)\n");
+	printer::inst()->print_str("'c' - connection (not paused)\n\n");
+	printer::inst()->print_str("'p' - play/pause\n");
 	printer::inst()->print_str("-------------------------------------------------------------------\n");
+}
+
+void show_miner_config() {
+#ifndef CONF_NO_HTTPD
+	std::regex gpuNvidiaPattern("\.*\(nvidia\)\.*");
+	std::regex gpuAmdPattern("\.*\(amd\)\.*");
+	std::string tmp = "";
+
+	if (httpd::miner_config != nullptr) {
+		//getCustomInfo();
+
+		if (httpd::miner_config->cpu_count < 0) {
+			tmp = httpd::getCustomInfo();
+		}
+
+		printer::inst()->print_str("\n\n===================================================================\n");
+		printer::inst()->print_str("=                       Miner Configuration                       =\n");
+		printer::inst()->print_str("===================================================================\n");
+		if (httpd::miner_config->isMining) {
+			printer::inst()->print_str("Miner State: Mining \n");
+		}
+		else {
+			printer::inst()->print_str("Miner State: Pause/Restarting \n");
+		}
+		printer::inst()->print_str("-------------------------------------------------------------------\n");
+		printer::inst()->print_str("Miner config :\n");
+		printer::inst()->print_str("----------------\n");
+
+		tmp = "   - Http Port (monitoring and control miner): " + std::to_string(httpd::miner_config->http_port);
+		tmp += "\n";
+		printer::inst()->print_str(tmp.c_str());
+		tmp = "   - Pool address : " + httpd::miner_config->pool_address;
+		tmp += "\n";
+		printer::inst()->print_str(tmp.c_str());
+		tmp = "   - Wallet id: " + httpd::miner_config->wallet_address;
+		tmp += "\n";
+		printer::inst()->print_str(tmp.c_str());
+
+		printer::inst()->print_str("\nCPU config:\n");
+		printer::inst()->print_str("------------\n");
+		
+		tmp = "   - In use: " + std::to_string(httpd::miner_config->current_cpu_count);
+		tmp += "\n";
+		printer::inst()->print_str(tmp.c_str());
+		tmp = "   - Avalaible: " + std::to_string(httpd::miner_config->cpu_count);
+		tmp += "\n";
+		printer::inst()->print_str(tmp.c_str());
+
+		printer::inst()->print_str("\nGPU config:\n");
+		printer::inst()->print_str("-------------\n");
+
+		if (httpd::miner_config->nvidia_list.size() > 0) {
+			printer::inst()->print_str("   - Nvidia gpu(s): \n");
+		
+			if (httpd::miner_config->current_use_nvidia) {
+				for (auto const& x : httpd::miner_config->gpu_list) {
+					if (std::regex_match(x.first, gpuNvidiaPattern)) {
+						tmp = "      - " + x.first;
+						tmp += ": \n";
+						printer::inst()->print_str(tmp.c_str());
+						tmp = "         - " + x.second.name;
+						tmp += "\n";
+						printer::inst()->print_str(tmp.c_str());
+						if (x.second.isInUse) {
+							printer::inst()->print_str("         - Using for mining: yes \n");
+						}
+						else {
+							printer::inst()->print_str("         - Using for mining: no \n");
+						}
+					}
+				}
+			}
+			else {
+				printer::inst()->print_str("   - No Nvidia gpu(s) in use.\n");
+			}
+		}
+		else {
+			printer::inst()->print_str("   - Nvidia gpu(s): not detected\n");
+		}
+
+		
+		
+		if (httpd::miner_config->amd_list.size() > 0) {
+			printer::inst()->print_str("\n   - Amd gpu(s): \n");
+
+			if (httpd::miner_config->current_use_amd) {
+				for (auto const& x : httpd::miner_config->gpu_list) {
+					if (std::regex_match(x.first, gpuAmdPattern)) {
+						tmp = "      - " + x.first;
+						tmp += ": \n";
+						printer::inst()->print_str(tmp.c_str());
+						tmp = "         - " + x.second.name;
+						tmp += "\n";
+						printer::inst()->print_str(tmp.c_str());
+						if (x.second.isInUse) {
+							printer::inst()->print_str("         - Using for mining: yes\n");
+						}
+						else {
+							printer::inst()->print_str("         - Using for mining: no \n");
+						}
+					}
+				}
+			}
+			else {
+				printer::inst()->print_str("   - No Amd gpu(s) in use.\n");
+			}
+		}
+		else {
+			printer::inst()->print_str("   - Amd gpu(s): not detected\n");
+		}
+
+
+		printer::inst()->print_str("-------------------------------------------------------------------\n");
+	
+	}
+	else {
+		//TODO: error handling
+	}
+
+#endif
 }
 
 void parse_runtime_input(bool* running) {
 	*running = true;
 
-	int key = get_key();
+	int key = get_key();  //show_miner_config()
 
 	if ((!executor::inst()->isPause) && (!executor::inst()->needRestart)) {
 
 		switch (key)
 		{
-		case 'h':
-			executor::inst()->push_event(ex_event(EV_USR_HASHRATE));
-			break;
-		case 'r':
-			executor::inst()->push_event(ex_event(EV_USR_RESULTS));
-			break;
-		case 'c':
-			executor::inst()->push_event(ex_event(EV_USR_CONNSTAT));
-			break;
-		default:
-			break;
+			case 'h':
+				executor::inst()->push_event(ex_event(EV_USR_HASHRATE));
+				break;
+			case 'r':
+				executor::inst()->push_event(ex_event(EV_USR_RESULTS));
+				break;
+			case 'c':
+				executor::inst()->push_event(ex_event(EV_USR_CONNSTAT));
+				break;
+			case 'p':
+				executor::inst()->isPause = true;
+				break;
+#ifndef CONF_NO_HTTPD
+			case 'i':
+				show_miner_config();
+				break;
+#endif
+			default:
+				break;
 		}
+	}
+	else if ((!executor::inst()->needRestart)) {
+		switch (key)
+		{
+			case 'p':
+				executor::inst()->isPause = false;
+				break;
+#ifndef CONF_NO_HTTPD
+			case 'i':
+				show_miner_config();
+				break;
+#endif
+			default:
+				break;
+		
+		}
+	}
+	else {
+		printer::inst()->print_str("-------------------------------------------------------------------\n");
+		printer::inst()->print_str(" The miner is restarting, please wait ... \n");
+		printer::inst()->print_str("-------------------------------------------------------------------\n");
 	}
 
 	*running = false;
@@ -946,7 +1102,6 @@ bool check_expert_mode(bool* expertmode, bool* firstTime, bool* startRunning) {
 
 
 #ifndef CONF_NO_HTTPD
-	//*expertmode = false;
 
 	if (*firstTime) { //TODO: let the user start the app in stand alone mode or not
 		std::string answer = "";
@@ -998,6 +1153,14 @@ bool check_expert_mode(bool* expertmode, bool* firstTime, bool* startRunning) {
 	expertContent += " \n\n }";
 	out << expertContent;
 	out.close();
+
+#ifndef CONF_NO_HTTPD
+	if (httpd::miner_config == nullptr) {
+		httpd::miner_config = new config_data();
+	}
+	
+	httpd::miner_config->expertMode = *expertmode;
+#endif
 
 	return errorResult;
 }

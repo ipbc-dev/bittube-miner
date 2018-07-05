@@ -1529,6 +1529,7 @@ int httpd::req_handler(void * cls,
 
 /*
  * Description: Starting the http daemon
+ *
  */
 bool httpd::start_daemon() {
 	d = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION,

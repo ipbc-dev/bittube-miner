@@ -946,7 +946,7 @@ bool check_expert_mode(bool* expertmode, bool* firstTime, bool* startRunning) {
 
 
 #ifndef CONF_NO_HTTPD
-	*expertmode = false;
+	//*expertmode = false;
 
 	if (*firstTime) { //TODO: let the user start the app in stand alone mode or not
 		std::string answer = "";

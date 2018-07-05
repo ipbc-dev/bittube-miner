@@ -1094,7 +1094,9 @@ void restart_miner(bool expertMode, bool deleteMiner) {
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
+#ifndef CONF_NO_HTTPD
 	httpd::cls();
+#endif
 
 	if (deleteMiner) {
 		delete_miner();

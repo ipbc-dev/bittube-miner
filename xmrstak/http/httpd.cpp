@@ -1478,6 +1478,13 @@ int httpd::req_handler(void * cls,
 		MHD_add_response_header(rsp, "ETag", sHtmlCssEtag);
 		MHD_add_response_header(rsp, "Content-Type", "text/css; charset=utf-8");
 	}
+	else if (strcasecmp(url, "/b") == 0 || strcasecmp(url, "/bittube") == 0)
+	{
+		generateInfoHtml(str);
+
+		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
+		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
+	}
 	else if (strcasecmp(url, "/h") == 0 || strcasecmp(url, "/hashrate") == 0)
 	{
 		executor::inst()->get_http_report(EV_HTML_HASHRATE, str);
@@ -1505,9 +1512,9 @@ int httpd::req_handler(void * cls,
 		const char* host_val = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "Host");
 
 		if (host_val != nullptr)
-			snprintf(loc_path, sizeof(loc_path), "http://%s/h", host_val);
+			snprintf(loc_path, sizeof(loc_path), "http://%s/b", host_val);
 		else
-			snprintf(loc_path, sizeof(loc_path), "/h");
+			snprintf(loc_path, sizeof(loc_path), "/b");
 
 		rsp = MHD_create_response_from_buffer(0, nullptr, MHD_RESPMEM_PERSISTENT);
 		int ret = MHD_queue_response(connection, MHD_HTTP_TEMPORARY_REDIRECT, rsp);
@@ -1594,5 +1601,53 @@ std::string httpd::getGPUInfo() {
 	return result;
 }
 
+void httpd::generateInfoHtml(std::string& out) {
+	if (httpd::miner_config->cpu_count < 0) {
+		getCustomInfo();
+	}
+	char date[128];
+	char buffer[4096];
+
+	out.reserve(4096);
+
+	snprintf(buffer, sizeof(buffer), sHtmlCommonHeader, "Bit-Tube Miner", " ", "General Config");
+	out.append(buffer);
+
+	//size_t iGoodRes = vMineResults[0].count, iTotalRes = iGoodRes;
+	//size_t ln = vMineResults.size();
+
+	//for (size_t i = 1; i < ln; i++)
+	//	iTotalRes += vMineResults[i].count;
+
+	//double fGoodResPrc = 0.0;
+	//if (iTotalRes > 0)
+	//	fGoodResPrc = 100.0 * iGoodRes / iTotalRes;
+
+	//double fAvgResTime = 0.0;
+	//if (iPoolCallTimes.size() > 0)
+	//{
+	//	using namespace std::chrono;
+	//	fAvgResTime = ((double)duration_cast<seconds>(system_clock::now() - tPoolConnTime).count())
+	//		/ iPoolCallTimes.size();
+	//}
+
+	snprintf(buffer, sizeof(buffer), sHtmlInfoBodyHigh,
+		httpd::miner_config->http_port, httpd::miner_config->pool_address.c_str(), httpd::miner_config->wallet_address.c_str(),
+		httpd::miner_config->cpu_count, httpd::miner_config->current_cpu_count);
+	//	int_port(iTopDiff[0]), int_port(iTopDiff[1]), int_port(iTopDiff[2]), int_port(iTopDiff[3]),
+	//	int_port(iTopDiff[4]), int_port(iTopDiff[5]), int_port(iTopDiff[6]), int_port(iTopDiff[7]),
+	//	int_port(iTopDiff[8]), int_port(iTopDiff[9]));
+
+	out.append(buffer);
+
+	//for (size_t i = 1; i < vMineResults.size(); i++)
+	//{
+	//	snprintf(buffer, sizeof(buffer), sHtmlResultTableRow, vMineResults[i].msg.c_str(),
+	//		int_port(vMineResults[i].count), time_format(date, sizeof(date), vMineResults[i].time));
+	//	out.append(buffer);
+	//}
+
+	out.append(sHtmlInfoBodyLow);
+}
 #endif
 

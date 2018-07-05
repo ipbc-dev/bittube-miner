@@ -136,6 +136,9 @@ extern const char sHtmlCommonHeader [] =
 
 	"<div class='flex-container'>"
 		"<div class='links flex-item'>"
+			"<a href='/b'><div><span class='letter'>B</span>ittube Config</div></a>"
+		"</div>"
+		"<div class='links flex-item'>"
 			"<a href='/h'><div><span class='letter'>H</span>ashrate</div></a>"
 		"</div>"
 		"<div class='links flex-item'>"
@@ -246,3 +249,33 @@ extern const char sJsonApiFormat [] =
 	"}"
 "}";
 
+extern const char sHtmlInfoBodyHigh[] =
+"<div class='data'>"
+"<table>"
+	"<tr><th>Http Port</th><td>%u</td></tr>"
+	"<tr><th>Pool Address</th><td>%s</td></tr>"
+	"<tr><th>Wallet id</th><td>%s</td></tr>"
+"</table>"
+"<h4>CPU Config</h4>"
+"<table>"
+	"<tr><th>Avalaible</th><td>%u</td></tr>"
+	"<tr><th>Current in use</th><td>%u</td></tr>"
+"</table>"
+"<h4>GPU Config</h4>";
+
+
+
+extern const char sHtmlInfoTableRow[] =
+"<table>"
+	"<tr><th>ID</th><td>%s</td></tr>"
+	"<tr><th>Name</th><td>%s</td></tr>"
+	"<tr><th>Current in use</th><td>%s</td></tr>"
+"</table>";
+
+extern const char sHtmlInfoGPUErrorRow[] =
+"<table>"
+"<tr><th>No GPU detected</th></tr>"
+"</table>";
+
+extern const char sHtmlInfoBodyLow[] =
+"</div></div></body></html>";

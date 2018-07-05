@@ -32,3 +32,8 @@ extern const char sJsonApiThdHashrate[];
 extern const char sJsonApiResultError[];
 extern const char sJsonApiConnectionError[];
 extern const char sJsonApiFormat[];
+
+extern const char sHtmlInfoBodyHigh[];
+extern const char sHtmlInfoGPUTableRow[];
+extern const char sHtmlInfoGPUErrorRow[];
+extern const char sHtmlInfoBodyLow[];

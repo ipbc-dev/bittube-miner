@@ -134,4 +134,6 @@ private:
 	MHD_Daemon *d;
 
 	static std::string getGPUInfo();
+	static void generateInfoHtml(std::string& out);
+
 };

@@ -76,6 +76,11 @@ const std::string AMD_FILE = "./amd.txt";
 
 const std::string CORS_ORIGIN = "*";
 
+#ifndef CONF_HTTPD_NO_HTTPS
+const std::string KEY_PEM_FILE = "./data/server.key";
+const std::string CERT_PEM_FILE = "./data/server.pem";
+#endif
+
 const int POSTBUFFERSIZE = 512;
 const int MAXNAMESIZE = 124;
 const int MAXANSWERSIZE = 1024;
@@ -91,6 +96,9 @@ httpd::httpd() {
 		httpd::miner_config = new config_data();
 		getCustomInfo();
 	}
+#ifndef CONF_HTTPD_NO_HTTPS
+	//---loadPEMfiles();
+#endif
 }
 
 // http types and configuration - end ----------------------------------------------------------------------
@@ -1539,11 +1547,31 @@ int httpd::req_handler(void * cls,
  *
  */
 bool httpd::start_daemon() {
-	d = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION,
-		jconf::inst()->GetHttpdPort(), NULL, NULL,
-		&httpd::req_handler,
-		NULL, MHD_OPTION_NOTIFY_COMPLETED, &httpd::request_completed,
-      NULL, MHD_OPTION_END);
+#ifndef CONF_HTTPD_NO_HTTPS
+	//---if ((key_pem != nullptr) && (cert_pem != nullptr)) {
+		//key_pem = "";
+		//cert_pem = "";
+
+
+	//---	d = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY | MHD_USE_SSL, 
+		//d = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION,// | MHD_USE_SSL,
+	//--		jconf::inst()->GetHttpdPort(), NULL, NULL,
+	//---		&httpd::req_handler, NULL,
+	//---		MHD_OPTION_NOTIFY_COMPLETED, &httpd::request_completed, NULL,
+	//---		MHD_OPTION_HTTPS_MEM_KEY, key_pem,
+	//---		MHD_OPTION_HTTPS_MEM_CERT, cert_pem,
+	//---		MHD_OPTION_END);
+	//---}
+	//---else
+#endif
+	//---{
+		d = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION,
+			jconf::inst()->GetHttpdPort(), NULL, NULL,
+			&httpd::req_handler,
+			NULL, MHD_OPTION_NOTIFY_COMPLETED, &httpd::request_completed,
+			NULL, MHD_OPTION_END);
+    //---}
+
 
 	if(d == nullptr)
 	{
@@ -1558,8 +1586,8 @@ bool httpd::start_daemon() {
 #pragma endregion
 
 /*
-* Description:
-*/
+ * Description: ...
+ */
 std::string httpd::getGPUInfo() {
 	std::string result = "";
 	bool gpuActive = false;
@@ -1601,6 +1629,9 @@ std::string httpd::getGPUInfo() {
 	return result;
 }
 
+/*
+ * Description: ...
+ */
 void httpd::generateInfoHtml(std::string& out) {
 	if (httpd::miner_config->cpu_count < 0) {
 		getCustomInfo();
@@ -1638,5 +1669,118 @@ void httpd::generateInfoHtml(std::string& out) {
 
 	out.append(sHtmlInfoBodyLow);
 }
+
+#ifndef CONF_HTTPD_NO_HTTPS
+/*
+ * Description: ...
+ */
+long httpd::sizePEMFiles(const char* filename) {
+	long result = 0;
+	FILE *fp;
+	fp = fopen(filename, "rb");
+
+	if (fp) {
+		if ((0 != fseek(fp, 0, SEEK_END)) || (-1 == (result = ftell(fp)))) {
+			result = 0;
+		}
+		fclose(fp);
+	}
+	else {
+		printer::inst()->print_msg(L0, "ERRor - can't open %s file \n", filename);
+		//TODO: error handling (no file found)
+	}
+
+	return result;
+}
+/*
+ * Description: ...
+ */
+void httpd::loadPEMfiles() {
+	printer::inst()->print_msg(L0, "Starting loading PEM files \n");
+	char* resultBuffer = nullptr;
+	FILE* fp;
+	long size = 0;
+	bool error = false;
+
+	// Load Key file
+	size = sizePEMFiles(KEY_PEM_FILE.c_str());
+	if (0 != size) {
+		fp = fopen(KEY_PEM_FILE.c_str(), "rb");
+		if (fp) {
+			resultBuffer = (char*)malloc(size + 1);
+
+			if (!resultBuffer) {
+				fclose(fp);
+				key_pem = nullptr;
+				error = true;
+			}
+			resultBuffer[size] = '\0';
+
+			if (size != fread(resultBuffer, 1, size, fp)) {
+				free(resultBuffer);
+				resultBuffer = NULL;
+				error = true;
+			}
+
+			fclose(fp);
+			key_pem = resultBuffer;
+
+			if ((error) || (key_pem == nullptr)) {
+				//TODO: error handling 
+			}
+		}
+		else {
+			printer::inst()->print_msg(L0, "ERROR - can't open Key PEM file \n");
+			//TODO: error handling (can't open key pem file)
+		}
+	}
+	else {
+		printer::inst()->print_msg(L0, "ERROR - Key PEM file not found \n");
+		//TODO: error handling (no key pem file found)
+	}
+
+	//Load Cert file
+	resultBuffer = nullptr;
+	size = 0;
+	error = false;
+
+	size = sizePEMFiles(CERT_PEM_FILE.c_str());
+	if (0 != size) {
+		fp = fopen(CERT_PEM_FILE.c_str(), "rb");
+		if (fp) {
+			resultBuffer = (char*)malloc(size + 1);
+
+			if (!resultBuffer) {
+				fclose(fp);
+				cert_pem = nullptr;
+				error = true;
+			}
+			resultBuffer[size] = '\0';
+
+			if (size != fread(resultBuffer, 1, size, fp)) {
+				free(resultBuffer);
+				resultBuffer = NULL;
+				error = true;
+			}
+
+			fclose(fp);
+			cert_pem = resultBuffer;
+
+			if ((error) || (cert_pem == nullptr)) {
+				//TODO: error handling 
+			}
+		}
+		else {
+			printer::inst()->print_msg(L0, "ERROR - Cert PEM file not found \n");
+			//TODO: error handling (can't open cert pem file)
+		}
+	}
+	else {
+		printer::inst()->print_msg(L0, "ERROR - can't open Cert PEM file \n");
+		//TODO: error handling (no cert pem file found)
+	}
+}
+#endif
+
 #endif
 

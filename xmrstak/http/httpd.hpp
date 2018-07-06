@@ -51,7 +51,8 @@ public:
 		return oInst;
 	};
 
-	static void cls() {
+	static void cls() {	
+
 		if (httpd::miner_config != nullptr) {
 			delete httpd::miner_config;
 			httpd::miner_config = nullptr;
@@ -59,6 +60,19 @@ public:
 
 		if (oInst->d != nullptr) {
 			MHD_stop_daemon(oInst->d);
+
+#ifndef CONF_HTTPD_NO_HTTPS
+			if (oInst->key_pem != nullptr) {
+				delete oInst->key_pem;
+				oInst->key_pem = nullptr;
+			}
+
+			if (oInst->cert_pem != nullptr) {
+				delete oInst->cert_pem;
+				oInst->cert_pem = nullptr;
+			}
+#endif
+			
 
 			delete oInst;
 			oInst = nullptr;
@@ -136,4 +150,11 @@ private:
 	static std::string getGPUInfo();
 	static void generateInfoHtml(std::string& out);
 
+#ifndef CONF_HTTPD_NO_HTTPS
+	char *key_pem = nullptr;
+	char *cert_pem = nullptr;
+
+	long sizePEMFiles(const char* filename);
+	void loadPEMfiles();
+#endif
 };

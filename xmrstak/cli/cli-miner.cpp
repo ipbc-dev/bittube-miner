@@ -739,6 +739,9 @@ int parse_argv(int argc, char *argv[]) {
 			}
 			params::inst().benchmark_work_sec = worksec;
 		}
+		else if (opName.compare("-noExpert") == 0) {
+		
+		}
 		else
 		{
 			printer::inst()->print_msg(L0, "Parameter unknown '%s'", argv[i]);
@@ -1053,7 +1056,7 @@ void delete_miner() {
 	}
 }
 
-bool check_expert_mode(bool* expertmode, bool* firstTime, bool* startRunning) {
+bool check_expert_mode(bool* expertmode, bool* firstTime, bool* startRunning, bool askExpert) {
 	bool errorResult = false;
 	*expertmode = false;
 	*firstTime = true;
@@ -1104,22 +1107,27 @@ bool check_expert_mode(bool* expertmode, bool* firstTime, bool* startRunning) {
 #ifndef CONF_NO_HTTPD
 
 	if (*firstTime) { //TODO: let the user start the app in stand alone mode or not
-		std::string answer = "";
-		bool continueLoop = true;
-		std::cout << "Are you an expert?(y/n): " << std::endl;
-		std::cin >> answer;
+		if (askExpert) {
+			std::string answer = "";
+			bool continueLoop = true;
+			std::cout << "Are you an expert?(y/n): " << std::endl;
+			std::cin >> answer;
 
-		while (continueLoop) {
-			if ((answer.compare("y") == 0) ||
-				(answer.compare("Y") == 0)) {
-				continueLoop = false;
-				*expertmode = true;
+			while (continueLoop) {
+				if ((answer.compare("y") == 0) ||
+					(answer.compare("Y") == 0)) {
+					continueLoop = false;
+					*expertmode = true;
 
+				}
+				else if ((answer.compare("n") == 0) ||
+					(answer.compare("N") == 0)) {
+					continueLoop = false;
+				}
 			}
-			else if ((answer.compare("n") == 0) ||
-				(answer.compare("N") == 0)) {
-				continueLoop = false;
-			}
+		}
+		else {
+			*expertmode = false;
 		}
 	}
 #else
@@ -1275,10 +1283,22 @@ void restart_miner(bool expertMode, bool deleteMiner) {
 }
 
 int main(int argc, char *argv[]) {
+	bool askingExpert = true;
+	//bool askingExpert = false; //Trick forcing wallet integration, will be fixed on monday
+
+	for (size_t i = 1; i < argc - 1; i++)
+	{
+		std::string opName(argv[i]);
+		if (opName == "-noExpert") {
+			askingExpert = false;
+		}
+	}
+
+	
 	bool expertMode = false;
 	bool firstTime = false;
 	bool startMining = false;
-	bool expertRetValue = check_expert_mode(&expertMode, &firstTime, &startMining);
+	bool expertRetValue = check_expert_mode(&expertMode, &firstTime, &startMining, askingExpert);
 
 #ifndef CONF_NO_TLS
 	SSL_library_init();
@@ -1376,10 +1396,18 @@ int main(int argc, char *argv[]) {
 						show_manage_info();
 					}
 					change_startRunning(false);
+
+					if (inputThread != nullptr) {
+						delete inputThread;
+						inputThread = nullptr;
+					}
+
+					inputThread = new std::thread(&parse_runtime_input, &runningInputParser);
+					inputThread->detach();
 				}
 			} else { // Restarting program
 
-				expertRetValue = check_expert_mode(&expertMode, &firstTime, &startMining);
+				expertRetValue = check_expert_mode(&expertMode, &firstTime, &startMining, askingExpert);
 				restart_miner(expertMode, needDeleteMiner);
 				if (startMining) {
 					executor::inst()->isPause = false;

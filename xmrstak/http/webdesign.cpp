@@ -109,6 +109,18 @@ extern const char sHtmlCssFile [] =
 
 	".motd-body {"
 		"overflow: hidden;"
+	"}"
+	
+	".bittube-right-cell {"
+		"width: 400px !important;"
+		"max-width: 400px !important;"
+		"overflow: ellipsis !important;"
+		"white-space: nowrap !important;"
+	"}"
+	
+	".bittube-left-cell {"
+		"width: 200px !important;"
+		"max-width: 200px !important;"
 	"}";
 
 size_t sHtmlCssSize = sizeof(sHtmlCssFile) - 1;
@@ -254,7 +266,7 @@ extern const char sHtmlInfoBodyHigh[] =
 "<table>"
 	"<tr><th>Http Port</th><td>%u</td></tr>"
 	"<tr><th>Pool Address</th><td>%s</td></tr>"
-	"<tr><th>Wallet id</th><td>%s</td></tr>"
+	"<tr><th class='bittube-left-cell'>Wallet id</th><td class='bittube-right-cell'>%s</td></tr>"
 "</table>"
 "<h4>CPU Config</h4>"
 "<table>"

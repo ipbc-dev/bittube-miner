@@ -550,7 +550,7 @@ std::string httpd::parsePoolFile() {
 				walletAddressResult = " \"wallet_address\" : \"";
 				walletAddressResult += base_match2[2];
 				walletAddressResult += "\",  \n";
-				httpd::miner_config->wallet_address = base_match[2];
+				httpd::miner_config->wallet_address = base_match2[2];
 			}
 		}
 	}
@@ -1613,30 +1613,11 @@ void httpd::generateInfoHtml(std::string& out) {
 	snprintf(buffer, sizeof(buffer), sHtmlCommonHeader, "Bit-Tube Miner", " ", "General Config");
 	out.append(buffer);
 
-	//size_t iGoodRes = vMineResults[0].count, iTotalRes = iGoodRes;
-	//size_t ln = vMineResults.size();
-
-	//for (size_t i = 1; i < ln; i++)
-	//	iTotalRes += vMineResults[i].count;
-
-	//double fGoodResPrc = 0.0;
-	//if (iTotalRes > 0)
-	//	fGoodResPrc = 100.0 * iGoodRes / iTotalRes;
-
-	//double fAvgResTime = 0.0;
-	//if (iPoolCallTimes.size() > 0)
-	//{
-	//	using namespace std::chrono;
-	//	fAvgResTime = ((double)duration_cast<seconds>(system_clock::now() - tPoolConnTime).count())
-	//		/ iPoolCallTimes.size();
-	//}
 
 	snprintf(buffer, sizeof(buffer), sHtmlInfoBodyHigh,
 		httpd::miner_config->http_port, httpd::miner_config->pool_address.c_str(), httpd::miner_config->wallet_address.c_str(),
 		httpd::miner_config->cpu_count, httpd::miner_config->current_cpu_count);
-	//	int_port(iTopDiff[0]), int_port(iTopDiff[1]), int_port(iTopDiff[2]), int_port(iTopDiff[3]),
-	//	int_port(iTopDiff[4]), int_port(iTopDiff[5]), int_port(iTopDiff[6]), int_port(iTopDiff[7]),
-	//	int_port(iTopDiff[8]), int_port(iTopDiff[9]));
+
 
 	out.append(buffer);
 

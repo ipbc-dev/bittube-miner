@@ -1640,12 +1640,20 @@ void httpd::generateInfoHtml(std::string& out) {
 
 	out.append(buffer);
 
-	//for (size_t i = 1; i < vMineResults.size(); i++)
-	//{
-	//	snprintf(buffer, sizeof(buffer), sHtmlResultTableRow, vMineResults[i].msg.c_str(),
-	//		int_port(vMineResults[i].count), time_format(date, sizeof(date), vMineResults[i].time));
-	//	out.append(buffer);
-	//}
+	if (httpd::miner_config->gpu_list.size() > 0) {
+		for (auto &x : httpd::miner_config->gpu_list) {
+			if (x.second.isInUse) {
+				snprintf(buffer, sizeof(buffer), sHtmlInfoGPUTableRow, x.first.c_str(), x.second.name.c_str(), "true");
+			}
+			else {
+				snprintf(buffer, sizeof(buffer), sHtmlInfoGPUTableRow, x.first.c_str(), x.second.name.c_str(), "false");
+			}
+		}
+		out.append(buffer);
+	}
+	else {
+		out.append(sHtmlInfoGPUErrorRow);
+	}
 
 	out.append(sHtmlInfoBodyLow);
 }

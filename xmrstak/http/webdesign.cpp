@@ -265,7 +265,7 @@ extern const char sHtmlInfoBodyHigh[] =
 
 
 
-extern const char sHtmlInfoTableRow[] =
+extern const char sHtmlInfoGPUTableRow[] =
 "<table>"
 	"<tr><th>ID</th><td>%s</td></tr>"
 	"<tr><th>Name</th><td>%s</td></tr>"

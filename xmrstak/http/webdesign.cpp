@@ -114,10 +114,20 @@ extern const char sHtmlCssFile [] =
 	".bittube-right-cell {"
 		"width: 400px !important;"
 		"max-width: 400px !important;"
-		"overflow: ellipsis !important;"
+		"text-overflow: ellipsis !important;"
+		"overflow: auto !important;"
 		"white-space: nowrap !important;"
 	"}"
 	
+	".bittube-notmining-header {"
+		"width: inherit !important;"
+		"min-width: 100% !important;"
+		"max-width. 100% !important;"
+		"margin: 0px !important;"
+		"padding-right:0px !important;"
+		"padding-left:0px !important"
+	"}"
+
 	".bittube-left-cell {"
 		"width: 200px !important;"
 		"max-width: 200px !important;"
@@ -161,6 +171,24 @@ extern const char sHtmlCommonHeader [] =
 		"</div>"
 	"</div>"
 	"<h4>%s</h4>";
+
+extern const char sHtmlNotMiningHeader[] =
+"<!DOCTYPE html>"
+"<html>"
+"<head><meta name='viewport' content='width=device-width' />"
+"<link rel='stylesheet' href='style.css' /><title>%s</title></head>"
+"<body>"
+"<div class='all'>"
+"<div class='version'>%s</div>"
+"<div class='header'><span style='color: rgb(134, 175, 73)'>Bit-Tube</span> Miner</div>"
+
+"<div class='flex-container'>"
+	"<div class='links flex-item bittube-notmining-header'>"
+		"<span style='color: rgb(30, 30, 30)'>Miner in pause. Please start miner to see more stats data</span>"
+	"</div>"
+"</div>"
+"<h4>%s</h4>";
+
 
 extern const char sHtmlMotdBoxStart[] = "<div class='motd-box'>";
 extern const char sHtmlMotdEntry[] = "<div class='motd-head'>Message from %s</div><div class='motd-body'>%s</div>";

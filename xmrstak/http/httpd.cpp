@@ -1338,8 +1338,9 @@ int httpd::req_handler(void * cls,
 							  void ** ptr) {
 
 	struct MHD_Response * rsp;
-
+	int ret = 0;
 	int retValue;
+	bool redirectHome = false;
 
 	if (strcmp(method, "GET") != 0) {
 		if ((strcmp(method, "POST") == 0) &&
@@ -1364,7 +1365,7 @@ int httpd::req_handler(void * cls,
 
 	if(strlen(jconf::inst()->GetHttpUsername()) != 0) {
 		char* username;
-		int ret;
+		//int ret;
 
 		username = MHD_digest_auth_get_username(connection);
 		if (username == NULL) {
@@ -1477,7 +1478,7 @@ int httpd::req_handler(void * cls,
 		{ 
 			rsp = MHD_create_response_from_buffer(0, nullptr, MHD_RESPMEM_PERSISTENT);
 
-			int ret = MHD_queue_response(connection, MHD_HTTP_NOT_MODIFIED, rsp);
+			ret = MHD_queue_response(connection, MHD_HTTP_NOT_MODIFIED, rsp);
 			MHD_destroy_response(rsp);
 			return ret;
 		}
@@ -1487,35 +1488,96 @@ int httpd::req_handler(void * cls,
 		MHD_add_response_header(rsp, "Content-Type", "text/css; charset=utf-8");
 	}
 	else if (strcasecmp(url, "/b") == 0 || strcasecmp(url, "/bittube") == 0)
-	{
-		generateInfoHtml(str);
+	{	
+		if (httpd::miner_config != nullptr) {
 
-		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
-		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
+			generateInfoHtml(str);
+
+			rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
+			MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
+		}
+		else  {
+			//TODO: error handling
+		}
 	}
 	else if (strcasecmp(url, "/h") == 0 || strcasecmp(url, "/hashrate") == 0)
-	{
-		executor::inst()->get_http_report(EV_HTML_HASHRATE, str);
+	{	
+		if (httpd::miner_config != nullptr) {
+			if (httpd::miner_config->isMining) {
+				executor::inst()->get_http_report(EV_HTML_HASHRATE, str);
 
-		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
-		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
+				rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
+				MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
+			}
+			else {
+				redirectHome = true;
+			}
+		}
+		else {
+			//TODO: error handling
+		}
 	}
 	else if (strcasecmp(url, "/c") == 0 || strcasecmp(url, "/connection") == 0)
 	{
-		executor::inst()->get_http_report(EV_HTML_CONNSTAT, str);
+		if (httpd::miner_config != nullptr) {
+			if (httpd::miner_config->isMining) {
+				executor::inst()->get_http_report(EV_HTML_CONNSTAT, str);
 
-		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
-		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
+				rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
+				MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
+			}
+			else {
+				redirectHome = true;
+			}
+		}
+		else {
+			//TODO: error handling
+		}
 	}
 	else if (strcasecmp(url, "/r") == 0 || strcasecmp(url, "/results") == 0)
 	{
-		executor::inst()->get_http_report(EV_HTML_RESULTS, str);
+		if (httpd::miner_config != nullptr) {
+			if (httpd::miner_config->isMining) {
+				executor::inst()->get_http_report(EV_HTML_RESULTS, str);
 
-		rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
-		MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
+				rsp = MHD_create_response_from_buffer(str.size(), (void*)str.c_str(), MHD_RESPMEM_MUST_COPY);
+				MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
+			}
+			else {
+				redirectHome = true;
+			}
+		}
+		else {
+			//TODO: error handling
+		}
 	} 
 	else {
-		//Do a 302 redirect to /h
+		redirectHome = true;
+		//Do a 302 redirect to /b
+		//---char loc_path[256];
+		//---const char* host_val = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "Host");
+
+		//---if (host_val != nullptr)
+		//---	snprintf(loc_path, sizeof(loc_path), "http://%s/b", host_val);
+		//---else
+		//---	snprintf(loc_path, sizeof(loc_path), "/b");
+
+		//---rsp = MHD_create_response_from_buffer(0, nullptr, MHD_RESPMEM_PERSISTENT);
+		//---int ret = MHD_queue_response(connection, MHD_HTTP_TEMPORARY_REDIRECT, rsp);
+		//---MHD_add_response_header(rsp, "Location", loc_path);
+		//---MHD_destroy_response(rsp);
+		//---return ret;
+
+		//send_page(connection, errorpage);
+		//std::string responseT(errorpage);
+		//rsp = MHD_create_response_from_buffer(responseT.size(), (void*)responseT.c_str(), MHD_RESPMEM_MUST_COPY);
+		//MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
+		//MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
+	}
+
+	
+
+	if (redirectHome) {
 		char loc_path[256];
 		const char* host_val = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "Host");
 
@@ -1525,20 +1587,17 @@ int httpd::req_handler(void * cls,
 			snprintf(loc_path, sizeof(loc_path), "/b");
 
 		rsp = MHD_create_response_from_buffer(0, nullptr, MHD_RESPMEM_PERSISTENT);
-		int ret = MHD_queue_response(connection, MHD_HTTP_TEMPORARY_REDIRECT, rsp);
+		ret = MHD_queue_response(connection, MHD_HTTP_TEMPORARY_REDIRECT, rsp);
 		MHD_add_response_header(rsp, "Location", loc_path);
 		MHD_destroy_response(rsp);
-		return ret;
+		//return ret;
 
-		//send_page(connection, errorpage);
-		//---std::string responseT(errorpage);
-		//---rsp = MHD_create_response_from_buffer(responseT.size(), (void*)responseT.c_str(), MHD_RESPMEM_MUST_COPY);
-		//---MHD_add_response_header(rsp, "Content-Type", "text/html; charset=utf-8");
-		//---MHD_add_response_header(rsp, "Access-Control-Allow-Origin", CORS_ORIGIN.c_str());
 	}
-
-	int ret = MHD_queue_response(connection, MHD_HTTP_OK, rsp);
-	MHD_destroy_response(rsp);
+	else {
+		ret = MHD_queue_response(connection, MHD_HTTP_OK, rsp);
+		MHD_destroy_response(rsp);
+	}
+	
 	return ret;
 }
 
@@ -1640,15 +1699,17 @@ void httpd::generateInfoHtml(std::string& out) {
 	char buffer[4096];
 
 	out.reserve(4096);
-
-	snprintf(buffer, sizeof(buffer), sHtmlCommonHeader, "Bit-Tube Miner", " ", "General Config");
+	if (httpd::miner_config->isMining) {
+		snprintf(buffer, sizeof(buffer), sHtmlCommonHeader, "Bit-Tube Miner", " ", "General Config");
+	}
+	else {
+		snprintf(buffer, sizeof(buffer), sHtmlNotMiningHeader, "Bit-Tube Miner", " ", "General Config");
+	}
 	out.append(buffer);
-
 
 	snprintf(buffer, sizeof(buffer), sHtmlInfoBodyHigh,
 		httpd::miner_config->http_port, httpd::miner_config->pool_address.c_str(), httpd::miner_config->wallet_address.c_str(),
 		httpd::miner_config->cpu_count, httpd::miner_config->current_cpu_count);
-
 
 	out.append(buffer);
 

@@ -11,6 +11,7 @@ extern const char sHttpAuthRelam[];
 extern const char sHttpAuthOpaque[];
 
 extern const char sHtmlCommonHeader[];
+extern const char sHtmlNotMiningHeader[];
 
 extern const char sHtmlMotdBoxStart[];
 extern const char sHtmlMotdEntry[];

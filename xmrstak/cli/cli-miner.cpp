@@ -1291,12 +1291,14 @@ void restart_miner(bool expertMode, bool deleteMiner) {
 int main(int argc, char *argv[]) {
 	bool askingExpert = true;
 	//bool askingExpert = false; //Trick forcing wallet integration, will be fixed on monday
-
-	for (size_t i = 1; i < argc - 1; i++)
+	std::cout << "2mierda" << std::endl;
+	for (size_t i = 1; i < argc; i++)
 	{
 		std::string opName(argv[i]);
-		if (opName == "-noExpert") {
+		if (opName.compare("-noExpert") == 0) {
+			std::cout << "mierda" << std::endl;
 			askingExpert = false;
+			break;
 		}
 	}
 

@@ -1292,19 +1292,27 @@ void executor::http_json_report(std::string& out)
 		fAvgResTime = double(iConnSec) / iPoolCallTimes.size();
 
 	//--------------------------------------------------------------------------------------------------------
-	//FIXME: error with special character crash json parsing on the wallet. Check or transfor string format
-	//char buffer[2048];
-	//res_error.reserve((vMineResults.size() - 1) * 128);
-	//for(size_t i=1; i < vMineResults.size(); i++)
-	//{
-	//	using namespace std::chrono;
-	//	if(i != 1) res_error.append(1, ',');
+	//TODO: do tests and force results errors
+	char buffer[2048];
+	res_error.reserve((vMineResults.size() - 1) * 128);
+	for(size_t i=1; i < vMineResults.size(); i++)
+	{
+		using namespace std::chrono;
+		if(i != 1) res_error.append(1, ',');
 
-	//	snprintf(buffer, sizeof(buffer), sJsonApiResultError, int_port(vMineResults[i].count),
-	//		int_port(duration_cast<seconds>(vMineResults[i].time.time_since_epoch()).count()),
-	//		vMineResults[i].msg.c_str());
-	//	res_error.append(buffer);
-	//}
+		snprintf(buffer, sizeof(buffer), sJsonApiResultError, int_port(vMineResults[i].count),
+			int_port(duration_cast<seconds>(vMineResults[i].time.time_since_epoch()).count()),
+			vMineResults[i].msg.c_str());
+		res_error.append(buffer);
+	}
+	//--------------------------------------------------------------------------------------------------------
+	//FIXME: delete this when finish tests -------------------------------------------------------------------
+	//---char buffer[2048];
+	//---res_error.reserve(128);
+	//---snprintf(buffer, sizeof(buffer), sJsonApiResultError, 11111,
+	//---			22222,
+	//---			"esto es un error con tildes: á é í ó ú ñ à è ì ò ù ä ë ï ö ü â ê î ô û");
+	//---res_error.append(buffer);
 	//--------------------------------------------------------------------------------------------------------
 
 	size_t n_calls = iPoolCallTimes.size();
@@ -1317,18 +1325,25 @@ void executor::http_json_report(std::string& out)
 	}
 
 	//--------------------------------------------------------------------------------------------------------
-	//FIXME: error with special character crash json parsing on the wallet. Check or transfor string format
-	//cn_error.reserve(vSocketLog.size() * 256);
-	//for(size_t i=0; i < vSocketLog.size(); i++)
-	//{
-	//	using namespace std::chrono;
-	//	if(i != 0) cn_error.append(1, ',');
+	//TODO: do tests and force conection errors
+	cn_error.reserve(vSocketLog.size() * 256);
+	for(size_t i=0; i < vSocketLog.size(); i++)
+	{
+		using namespace std::chrono;
+		if(i != 0) cn_error.append(1, ',');
 
-	//	snprintf(buffer, sizeof(buffer), sJsonApiConnectionError,
-	//		int_port(duration_cast<seconds>(vMineResults[i].time.time_since_epoch()).count()),
-	//		vSocketLog[i].msg.c_str());
-	//	cn_error.append(buffer);
-	//}
+		snprintf(buffer, sizeof(buffer), sJsonApiConnectionError,
+			int_port(duration_cast<seconds>(vMineResults[i].time.time_since_epoch()).count()),
+			vSocketLog[i].msg.c_str());
+		cn_error.append(buffer);
+	}
+	//--------------------------------------------------------------------------------------------------------
+	//FIXME: delete this when finish tests -------------------------------------------------------------------
+	//---cn_error.reserve(256);
+	//---snprintf(buffer, sizeof(buffer), sJsonApiConnectionError,
+	//---		  333333,
+	//---		  "esto es un error de conexion con caracteres poco comunes como: ñ á é í ó ú ä â à");
+	//---cn_error.append(buffer);
 	//--------------------------------------------------------------------------------------------------------
 
 	size_t bb_size = 2048 + hr_thds.size() + res_error.size() + cn_error.size();

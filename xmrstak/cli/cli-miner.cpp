@@ -812,10 +812,6 @@ int program_config(bool expertMode) {
 }
 
 void show_credits(bool expertMode) {
-	//if (!expertMode) {
-	//	printer::inst()->print_str("-------------------------------------------------------------------\n");
-	//	printer::inst()->print_str("Automatic configuration for non experts is in beta. \n");
-	//}
 	printer::inst()->print_str("-------------------------------------------------------------------\n");
 	printer::inst()->print_str(get_version_str_short().c_str());
 	printer::inst()->print_str("\n\n");
@@ -862,7 +858,6 @@ void show_miner_config() {
 	std::string tmp = "";
 
 	if (httpd::miner_config != nullptr) {
-		//getCustomInfo();
 
 		if (httpd::miner_config->cpu_count < 0) {
 			tmp = httpd::getCustomInfo();

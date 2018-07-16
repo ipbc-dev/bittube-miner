@@ -260,16 +260,42 @@ __global__ void cryptonight_core_gpu_phase2( int threads, int bfactor, int parti
 		{
 			j = ( ( idx0 & MASK ) >> 2 ) + sub;
 
-			const uint32_t x_0 = loadGlobal32<uint32_t>( long_state + j );
-			const uint32_t x_1 = shuffle<4>(sPtr,sub, x_0, sub + 1);
-			const uint32_t x_2 = shuffle<4>(sPtr,sub, x_0, sub + 2);
-			const uint32_t x_3 = shuffle<4>(sPtr,sub, x_0, sub + 3);
-			d[x] = a ^
-				t_fn0( x_0 & 0xff ) ^
-				t_fn1( (x_1 >> 8) & 0xff ) ^
-				t_fn2( (x_2 >> 16) & 0xff ) ^
-				t_fn3( ( x_3 >> 24 ) );
+			if(ALGO == cryptonight_bittube2) {
+				uint32_t k[4];
+				k[0] = ~loadGlobal32<uint32_t>( long_state + j );
+				k[1] = shuffle<4>(sPtr,sub, k[0], sub + 1);
+				k[2] = shuffle<4>(sPtr,sub, k[0], sub + 2);
+				k[3] = shuffle<4>(sPtr,sub, k[0], sub + 3);
 
+				uint32_t r;
+
+				#pragma unroll 4
+				for(int i = 0; i < 4; ++i) {
+						// only calculate the key if all data are up to date
+						if(i == sub) {
+							r = a ^
+								t_fn0(__byte_perm(k[0], 0, 0x4440)) ^
+								t_fn1(__byte_perm(k[1], 0, 0x4441)) ^
+								t_fn2(__byte_perm(k[2], 0, 0x4442)) ^
+								t_fn3(__byte_perm(k[3], 0, 0x4443));
+						}
+						/* avoid negative number for modulo
+						 * load valid key (k) depending on the round
+						 */
+						k[(4 - sub + i)%4] = shuffle<4>(sPtr,sub, k[0] ^ r, i);
+				}
+				d[x] = r;
+			} else {
+				const uint32_t x_0 = loadGlobal32<uint32_t>( long_state + j );
+				const uint32_t x_1 = shuffle<4>(sPtr,sub, x_0, sub + 1);
+				const uint32_t x_2 = shuffle<4>(sPtr,sub, x_0, sub + 2);
+				const uint32_t x_3 = shuffle<4>(sPtr,sub, x_0, sub + 3);
+				d[x] = a ^
+					t_fn0(__byte_perm(x_0, 0, 0x4440)) ^
+					t_fn1(__byte_perm(x_1, 0, 0x4441)) ^
+					t_fn2(__byte_perm(x_2, 0, 0x4442)) ^
+					t_fn3(__byte_perm(x_3, 0, 0x4443));
+			}
 
 			//XOR_BLOCKS_DST(c, b, &long_state[j]);
 			t1[0] = shuffle<4>(sPtr,sub, d[x], 0);

@@ -18,7 +18,7 @@
 #endif
 
 #define XMR_STAK_NAME "bittube-miner"
-#define XMR_STAK_VERSION "2.0.0.1"
+#define XMR_STAK_VERSION "2.0.0.2"
 
 #if defined(_WIN32)
 #define OS_TYPE "win"

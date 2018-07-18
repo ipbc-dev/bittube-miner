@@ -278,7 +278,7 @@ __global__ void cryptonight_core_gpu_phase2( int threads, int bfactor, int parti
 								t_fn2(__byte_perm(k[2], 0, 0x4442)) ^
 								t_fn3(__byte_perm(k[3], 0, 0x4443));
 						}
-						if(i < 4)
+						if(i < 3)
 						{
 							k[(4 - sub + i)&3] = shuffle<4>(sPtr,sub, k[0] ^ d[x], i);
 						}

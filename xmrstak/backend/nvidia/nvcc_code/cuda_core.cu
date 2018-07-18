@@ -267,24 +267,22 @@ __global__ void cryptonight_core_gpu_phase2( int threads, int bfactor, int parti
 				k[2] = shuffle<4>(sPtr,sub, k[0], sub + 2);
 				k[3] = shuffle<4>(sPtr,sub, k[0], sub + 3);
 
-				uint32_t r;
 
 				#pragma unroll 4
 				for(int i = 0; i < 4; ++i) {
 						// only calculate the key if all data are up to date
 						if(i == sub) {
-							r = a ^
+							d[x] = a ^
 								t_fn0(__byte_perm(k[0], 0, 0x4440)) ^
 								t_fn1(__byte_perm(k[1], 0, 0x4441)) ^
 								t_fn2(__byte_perm(k[2], 0, 0x4442)) ^
 								t_fn3(__byte_perm(k[3], 0, 0x4443));
 						}
-						/* avoid negative number for modulo
-						 * load valid key (k) depending on the round
-						 */
-						k[(4 - sub + i)%4] = shuffle<4>(sPtr,sub, k[0] ^ r, i);
+						if(i < 4)
+						{
+							k[(4 - sub + i)&3] = shuffle<4>(sPtr,sub, k[0] ^ d[x], i);
+						}
 				}
-				d[x] = r;
 			} else {
 				const uint32_t x_0 = loadGlobal32<uint32_t>( long_state + j );
 				const uint32_t x_1 = shuffle<4>(sPtr,sub, x_0, sub + 1);
@@ -507,7 +505,7 @@ void cryptonight_core_gpu_hash(nvid_ctx* ctx, uint32_t nonce)
 	if(ALGO == cryptonight_heavy || ALGO == cryptonight_haven || ALGO == cryptonight_bittube2)
 	{
 		// cryptonight_heavy used two full rounds over the scratchpad memory
-		roundsPhase3 *= 2;
+		roundsPhase3 <<= 1;
 	}
 
 	for ( int i = 0; i < roundsPhase3; i++ )

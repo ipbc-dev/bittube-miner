@@ -23,7 +23,7 @@ struct config_data {
 
 	int http_port = 8282;
 	std::string pool_address = "mining.bit.tube:13333";
-	std::string wallet_address = "bxd2iN7fUb2jA4ix9S37uw1eK2iyVxDbyRD5aVzCbFqj6PSMWP6G5eW1LgBEA6cqRUEUi7hMs1xXm5Mj9s4pDcJb2jfAw9Zvm";
+	std::string wallet_address = "WALLETADDRESS";
 
 	int cpu_count = -1;
 	std::vector<std::string> nvidia_list;

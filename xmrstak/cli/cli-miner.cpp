@@ -226,7 +226,7 @@ void do_guided_pool_config(bool expertModeIn)
 
 	auto& userName = params::inst().poolUsername;
 	if (!expertModeIn) {
-		userName = "bxd2iN7fUb2jA4ix9S37uw1eK2iyVxDbyRD5aVzCbFqj6PSMWP6G5eW1LgBEA6cqRUEUi7hMs1xXm5Mj9s4pDcJb2jfAw9Zvm";
+		userName = "WALLETADDRESS";
 	}
 	else if(userName.empty())
 	{

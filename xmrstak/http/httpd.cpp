@@ -125,7 +125,7 @@ const char* askpage = "<html><body>\
 						  <label for=\"poolin\">Pool adress: </label>\
                           <input id=\"poolin\" name=\"pool_address\" type=\"text\" value=\"mining.bit.tube:13333\">\
 						  <label for=\"walletin\">Wallet id: </label>\
-                          <input id=\"walletin\" name=\"wallet_address\" type=\"text\" value=\"bxd2iN7fUb2jA4ix9S37uw1eK2iyVxDbyRD5aVzCbFqj6PSMWP6G5eW1LgBEA6cqRUEUi7hMs1xXm5Mj9s4pDcJb2jfAw9Zvm\">\
+                          <input id=\"walletin\" name=\"wallet_address\" type=\"text\" value=\"WALLETADDRESS\">\
 						  <hr>\
 					      <label for=\"cpuin\">Using cpu </label>\
                           <input id=\"cpuin\" name=\"cpu_count\" type=\"number\" value=4>\

@@ -528,7 +528,7 @@ std::string httpd::parsePoolFile() {
 	std::smatch base_match2;
 
 	std::regex poolPattern("[^*]*\(pool_address\)\.*[:][^\"]*\"\([a-zA-Z0-9.-]+[:][0-9]+\)\"\.*[,]\.*wallet_address\.*");
-	std::regex walletPattern("[^*]*\(wallet_address\)\.*[:]\.*\"\([a-zA-Z0-9]+\)\"\.*[,]\.*rig_id\.*");
+	std::regex walletPattern("[^*]*\(wallet_address\)\.*[:]\.*\"\([a-zA-Z0-9.]+\)\"\.*[,]\.*rig_id\.*");
 
 	std::ifstream poolFile(POOL_FILE);
 

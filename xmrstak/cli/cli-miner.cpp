@@ -990,9 +990,11 @@ void parse_runtime_input(bool* running) {
 				break;
 			case 'p':
 				executor::inst()->isPause = true;
+#ifndef CONF_NO_HTTPD
 				if (httpd::miner_config != nullptr) {
 					httpd::miner_config->isMining = false;
 				}
+#endif
 				break;
 #ifndef CONF_NO_HTTPD
 			case 'i':
@@ -1008,9 +1010,11 @@ void parse_runtime_input(bool* running) {
 		{
 			case 'p':
 				executor::inst()->isPause = false;
+#ifndef CONF_NO_HTTPD
 				if (httpd::miner_config != nullptr) {
 					httpd::miner_config->isMining = true;
 				}
+#endif
 				break;
 #ifndef CONF_NO_HTTPD
 			case 'i':

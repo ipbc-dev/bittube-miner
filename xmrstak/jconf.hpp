@@ -1,31 +1,43 @@
 #pragma once
 
-#include "params.hpp"
-#include "xmrstak/misc/coinDescription.hpp"
 #include "xmrstak/misc/environment.hpp"
+#include "xmrstak/misc/coinDescription.hpp"
+#include "params.hpp"
 
 #include <stdlib.h>
 #include <string>
 
 class jconf
 {
-  public:
+public:
 	static jconf* inst()
 	{
 		auto& env = xmrstak::environment::inst();
 		if(env.pJconfConfig == nullptr)
-		{
-			std::unique_lock<std::mutex> lck(env.update);
-			if(env.pJconfConfig == nullptr)
-				env.pJconfConfig = new jconf;
-		}
+			env.pJconfConfig = new jconf;
 		return env.pJconfConfig;
 	};
 
+	static inline void cls()
+	{
+		auto& env = xmrstak::environment::inst();
+		if (env.pJconfConfig != nullptr) {
+			env.pJconfConfig->static_delete();
+		}
+	};
+
+	void static_delete();
+
+	bool is_safe_to_touch() {
+		if (prv != nullptr) {
+			return true;
+		}
+		return false;
+	}
+
 	bool parse_config(const char* sFilename, const char* sFilenamePools);
 
-	struct pool_cfg
-	{
+	struct pool_cfg {
 		const char* sPoolAddr;
 		const char* sWalletAddr;
 		const char* sRigId;
@@ -43,8 +55,7 @@ class jconf
 	uint64_t GetPoolCount();
 	bool GetPoolConfig(size_t id, pool_cfg& cfg);
 
-	enum slow_mem_cfg
-	{
+	enum slow_mem_cfg {
 		always_use,
 		no_mlck,
 		print_warning,
@@ -86,7 +97,7 @@ class jconf
 
 	slow_mem_cfg GetSlowMemSetting();
 
-  private:
+private:
 	jconf();
 
 	bool parse_file(const char* sFilename, bool main_conf);

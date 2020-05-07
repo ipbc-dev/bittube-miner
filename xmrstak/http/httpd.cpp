@@ -155,8 +155,15 @@ int httpd::req_handler(void* cls,
 	return ret;
 }
 
+<<<<<<< HEAD
 bool httpd::start_daemon()
 {
+=======
+/*
+ * Description: Starting the http daemon
+ */
+bool httpd::start_daemon() {
+>>>>>>> parent of c2ab148... - Add play/pause console key "p"
 	d = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION,
 		jconf::inst()->GetHttpdPort(), NULL, NULL,
 		&httpd::req_handler,

@@ -4,8 +4,17 @@
 
 #include <mutex>
 
-
-enum out_colours { K_RED, K_GREEN, K_BLUE, K_YELLOW, K_CYAN, K_MAGENTA, K_WHITE, K_NONE };
+enum out_colours
+{
+	K_RED,
+	K_GREEN,
+	K_BLUE,
+	K_YELLOW,
+	K_CYAN,
+	K_MAGENTA,
+	K_WHITE,
+	K_NONE
+};
 
 // Warning - on Linux get_key will detect control keys, but not on Windows.
 // We will only use it for alphanum keys anyway.
@@ -21,45 +30,42 @@ inline long long unsigned int int_port(size_t i)
 	return i;
 }
 
-enum verbosity : size_t { L0 = 0, L1 = 1, L2 = 2, L3 = 3, L4 = 4, LINF = 100};
+enum verbosity : size_t
+{
+	L0 = 0,
+	L1 = 1,
+	L2 = 2,
+	L3 = 3,
+	L4 = 4,
+	LDEBUG = 10,
+	LINF = 100
+};
 
 class printer
 {
-public:
+  public:
 	static inline printer* inst()
 	{
 		auto& env = xmrstak::environment::inst();
 		if(env.pPrinter == nullptr)
-			env.pPrinter = new printer;
+		{
+			std::unique_lock<std::mutex> lck(env.update);
+			if(env.pPrinter == nullptr)
+				env.pPrinter = new printer;
+		}
 		return env.pPrinter;
 	};
 
-	static inline void cls()
-	{
-		auto& env = xmrstak::environment::inst();
-		if (env.pPrinter != nullptr) {
-			env.pPrinter->static_delete();
-		}
-	};
-
 	inline void set_verbose_level(size_t level) { verbose_level = (verbosity)level; }
-	inline void set_flush_stdout(bool status) { b_flush_stdout = status; }
-	inline void static_delete() {
-		if (logfile != nullptr) {
-			delete logfile;
-			logfile = nullptr;
-		}
-	}
 	void print_msg(verbosity verbose, const char* fmt, ...);
 	void print_str(const char* str);
 	bool open_logfile(const char* file);
 
-private:
+  private:
 	printer();
 
 	std::mutex print_mutex;
 	verbosity verbose_level;
-	bool b_flush_stdout;
 	FILE* logfile;
 };
 

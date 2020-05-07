@@ -1,6 +1,7 @@
 #pragma once
 
 #include "xmrstak/misc/environment.hpp"
+#include "xmrstak/misc/home_dir.hpp"
 
 #include <string>
 
@@ -14,7 +15,11 @@ struct params
 	{
 		auto& env = environment::inst();
 		if(env.pParams == nullptr)
-			env.pParams = new params;
+		{
+			std::unique_lock<std::mutex> lck(env.update);
+			if(env.pParams == nullptr)
+				env.pParams = new params;
+		}
 		return *env.pParams;
 	}
 
@@ -24,7 +29,8 @@ struct params
 	bool AMDCache;
 	bool useNVIDIA;
 	bool useCPU;
-	int realCPUCount = -1;
+	std::string amdGpus;
+	std::string nvidiaGpus;
 	// user selected OpenCL vendor
 	std::string openCLVendor;
 
@@ -46,8 +52,12 @@ struct params
 	std::string configFile;
 	std::string configFilePools;
 	std::string configFileAMD;
+	std::string rootAMDCacheDir;
 	std::string configFileNVIDIA;
 	std::string configFileCPU;
+
+	std::string outputFile;
+	int h_print_time = -1;
 
 	bool allowUAC = true;
 	std::string minerArg0;
@@ -59,7 +69,7 @@ struct params
 	int benchmark_work_sec = 60;
 
 	params() :
-		binaryName("xmr-stak"),
+		binaryName("bittube-miner"),
 		executablePrefix(""),
 		useAMD(true),
 		AMDCache(true),
@@ -69,10 +79,11 @@ struct params
 		configFile("config.txt"),
 		configFilePools("pools.txt"),
 		configFileAMD("amd.txt"),
+		rootAMDCacheDir(get_home() + "/.openclcache/"),
 		configFileCPU("cpu.txt"),
 		configFileNVIDIA("nvidia.txt")
-	{}
-
+	{
+	}
 };
 
 } // namespace xmrstak

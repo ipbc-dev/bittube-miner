@@ -12,26 +12,29 @@ namespace cpu
 
 class jconf
 {
-public:
+  public:
 	static jconf* inst()
 	{
-		if (oInst == nullptr) oInst = new jconf;
+		if(oInst == nullptr)
+			oInst = new jconf;
 		return oInst;
 	};
 
 	bool parse_config(const char* sFilename = params::inst().configFileCPU.c_str());
 
-	struct thd_cfg {
+	struct thd_cfg
+	{
 		int iMultiway;
 		bool bNoPrefetch;
+		std::string asm_version_str;
 		long long iCpuAff;
 	};
 
 	size_t GetThreadCount();
-	bool GetThreadConfig(size_t id, thd_cfg &cfg);
+	bool GetThreadConfig(size_t id, thd_cfg& cfg);
 	bool NeedsAutoconf();
 
-private:
+  private:
 	jconf();
 	static jconf* oInst;
 

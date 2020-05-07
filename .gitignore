@@ -1,13 +1,9 @@
 bin/
 obj/
-xmr-stak-cpu.layout
-xmr-stak-cpu.depend
-config-debug.txt
-doc/temp/
 build/
-linux-build/
-.vs/
-.vscode/
+bittube-miner-cpu.layout
+bittube-miner-cpu.depend
+config-debug.txt
 
 # netbeans project files
 /nbproject/
@@ -20,9 +16,17 @@ linux-build/
 
 # KDevelop files
 .kdev4/
-xmr-stak.kdev4
+bittube-miner.kdev4
 
 # Idea/Clion project files
 cmake-build-release/
 cmake-build-debug/
 \.idea/
+
+# MacOS files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*

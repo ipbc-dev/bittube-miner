@@ -1443,8 +1443,14 @@ int do_benchmark(int block_version, int wait_sec, int work_sec)
 
 	printer::inst()->print_msg(L0, "Prepare benchmark for block version %d", block_version);
 
-	uint8_t work[112];
-	memset(work,0,112);
+	if(block_version <= 0)
+	{
+		printer::inst()->print_msg(L0, "Block version must be >0, current value is %u.", block_version);
+		return 1;
+	}
+
+	uint8_t work[128];
+	memset(work, 0, 128);
 	work[0] = static_cast<uint8_t>(block_version);
 
 	xmrstak::pool_data dat;
@@ -1452,22 +1458,20 @@ int do_benchmark(int block_version, int wait_sec, int work_sec)
 	xmrstak::miner_work oWork = xmrstak::miner_work();
 	pvThreads = xmrstak::BackendConnector::thread_starter(oWork);
 
-	printer::inst()->print_msg(L0, "Wait %d sec until all backends are initialized",wait_sec);
+	printer::inst()->print_msg(L0, "Wait %d sec until all backends are initialized", wait_sec);
 	std::this_thread::sleep_for(std::chrono::seconds(wait_sec));
 
-	/* AMD and NVIDIA is currently only supporting work sizes up to 84byte
-	 * \todo fix this issue
+	/* AMD and NVIDIA is currently only supporting work sizes up to 128byte
 	 */
-	xmrstak::miner_work benchWork = xmrstak::miner_work("", work, 84, 0, false, 0);
-	printer::inst()->print_msg(L0, "Start a %d second benchmark...",work_sec);
-	xmrstak::globalStates::inst().switch_work(benchWork, dat);
+	printer::inst()->print_msg(L0, "Start a %d second benchmark...", work_sec);
+	xmrstak::globalStates::inst().switch_work(xmrstak::miner_work("", work, 128, 0, false, 1, 0), dat);
 	uint64_t iStartStamp = get_timestamp_ms();
 
 	std::this_thread::sleep_for(std::chrono::seconds(work_sec));
-	xmrstak::globalStates::inst().switch_work(oWork, dat);
+	xmrstak::globalStates::inst().switch_work(xmrstak::miner_work("", work, 128, 0, false, 0, 0), dat);
 
 	double fTotalHps = 0.0;
-	for (uint32_t i = 0; i < pvThreads->size(); i++)
+	for(uint32_t i = 0; i < pvThreads->size(); i++)
 	{
 		double fHps = pvThreads->at(i)->iHashCount;
 		fHps /= (pvThreads->at(i)->iTimestamp - iStartStamp) / 1000.0;
@@ -1475,7 +1479,7 @@ int do_benchmark(int block_version, int wait_sec, int work_sec)
 		auto bType = static_cast<xmrstak::iBackend::BackendType>(pvThreads->at(i)->backendType);
 		std::string name(xmrstak::iBackend::getName(bType));
 
-		printer::inst()->print_msg(L0, "Benchmark Thread %u %s: %.1f H/S", i,name.c_str(), fHps);
+		printer::inst()->print_msg(L0, "Benchmark Thread %u %s: %.1f H/S", i, name.c_str(), fHps);
 		fTotalHps += fHps;
 	}
 

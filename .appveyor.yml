@@ -1,0 +1,33 @@
+# image
+image: Visual Studio 2015
+
+# build platform
+platform: x64
+
+# clone directory
+clone_folder: c:\bittube-miner
+
+install:
+  - mkdir c:\bittube-miner-dep
+  - curl -sL https://github.com/fireice-uk/bittube-miner-dep/releases/download/v1/bittube-miner-dep.zip -o bittube-miner-dep.zip
+  - 7z x bittube-miner-dep.zip -o"c:\bittube-miner-dep" -y > nul
+  - appveyor DownloadFile  https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda_8.0.44_windows-exe -FileName cuda_8.0.44_windows.exe
+  - cuda_8.0.44_windows.exe -s compiler_8.0 cudart_8.0 nvrtc_8.0 nvrtc_dev_8.0
+  - set PATH=%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin;%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\libnvvp;%PATH%
+  - nvcc -V
+
+build_script:
+  - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\VsMSBuildCmd.bat"
+  - cd c:\bittube-miner
+  - mkdir build
+  - cd build
+  - set CMAKE_PREFIX_PATH=C:\bittube-miner-dep\hwloc;C:\bittube-miner-dep\libmicrohttpd;C:\bittube-miner-dep\openssl;
+  - cmake -G "Visual Studio 14 2015 Win64" -T v140,host=x64 .. -DCUDA_ARCH=30
+  - cmake --build . --config Release --target install
+
+test_script:
+  - cd c:\bittube-miner\build\bin\Release
+  - dir
+  - copy C:\bittube-miner-dep\openssl\bin\* .
+  - set XMRSTAK_NOWAIT=1
+  - bittube-miner.exe --help --noUAC

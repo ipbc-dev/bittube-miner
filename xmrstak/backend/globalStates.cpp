@@ -21,19 +21,18 @@
   *
   */
 
-#include "miner_work.hpp"
 #include "globalStates.hpp"
+#include "miner_work.hpp"
 
 #include <assert.h>
-#include <cmath>
 #include <chrono>
+#include <cmath>
 #include <cstring>
-
 
 namespace xmrstak
 {
 
-void globalStates::consume_work( miner_work& threadWork, uint64_t& currentJobId)
+void globalStates::consume_work(miner_work& threadWork, uint64_t& currentJobId)
 {
 	jobLock.ReadLock();
 
@@ -43,26 +42,25 @@ void globalStates::consume_work( miner_work& threadWork, uint64_t& currentJobId)
 	jobLock.UnLock();
 }
 
-void globalStates::switch_work(miner_work& pWork, pool_data& dat)
+void globalStates::switch_work(miner_work&& pWork, pool_data& dat)
 {
 	jobLock.WriteLock();
 
 	/* This notifies all threads that the job has changed.
-	* To avoid duplicated shared this must be done before the nonce is exchanged.
-	*/
+	 * To avoid duplicated shared this must be done before the nonce is exchanged.
+	 */
 	iGlobalJobNo++;
 
 	size_t xid = dat.pool_id;
 	dat.pool_id = pool_id;
 	pool_id = xid;
 
-	oGlobalWork = pWork;
 	/* Maybe a worker thread is updating the nonce while we read it.
-	* To avoid duplicated share calculations the job ID is checked in the worker thread
-	* after the nonce is read.
-	*/
+	 * To avoid duplicated share calculations the job ID is checked in the worker thread
+	 * after the nonce is read.
+	 */
 	dat.iSavedNonce = iGlobalNonce.exchange(dat.iSavedNonce, std::memory_order_relaxed);
-	oGlobalWork = pWork;
+	oGlobalWork = std::move(pWork);
 
 	jobLock.UnLock();
 }

@@ -24,9 +24,9 @@
 #include "telemetry.hpp"
 #include "xmrstak/net/msgstruct.hpp"
 
+#include <chrono>
 #include <cmath>
 #include <cstring>
-#include <chrono>
 
 namespace xmrstak
 {
@@ -37,7 +37,7 @@ telemetry::telemetry(size_t iThd)
 	ppTimestamps = new uint64_t*[iThd];
 	iBucketTop = new uint32_t[iThd];
 
-	for (size_t i = 0; i < iThd; i++)
+	for(size_t i = 0; i < iThd; i++)
 	{
 		ppHashCounts[i] = new uint64_t[iBucketSize];
 		ppTimestamps[i] = new uint64_t[iBucketSize];
@@ -49,7 +49,6 @@ telemetry::telemetry(size_t iThd)
 
 double telemetry::calc_telemetry_data(size_t iLastMillisec, size_t iThread)
 {
-	uint64_t iTimeNow = get_timestamp_ms();
 
 	uint64_t iEarliestHashCnt = 0;
 	uint64_t iEarliestStamp = 0;
@@ -57,21 +56,23 @@ double telemetry::calc_telemetry_data(size_t iLastMillisec, size_t iThread)
 	uint64_t iLatestHashCnt = 0;
 	bool bHaveFullSet = false;
 
+	uint64_t iTimeNow = get_timestamp_ms();
+
 	//Start at 1, buckettop points to next empty
-	for (size_t i = 1; i < iBucketSize; i++)
+	for(size_t i = 1; i < iBucketSize; i++)
 	{
 		size_t idx = (iBucketTop[iThread] - i) & iBucketMask; //overflow expected here
 
-		if (ppTimestamps[iThread][idx] == 0)
+		if(ppTimestamps[iThread][idx] == 0)
 			break; //That means we don't have the data yet
 
-		if (iLatestStamp == 0)
+		if(iLatestStamp == 0)
 		{
 			iLatestStamp = ppTimestamps[iThread][idx];
 			iLatestHashCnt = ppHashCounts[iThread][idx];
 		}
 
-		if (iTimeNow - ppTimestamps[iThread][idx] > iLastMillisec)
+		if(iTimeNow - ppTimestamps[iThread][idx] > iLastMillisec)
 		{
 			bHaveFullSet = true;
 			break; //We are out of the requested time period
@@ -81,11 +82,11 @@ double telemetry::calc_telemetry_data(size_t iLastMillisec, size_t iThread)
 		iEarliestHashCnt = ppHashCounts[iThread][idx];
 	}
 
-	if (!bHaveFullSet || iEarliestStamp == 0 || iLatestStamp == 0)
+	if(!bHaveFullSet || iEarliestStamp == 0 || iLatestStamp == 0)
 		return nan("");
 
 	//Don't think that can happen, but just in case
-	if (iLatestStamp - iEarliestStamp == 0)
+	if(iLatestStamp - iEarliestStamp == 0)
 		return nan("");
 
 	double fHashes, fTime;

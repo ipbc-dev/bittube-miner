@@ -37,7 +37,6 @@
 #include <cpuid.h>
 #endif
 
-
 namespace xmrstak
 {
 namespace cpu
@@ -48,9 +47,14 @@ using namespace rapidjson;
 /*
  * This enum needs to match index in oConfigValues, otherwise we will get a runtime error
  */
-enum configEnum { aCpuThreadsConf, sUseSlowMem };
+enum configEnum
+{
+	aCpuThreadsConf,
+	sUseSlowMem
+};
 
-struct configVal {
+struct configVal
+{
 	configEnum iName;
 	const char* sName;
 	Type iType;
@@ -59,10 +63,9 @@ struct configVal {
 // Same order as in configEnum, as per comment above
 // kNullType means any type
 configVal oConfigValues[] = {
-	{ aCpuThreadsConf, "cpu_threads_conf", kNullType }
-};
+	{aCpuThreadsConf, "cpu_threads_conf", kNullType}};
 
-constexpr size_t iConfigCnt = (sizeof(oConfigValues)/sizeof(oConfigValues[0]));
+constexpr size_t iConfigCnt = (sizeof(oConfigValues) / sizeof(oConfigValues[0]));
 
 inline bool checkType(Type have, Type want)
 {
@@ -95,7 +98,7 @@ jconf::jconf()
 	prv = new opaque_private();
 }
 
-bool jconf::GetThreadConfig(size_t id, thd_cfg &cfg)
+bool jconf::GetThreadConfig(size_t id, thd_cfg& cfg)
 {
 	if(!prv->configValues[aCpuThreadsConf]->IsArray())
 		return false;
@@ -108,12 +111,13 @@ bool jconf::GetThreadConfig(size_t id, thd_cfg &cfg)
 	if(!oThdConf.IsObject())
 		return false;
 
-	const Value *mode, *no_prefetch, *aff;
+	const Value *mode, *no_prefetch, *aff, *asm_version;
 	mode = GetObjectMember(oThdConf, "low_power_mode");
 	no_prefetch = GetObjectMember(oThdConf, "no_prefetch");
 	aff = GetObjectMember(oThdConf, "affine_to_cpu");
+	asm_version = GetObjectMember(oThdConf, "asm");
 
-	if(mode == nullptr || no_prefetch == nullptr || aff == nullptr)
+	if(mode == nullptr || no_prefetch == nullptr || aff == nullptr || asm_version == nullptr)
 		return false;
 
 	if(!mode->IsBool() && !mode->IsNumber())
@@ -140,9 +144,12 @@ bool jconf::GetThreadConfig(size_t id, thd_cfg &cfg)
 	else
 		cfg.iCpuAff = -1;
 
+	if(!asm_version->IsString())
+		return false;
+	cfg.asm_version_str = asm_version->GetString();
+
 	return true;
 }
-
 
 size_t jconf::GetThreadCount()
 {
@@ -154,22 +161,22 @@ size_t jconf::GetThreadCount()
 
 bool jconf::parse_config(const char* sFilename)
 {
-	FILE * pFile;
-	char * buffer;
+	FILE* pFile;
+	char* buffer;
 	size_t flen;
 
 	pFile = fopen(sFilename, "rb");
-	if (pFile == NULL)
+	if(pFile == NULL)
 	{
 		printer::inst()->print_msg(L0, "Failed to open config file %s.", sFilename);
 		return false;
 	}
 
-	fseek(pFile,0,SEEK_END);
+	fseek(pFile, 0, SEEK_END);
 	flen = ftell(pFile);
 	rewind(pFile);
 
-	if(flen >= 64*1024)
+	if(flen >= 64 * 1024)
 	{
 		fclose(pFile);
 		printer::inst()->print_msg(L0, "Oversized config file - %s.", sFilename);
@@ -184,7 +191,7 @@ bool jconf::parse_config(const char* sFilename)
 	}
 
 	buffer = (char*)malloc(flen + 3);
-	if(fread(buffer+1, flen, 1, pFile) != 1)
+	if(fread(buffer + 1, flen, 1, pFile) != 1)
 	{
 		free(buffer);
 		fclose(pFile);
@@ -206,7 +213,7 @@ bool jconf::parse_config(const char* sFilename)
 	buffer[flen] = '}';
 	buffer[flen + 1] = '\0';
 
-	prv->jsonDoc.Parse<kParseCommentsFlag|kParseTrailingCommasFlag>(buffer, flen+2);
+	prv->jsonDoc.Parse<kParseCommentsFlag | kParseTrailingCommasFlag>(buffer, flen + 2);
 	free(buffer);
 
 	if(prv->jsonDoc.HasParseError())
@@ -246,7 +253,7 @@ bool jconf::parse_config(const char* sFilename)
 	}
 
 	thd_cfg c;
-	for(size_t i=0; i < GetThreadCount(); i++)
+	for(size_t i = 0; i < GetThreadCount(); i++)
 	{
 		if(!GetThreadConfig(i, c))
 		{

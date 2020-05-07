@@ -86,7 +86,7 @@
     sudo make install
     cd ..
     git clone https://github.com/ipbc-dev/bittube-miner.git
-    cd xmr-stak
+    cd bittube-miner
     mkdir build
     cd build
     CC=gcc cmake .. -DCUDA_ENABLE=OFF \
@@ -96,7 +96,7 @@
 ```
 
 - g++ version 5.1 or higher is required for full C++11 support. 
-If you want to compile the binary without installing libraries / compiler or just compile binary for some other distribution, please check the [build_xmr-stak_docker.sh script](scripts/build_xmr-stak_docker/build_xmr-stak_docker.sh).
+If you want to compile the binary without installing libraries / compiler or just compile binary for some other distribution, please check the [build_bittube-miner_docker.sh script](scripts/build_bittube-miner_docker/build_bittube-miner_docker.sh).
 
 - Some newer gcc versions are not supported by CUDA (e.g. Ubuntu 17.10). It will require installing gcc 5 but you can avoid changing defaults.
 
@@ -110,6 +110,6 @@ cmake -DCUDA_HOST_COMPILER=/usr/bin/gcc-5 ..
     cmake -DCMAKE_LINK_STATIC=ON -DXMR-STAK_COMPILE=generic .
     make install
     cd bin\Release
-    copy C:\xmr-stak-dep\openssl\bin\* .
+    copy C:\bittube-miner-dep\openssl\bin\* .
 ```
 Note - cmake caches variables, so if you want to do a dynamic build later you need to specify '-DCMAKE_LINK_STATIC=OFF'

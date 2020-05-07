@@ -1,18 +1,18 @@
 #pragma once
 
-#include "thdq.hpp"
 #include "telemetry.hpp"
+#include "thdq.hpp"
 #include "xmrstak/backend/iBackend.hpp"
+#include "xmrstak/donate-level.hpp"
 #include "xmrstak/misc/environment.hpp"
 #include "xmrstak/net/msgstruct.hpp"
-#include "xmrstak/donate-level.hpp"
 
-#include <atomic>
 #include <array>
+#include <atomic>
+#include <chrono>
+#include <future>
 #include <list>
 #include <vector>
-#include <future>
-#include <chrono>
 
 class jpsock;
 
@@ -27,27 +27,18 @@ class minethd;
 
 class executor
 {
-public:
+  public:
 	static executor* inst()
 	{
 		auto& env = xmrstak::environment::inst();
 		if(env.pExecutor == nullptr)
-			env.pExecutor = new executor;
+		{
+			std::unique_lock<std::mutex> lck(env.update);
+			if(env.pExecutor == nullptr)
+				env.pExecutor = new executor;
+		}
 		return env.pExecutor;
 	};
-	
-	static inline void cls()
-	{
-		auto& env = xmrstak::environment::inst();
-		if (env.pExecutor != nullptr) {
-			env.pExecutor->static_delete();
-		}
-	};
-
-	void static_delete();
-
-	bool isPause = true;
-	bool needRestart = false;
 
 	void ex_start(bool daemon) { daemon ? ex_main() : std::thread(&executor::ex_main, this).detach(); }
 
@@ -56,13 +47,15 @@ public:
 	inline void push_event(ex_event&& ev) { oEventQ.push(std::move(ev)); }
 	void push_timed_event(ex_event&& ev, size_t sec);
 
-private:
+  private:
 	struct timed_event
 	{
 		ex_event event;
 		size_t ticks_left;
 
-		timed_event(ex_event&& ev, size_t ticks) : event(std::move(ev)), ticks_left(ticks) {}
+		timed_event(ex_event&& ev, size_t ticks) :
+			event(std::move(ev)),
+			ticks_left(ticks) {}
 	};
 
 	inline void set_timestamp() { dev_timestamp = get_timestamp(); };
@@ -76,7 +69,6 @@ private:
 
 	inline bool is_dev_time()
 	{
-		return false; // disable donations for now
 		//Add 2 seconds to compensate for connect
 		constexpr size_t dev_portion = static_cast<size_t>(double(iDevDonatePeriod) * fDevDonationLevel + 2.);
 
@@ -106,6 +98,7 @@ private:
 	void ex_main();
 
 	void ex_clock_thd();
+	void pool_connect(jpsock* pool);
 
 	constexpr static size_t motd_max_length = 512;
 	bool motd_filter_console(std::string& motd);
@@ -132,7 +125,8 @@ private:
 		std::chrono::system_clock::time_point time;
 		std::string msg;
 
-		sck_error_log(std::string&& err) : msg(std::move(err))
+		sck_error_log(std::string&& err) :
+			msg(std::move(err))
 		{
 			time = std::chrono::system_clock::now();
 		}
@@ -147,12 +141,16 @@ private:
 		std::string msg;
 		size_t count;
 
-		result_tally() : msg("[OK]"), count(0)
+		result_tally() :
+			msg("[OK]"),
+			count(0)
 		{
 			time = std::chrono::system_clock::now();
 		}
 
-		result_tally(std::string&& err) : msg(std::move(err)), count(1)
+		result_tally(std::string&& err) :
+			msg(std::move(err)),
+			count(1)
 		{
 			time = std::chrono::system_clock::now();
 		}
@@ -174,7 +172,7 @@ private:
 	std::vector<result_tally> vMineResults;
 
 	//More result statistics
-	std::array<size_t, 10> iTopDiff { { } }; //Initialize to zero
+	std::array<size_t, 10> iTopDiff{{}}; //Initialize to zero
 
 	std::chrono::system_clock::time_point tPoolConnTime;
 	size_t iPoolHashes = 0;
@@ -202,9 +200,9 @@ private:
 	void on_sock_error(size_t pool_id, std::string&& sError, bool silent);
 	void on_pool_have_job(size_t pool_id, pool_job& oPoolJob);
 	void on_miner_result(size_t pool_id, job_result& oResult);
+	void connect_to_pools(std::list<jpsock*>& eval_pools);
 	bool get_live_pools(std::vector<jpsock*>& eval_pools, bool is_dev);
 	void eval_pool_choice();
 
 	inline size_t sec_to_ticks(size_t sec) { return sec * (1000 / iTickTime); }
 };
-

@@ -2,7 +2,7 @@
 FROM nvidia/cuda:9.0-base
 
 # Default git repository
-ENV GIT_REPOSITORY https://github.com/ipbc-dev/bittube-miner.git
+ENV GIT_REPOSITORY https://github.com/fireice-uk/bittube-miner.git
 ENV XMRSTAK_CMAKE_FLAGS -DXMR-STAK_COMPILE=generic -DCUDA_ENABLE=ON -DOpenCL_ENABLE=OFF
 
 # Innstall packages
